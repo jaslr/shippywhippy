@@ -3,15 +3,24 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywippy"
 handle = "shippywippy"
-application_url = "https://example.com/"
+application_url = "https://floyd-wake-border-transcript.trycloudflare.com"
 embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "froggya.myshopify.com"
+include_config_on_deploy = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = ""
+scopes = "read_products,read_shipping,write_products"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [
+  "https://floyd-wake-border-transcript.trycloudflare.com/auth/callback",
+  "https://floyd-wake-border-transcript.trycloudflare.com/auth/shopify/callback",
+  "https://floyd-wake-border-transcript.trycloudflare.com/api/auth/callback"
+]
 
 [webhooks]
 api_version = "2024-10"
