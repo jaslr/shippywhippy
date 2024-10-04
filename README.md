@@ -6,6 +6,10 @@ Rather than cloning this repo, you can use your preferred package manager and th
 
 Visit the [`shopify.dev` documentation](https://shopify.dev/docs/api/shopify-app-remix) for more details on the Remix app package.
 
+## About Shippy Wippy
+
+Shippy Wippy is a Shopify app designed to connect stores to Australia Post Carrier Calculated Shipping Rates. This integration allows merchants to provide accurate, real-time shipping rates from Australia Post to their customers during checkout.
+
 ## Quick start
 
 ### Prerequisites
@@ -343,13 +347,17 @@ The Remix app template comes with the following out-of-the-box functionality:
 
 ## Tech Stack
 
-This template uses [Remix](https://remix.run). The following Shopify tools are also included to ease app development:
+The app is built using the following technologies:
 
-- [Shopify App Remix](https://shopify.dev/docs/api/shopify-app-remix) provides authentication and methods for interacting with Shopify APIs.
-- [Shopify App Bridge](https://shopify.dev/docs/apps/tools/app-bridge) allows your app to seamlessly integrate your app within Shopify's Admin.
-- [Polaris React](https://polaris.shopify.com/) is a powerful design system and component library that helps developers build high quality, consistent experiences for Shopify merchants.
-- [Webhooks](https://github.com/Shopify/shopify-app-js/tree/main/packages/shopify-app-remix#authenticating-webhook-requests): Callbacks sent by Shopify when certain events occur
-- [Polaris](https://polaris.shopify.com/): Design system that enables apps to create Shopify-like experiences
+| Component | Technology |
+|-----------|------------|
+| Framework | [Remix](https://remix.run) |
+| Database | [Prisma](https://www.prisma.io/) |
+| UI Library | [Polaris](https://polaris.shopify.com) |
+| API | [GraphQL API](https://shopify.dev/docs/api/admin-graphql) |
+| Authentication | [App Bridge](https://shopify.dev/docs/apps/tools/app-bridge) |
+
+This tech stack provides a robust foundation for building a performant and scalable Shopify app, with Remix offering server-side rendering capabilities, Prisma handling database operations, Polaris ensuring a consistent Shopify-like UI, and GraphQL enabling efficient data fetching from the Shopify Admin API.
 
 ## Resources
 
