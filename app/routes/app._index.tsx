@@ -66,11 +66,16 @@ export default function Index() {
 
   return (
     <Page>
-      {isDevelopmentStore && (
-        <Banner title="Development Store" tone="info">
-          This is a development store. Some features may not be available.
-        </Banner>
-      )}
+      <Banner title="Diagnostics" tone="info">
+        <List>
+          <List.Item>
+            Carrier-Calculated Shipping: {hasCarrierCalculatedShipping ? 'Enabled' : 'Not enabled'}
+          </List.Item>
+          <List.Item>
+            Development Store: {isDevelopmentStore ? 'Yes' : 'No'}
+          </List.Item>
+        </List>
+      </Banner>
       <TitleBar title="Remix app template" />
       <BlockStack gap="500">
         <Layout>
@@ -212,21 +217,6 @@ export default function Index() {
           </Layout.Section>
         </Layout>
       </BlockStack>
-      {isDevelopmentStore && (
-        <Banner title="Development Store" tone="warning">
-          This is a development store. Some features may not be available. 
-        </Banner>
-      )}
-      {hasCarrierCalculatedShipping ? (
-        <Banner title="Carrier-Calculated Shipping" tone="success">
-          Your store has carrier-calculated shipping enabled.
-        </Banner>
-      ) : (
-        <Banner title="Carrier-Calculated Shipping" tone="warning">
-          Your store does not have carrier-calculated shipping enabled. 
-          Consider upgrading your plan or activating this feature to use third-party carrier rates.
-        </Banner>
-      )}
     </Page>
   );
 }
