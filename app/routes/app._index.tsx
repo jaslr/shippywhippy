@@ -86,64 +86,66 @@ export default function Index() {
 
   return (
     <Page>
-      <Banner title="Diagnostics" tone="info">
-        <List>
-          <List.Item>
-            Carrier-Calculated Shipping: {hasCarrierCalculatedShipping ? 'Enabled' : 'Not enabled'}
-          </List.Item>
-          <List.Item>
-            Development Store: {isDevelopmentStore ? 'Yes' : 'No'}
-          </List.Item>
-        </List>
-      </Banner>
-      <TitleBar title="Shippy Wippy" />
-      <Layout>
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="500">
-              <Text as="h2" variant="headingMd">
-                Carrier-Calculated Shipping Configuration
-              </Text>
-              <FormLayout>
-                {carriers.map((carrier, index) => (
-                  <Card key={carrier.name}>
-                    <BlockStack gap="400">
-                      <Text as="h3" variant="headingMd">
-                        {carrier.name}
-                      </Text>
-                      <FormLayout>
-                        <TextField
-                          label="API Key"
-                          value={carrier.apiKey}
-                          onChange={(value) => handleApiKeyChange(value, index)}
-                          autoComplete="off"
-                        />
-                        <RadioButton
-                          label="Enable"
-                          checked={carrier.enabled}
-                          id={`${carrier.name}-enable`}
-                          name={`${carrier.name}-status`}
-                          onChange={(checked) => handleRadioChange(checked, index)}
-                        />
-                        <RadioButton
-                          label="Disable"
-                          checked={!carrier.enabled}
-                          id={`${carrier.name}-disable`}
-                          name={`${carrier.name}-status`}
-                          onChange={(checked) => handleRadioChange(!checked, index)}
-                        />
-                      </FormLayout>
-                    </BlockStack>
-                  </Card>
-                ))}
-              </FormLayout>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-        <Layout.Section variant="oneThird">
-          {/* Keep existing app template specs and next steps cards */}
-        </Layout.Section>
-      </Layout>
+      <BlockStack gap="800">
+        <Banner title="Diagnostics" tone="info">
+          <List>
+            <List.Item>
+              Carrier-Calculated Shipping: {hasCarrierCalculatedShipping ? 'Enabled' : 'Not enabled'}
+            </List.Item>
+            <List.Item>
+              Development Store: {isDevelopmentStore ? 'Yes' : 'No'}
+            </List.Item>
+          </List>
+        </Banner>
+        <TitleBar title="Shippy Wippy" />
+        <Layout>
+          <Layout.Section>
+            <Card>
+              <BlockStack gap="500">
+                <Text as="h2" variant="headingMd">
+                  Carrier-Calculated Shipping Configuration
+                </Text>
+                <FormLayout>
+                  {carriers.map((carrier, index) => (
+                    <Card key={carrier.name}>
+                      <BlockStack gap="400">
+                        <Text as="h3" variant="headingMd">
+                          {carrier.name}
+                        </Text>
+                        <FormLayout>
+                          <TextField
+                            label="API Key"
+                            value={carrier.apiKey}
+                            onChange={(value) => handleApiKeyChange(value, index)}
+                            autoComplete="off"
+                          />
+                          <RadioButton
+                            label="Enable"
+                            checked={carrier.enabled}
+                            id={`${carrier.name}-enable`}
+                            name={`${carrier.name}-status`}
+                            onChange={(checked) => handleRadioChange(checked, index)}
+                          />
+                          <RadioButton
+                            label="Disable"
+                            checked={!carrier.enabled}
+                            id={`${carrier.name}-disable`}
+                            name={`${carrier.name}-status`}
+                            onChange={(checked) => handleRadioChange(!checked, index)}
+                          />
+                        </FormLayout>
+                      </BlockStack>
+                    </Card>
+                  ))}
+                </FormLayout>
+              </BlockStack>
+            </Card>
+          </Layout.Section>
+          <Layout.Section variant="oneThird">
+            {/* Keep existing app template specs and next steps cards */}
+          </Layout.Section>
+        </Layout>
+      </BlockStack>
     </Page>
   );
 }
