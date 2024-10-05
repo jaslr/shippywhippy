@@ -1,0 +1,20 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Create Site Structure",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "echo '🏗️ Starting Site Structure creation...' && echo '🏗️ Site Structure' > ${workspaceFolder}/site_structure.md && echo 'Created initial file' && find ${workspaceFolder} -type d \\( -path '*/node_modules' -o -path '*/.cache' -o -path '*/build' -o -path '*/public/build' \\) -prune -o -type f -print | sed -e 's#${workspaceFolder}/##' -e 's/[^-][^\\/]*\\//  │   /g' -e 's/│   \\([^│]\\)/│   ├── \\1/' -e 's/\\(│   \\)*│   └/\\1    └/' -e 's/└── /├── /' -e '$s/├── /└── /' >> ${workspaceFolder}/site_structure.md && echo 'Generated structure' && code -r ${workspaceFolder}/site_structure.md && echo '🏗️ Site Structure creation completed.'"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "group": "build"
+        }
+    ]
+}
