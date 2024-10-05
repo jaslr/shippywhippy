@@ -2,19 +2,21 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Create Site Structure",
             "type": "shell",
+            "label": "Create Sitemap",
             "command": "bash",
             "args": [
                 "-c",
-                "echo '🏗️ Starting Site Structure creation...' && echo '🏗️ Site Structure' > ${workspaceFolder}/site_structure.md && echo 'Created initial file' && find ${workspaceFolder} -type d \\( -path '*/node_modules' -o -path '*/.cache' -o -path '*/build' -o -path '*/public/build' \\) -prune -o -type f -print | sed -e 's#${workspaceFolder}/##' -e 's/[^-][^\\/]*\\//  │   /g' -e 's/│   \\([^│]\\)/│   ├── \\1/' -e 's/\\(│   \\)*│   └/\\1    └/' -e 's/└── /├── /' -e '$s/├── /└── /' >> ${workspaceFolder}/site_structure.md && echo 'Generated structure' && code -r ${workspaceFolder}/site_structure.md && echo '🏗️ Site Structure creation completed.'"
+                "echo 'Starting sitemap creation...' && WORKSPACE='${workspaceFolder}' && echo \"Workspace root: $WORKSPACE\" && SITEMAP=\"$WORKSPACE/sitemap.md\" && echo '# Sitemap' > \"$SITEMAP\" && echo 'Created sitemap file.' && echo '## Root' >> \"$SITEMAP\" && if ls -1 \"$WORKSPACE\" | sed 's/^/- /' >> \"$SITEMAP\"; then echo 'Added root directory contents.' && echo '## /app' >> \"$SITEMAP\" && if ls -1 \"$WORKSPACE/app\" | sed 's/^/- /' >> \"$SITEMAP\"; then echo 'Added /app directory contents.' && echo \"Sitemap created successfully at $SITEMAP\" && cat \"$SITEMAP\"; else echo 'Error: Failed to add /app directory contents.'; fi; else echo 'Error: Failed to add root directory contents.'; fi"
             ],
-            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "presentation": {
                 "reveal": "always",
                 "panel": "new"
-            },
-            "group": "build"
+            }
         }
     ]
 }
