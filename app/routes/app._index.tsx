@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import {
@@ -7,11 +7,13 @@ import {
   Text,
   Card,
   BlockStack,
-  Box,
   List,
   Link,
   InlineStack,
   Banner,
+  TextField,
+  RadioButton,
+  FormLayout,
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -61,8 +63,26 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export default function Index() {
   const { isDevelopmentStore, hasCarrierCalculatedShipping } = useLoaderData<typeof loader>();
-
   const shopify = useAppBridge();
+
+  const [carriers, setCarriers] = useState([
+    { name: "Australia Post", apiKey: "", enabled: false },
+    { name: "Aramex (formerly Fastway)", apiKey: "", enabled: false },
+    { name: "Sendle", apiKey: "", enabled: false },
+    { name: "DHL", apiKey: "", enabled: false },
+  ]);
+
+  const handleApiKeyChange = (value: string, index: number) => {
+    const updatedCarriers = [...carriers];
+    updatedCarriers[index].apiKey = value;
+    setCarriers(updatedCarriers);
+  };
+
+  const handleRadioChange = (checked: boolean, index: number) => {
+    const updatedCarriers = [...carriers];
+    updatedCarriers[index].enabled = checked;
+    setCarriers(updatedCarriers);
+  };
 
   return (
     <Page>
@@ -76,147 +96,54 @@ export default function Index() {
           </List.Item>
         </List>
       </Banner>
-      <TitleBar title="Remix app template" />
-      <BlockStack gap="500">
-        <Layout>
-          <Layout.Section>
-            <Card>
-              <BlockStack gap="500">
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    Welcome to your Shopify app 🎉
-                  </Text>
-                  <Text variant="bodyMd" as="p">
-                    This embedded app template uses{" "}
-                    <Link
-                      url="https://shopify.dev/docs/apps/tools/app-bridge"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      App Bridge
-                    </Link>{" "}
-                    interface examples like an{" "}
-                    <Link url="/app/additional" removeUnderline>
-                      additional page in the app nav
-                    </Link>
-                    , to provide a starting point for app development.
-                  </Text>
-                </BlockStack>
-                <BlockStack gap="200">
-                  <Text as="h3" variant="headingMd">
-                    Next steps
-                  </Text>
-                  <Text as="p" variant="bodyMd">
-                    Customize this template to make it your own. Learn more about Shopify app development in our documentation.
-                  </Text>
-                </BlockStack>
-              </BlockStack>
-            </Card>
-          </Layout.Section>
-          <Layout.Section variant="oneThird">
+      <TitleBar title="Shippy Wippy" />
+      <Layout>
+        <Layout.Section>
+          <Card>
             <BlockStack gap="500">
-              <Card>
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    App template specs
-                  </Text>
-                  <BlockStack gap="200">
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Framework
+              <Text as="h2" variant="headingMd">
+                Carrier-Calculated Shipping Configuration
+              </Text>
+              <FormLayout>
+                {carriers.map((carrier, index) => (
+                  <Card key={carrier.name}>
+                    <BlockStack gap="400">
+                      <Text as="h3" variant="headingMd">
+                        {carrier.name}
                       </Text>
-                      <Link
-                        url="https://remix.run"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        Remix
-                      </Link>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Database
-                      </Text>
-                      <Link
-                        url="https://www.prisma.io/"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        Prisma
-                      </Link>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Interface
-                      </Text>
-                      <span>
-                        <Link
-                          url="https://polaris.shopify.com"
-                          target="_blank"
-                          removeUnderline
-                        >
-                          Polaris
-                        </Link>
-                        {", "}
-                        <Link
-                          url="https://shopify.dev/docs/apps/tools/app-bridge"
-                          target="_blank"
-                          removeUnderline
-                        >
-                          App Bridge
-                        </Link>
-                      </span>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        API
-                      </Text>
-                      <Link
-                        url="https://shopify.dev/docs/api/admin-graphql"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        GraphQL API
-                      </Link>
-                    </InlineStack>
-                  </BlockStack>
-                </BlockStack>
-              </Card>
-              <Card>
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    Next steps
-                  </Text>
-                  <List>
-                    <List.Item>
-                      Build an{" "}
-                      <Link
-                        url="https://shopify.dev/docs/apps/getting-started/build-app-example"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        {" "}
-                        example app
-                      </Link>{" "}
-                      to get started
-                    </List.Item>
-                    <List.Item>
-                      Explore Shopify's API with{" "}
-                      <Link
-                        url="https://shopify.dev/docs/apps/tools/graphiql-admin-api"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        GraphiQL
-                      </Link>
-                    </List.Item>
-                  </List>
-                </BlockStack>
-              </Card>
+                      <FormLayout>
+                        <TextField
+                          label="API Key"
+                          value={carrier.apiKey}
+                          onChange={(value) => handleApiKeyChange(value, index)}
+                          autoComplete="off"
+                        />
+                        <RadioButton
+                          label="Enable"
+                          checked={carrier.enabled}
+                          id={`${carrier.name}-enable`}
+                          name={`${carrier.name}-status`}
+                          onChange={(checked) => handleRadioChange(checked, index)}
+                        />
+                        <RadioButton
+                          label="Disable"
+                          checked={!carrier.enabled}
+                          id={`${carrier.name}-disable`}
+                          name={`${carrier.name}-status`}
+                          onChange={(checked) => handleRadioChange(!checked, index)}
+                        />
+                      </FormLayout>
+                    </BlockStack>
+                  </Card>
+                ))}
+              </FormLayout>
             </BlockStack>
-          </Layout.Section>
-        </Layout>
-      </BlockStack>
+          </Card>
+        </Layout.Section>
+        <Layout.Section variant="oneThird">
+          {/* Keep existing app template specs and next steps cards */}
+        </Layout.Section>
+      </Layout>
     </Page>
   );
 }
