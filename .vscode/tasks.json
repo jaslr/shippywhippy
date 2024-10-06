@@ -4,14 +4,17 @@
         {
             "label": "🚀 Full Development Setup",
             "type": "shell",
-            "command": "bash",
-            "args": [
-                "-c",
-                "pkill -f 'npm run dev' || true && echo 'Killed existing npm run dev process' && bash ./tasks/generate_site_structure.sh & echo 'Generating site structure' && npm run dev & echo 'Started npm run dev' & npm run compodoc & echo 'Started compodoc' & npx prisma studio & echo 'Started Prisma Studio'"
-            ],
+            "command": "echo",
+            "args": ["Starting Full Development Setup"],
             "problemMatcher": [],
-            "dependsOn": ["Generate Site Structure", "Run npm dev", "Run compodoc", "Run Prisma Studio"],
-            "dependsOrder": "parallel",
+            "dependsOn": [
+                "Kill existing processes",
+                "Run Prisma Studio",
+                "Run compodoc",
+                "Generate Site Structure",
+                "Run npm dev"
+            ],
+            "dependsOrder": "sequence",
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -26,18 +29,13 @@
             }
         },
         {
-            "label": "📄 Generate Site Structure",
+            "label": "Kill existing processes",
             "type": "shell",
-            "command": "bash",
-            "args": [
-                "./tasks/generate_site_structure.sh"
-            ],
-            "problemMatcher": [],
+            "command": "${workspaceFolder}/scripts/kill_processes.sh",
             "presentation": {
                 "reveal": "always",
                 "panel": "new"
-            },
-            "group": "none"
+            }
         },
         {
             "label": "Generate Site Structure",
@@ -46,45 +44,92 @@
             "args": ["./tasks/generate_site_structure.sh"],
             "presentation": {
                 "reveal": "always",
-                "panel": "new",
-                "group": "develop"
+                "panel": "new"
             }
         },
         {
             "label": "Run npm dev",
             "type": "shell",
-            "command": "bash",
-            "args": ["-c", "npm run dev"],
+            "command": "npm",
+            "args": ["run", "dev"],
             "isBackground": true,
             "presentation": {
                 "reveal": "always",
-                "panel": "new",
-                "group": "develop"
-            }
+                "panel": "new"
+            },
+            "problemMatcher": [
+                {
+                    "pattern": [
+                        {
+                            "regexp": ".",
+                            "file": 1,
+                            "location": 2,
+                            "message": 3
+                        }
+                    ],
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": "^.*",
+                        "endsPattern": "^.*"
+                    }
+                }
+            ]
         },
         {
             "label": "Run compodoc",
             "type": "shell",
-            "command": "bash",
-            "args": ["-c", "npm run compodoc"],
+            "command": "npm",
+            "args": ["run", "compodoc"],
             "isBackground": true,
             "presentation": {
                 "reveal": "always",
-                "panel": "new",
-                "group": "develop"
-            }
+                "panel": "new"
+            },
+            "problemMatcher": [
+                {
+                    "pattern": [
+                        {
+                            "regexp": ".",
+                            "file": 1,
+                            "location": 2,
+                            "message": 3
+                        }
+                    ],
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": "^.*",
+                        "endsPattern": "^.*"
+                    }
+                }
+            ]
         },
         {
             "label": "Run Prisma Studio",
             "type": "shell",
-            "command": "bash",
-            "args": ["-c", "npx prisma studio"],
+            "command": "npx",
+            "args": ["prisma", "studio"],
             "isBackground": true,
             "presentation": {
                 "reveal": "always",
-                "panel": "new",
-                "group": "develop"
-            }
+                "panel": "new"
+            },
+            "problemMatcher": [
+                {
+                    "pattern": [
+                        {
+                            "regexp": ".",
+                            "file": 1,
+                            "location": 2,
+                            "message": 3
+                        }
+                    ],
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": "^.*",
+                        "endsPattern": "^.*"
+                    }
+                }
+            ]
         }
     ]
 }

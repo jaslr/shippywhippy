@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywippy"
 handle = "shippywippy"
-application_url = "https://walker-peers-skiing-tract.trycloudflare.com"
+application_url = "https://saturday-experienced-lee-sell.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_products,read_shipping,write_products"
 
 [auth]
 redirect_urls = [
-  "https://walker-peers-skiing-tract.trycloudflare.com/auth/callback",
-  "https://walker-peers-skiing-tract.trycloudflare.com/auth/shopify/callback",
-  "https://walker-peers-skiing-tract.trycloudflare.com/api/auth/callback"
+  "https://saturday-experienced-lee-sell.trycloudflare.com/auth/callback",
+  "https://saturday-experienced-lee-sell.trycloudflare.com/auth/shopify/callback",
+  "https://saturday-experienced-lee-sell.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
