@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywippy"
 handle = "shippywippy"
-application_url = "https://nec-joy-tries-delays.trycloudflare.com"
+application_url = "https://chair-cash-yea-spelling.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_products,read_shipping,write_products"
 
 [auth]
 redirect_urls = [
-  "https://nec-joy-tries-delays.trycloudflare.com/auth/callback",
-  "https://nec-joy-tries-delays.trycloudflare.com/auth/shopify/callback",
-  "https://nec-joy-tries-delays.trycloudflare.com/api/auth/callback"
+  "https://chair-cash-yea-spelling.trycloudflare.com/auth/callback",
+  "https://chair-cash-yea-spelling.trycloudflare.com/auth/shopify/callback",
+  "https://chair-cash-yea-spelling.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
