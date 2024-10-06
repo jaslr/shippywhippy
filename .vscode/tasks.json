@@ -17,6 +17,20 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "label": "📄 Generate Site Structure",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "${workspaceFolder}/tasks/generate_site_structure.sh"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "group": "none"
         }
     ]
 }
