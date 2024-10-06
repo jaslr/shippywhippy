@@ -33,9 +33,10 @@ model Session {
 }
 
 model User {
-  id         Int        @id @default(autoincrement())
-  username   String     @unique
+  id         Int      @id @default(autoincrement())
+  username   String   @unique
   shopifyName String
+  shopUrl    String?  // Add this line, make it optional with '?'
   carriers   Carrier[]  @relation("UserCarriers")
   sessions   Session[]
 }

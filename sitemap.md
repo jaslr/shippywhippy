@@ -44,6 +44,7 @@
     - route.tsx
     - styles.module.css
   - api.australia-post-lookup.ts
+  - api.shop-info.ts
   - app._index.tsx
   - app.additional.tsx
   - app.tsx
@@ -59,9 +60,11 @@
 
 ## prisma
 - dev.sqlite
+- dev.sqlite-journal
 - migrations/
-  - 20240530213853_create_session_table/
+  - 20241006195144_init/
     - migration.sql
+  - migration_lock.toml
 - schema.prisma
 
 ## public
