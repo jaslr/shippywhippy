@@ -38,6 +38,7 @@
       - carrier.ts
     - utils/
       - carrierHelpers.ts
+- prisma.ts
 - root.tsx
 - routes/
   - _index/
@@ -60,7 +61,6 @@
 
 ## prisma
 - dev.sqlite
-- dev.sqlite-journal
 - migrations/
   - 20241006195144_init/
     - migration.sql

@@ -13,12 +13,27 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 	if (!user) {
 		const shopData = await admin.rest.resources.Shop.all({ session });
-		const shopUrl = shopData.data[0]?.myshopify_domain || shop;
+		const shopInfo = shopData.data[0];
+		const shopUrl = shopInfo?.myshopify_domain || shop;
 
 		user = await prisma.user.create({
 			data: {
 				username: shop,
 				shopifyName: shopUrl,
+				// Remove shopUrl from here
+			},
+		});
+	} else {
+		// Update existing user with latest Shopify data
+		const shopData = await admin.rest.resources.Shop.all({ session });
+		const shopInfo = shopData.data[0];
+		const shopUrl = shopInfo?.myshopify_domain || shop;
+
+		user = await prisma.user.update({
+			where: { id: user.id },
+			data: {
+				shopifyName: shopUrl,
+				// Remove shopUrl from here
 			},
 		});
 	}

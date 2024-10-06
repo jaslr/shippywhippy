@@ -7,10 +7,10 @@
             "command": "bash",
             "args": [
                 "-c",
-                "pkill -f 'npm run dev' || true && echo 'Killed existing npm run dev process' && bash ./tasks/generate_site_structure.sh & echo 'Generating site structure' && npm run dev & echo 'Started npm run dev' & npm run compodoc & echo 'Started compodoc'"
+                "pkill -f 'npm run dev' || true && echo 'Killed existing npm run dev process' && bash ./tasks/generate_site_structure.sh & echo 'Generating site structure' && npm run dev & echo 'Started npm run dev' & npm run compodoc & echo 'Started compodoc' & npx prisma studio & echo 'Started Prisma Studio'"
             ],
             "problemMatcher": [],
-            "dependsOn": ["Generate Site Structure", "Run npm dev", "Run compodoc"],
+            "dependsOn": ["Generate Site Structure", "Run npm dev", "Run compodoc", "Run Prisma Studio"],
             "dependsOrder": "parallel",
             "presentation": {
                 "echo": true,
@@ -67,6 +67,18 @@
             "type": "shell",
             "command": "bash",
             "args": ["-c", "npm run compodoc"],
+            "isBackground": true,
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "group": "develop"
+            }
+        },
+        {
+            "label": "Run Prisma Studio",
+            "type": "shell",
+            "command": "bash",
+            "args": ["-c", "npx prisma studio"],
             "isBackground": true,
             "presentation": {
                 "reveal": "always",
