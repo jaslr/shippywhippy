@@ -30,11 +30,20 @@
 - db.server.ts
 - entry.server.tsx
 - globals.d.ts
+- libs/
+  - carriers/
+    - hooks/
+      - useCarrier.ts
+    - types/
+      - carrier.ts
+    - utils/
+      - carrierHelpers.ts
 - root.tsx
 - routes/
   - _index/
     - route.tsx
     - styles.module.css
+  - api.australia-post-lookup.ts
   - app._index.tsx
   - app.additional.tsx
   - app.tsx

@@ -1,41 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { Card, BlockStack, Text, TextField, RadioButton, FormLayout, Button, Banner } from '@shopify/polaris';
+import React, { useState } from 'react';
+import { Card, BlockStack, Text, TextField, RadioButton, FormLayout, Button, Banner, Link } from '@shopify/polaris';
 import { AUSTRALIA_POST_NAME, AUSTRALIA_POST_API_KEY } from './constants';
+import { useFetcher } from '@remix-run/react';
+
+type AustraliaPostLookupData = {
+  success: boolean;
+  error?: string;
+  data?: any;
+};
 
 const API_KEY = AUSTRALIA_POST_API_KEY;
 
 export function AustraliaPostCard() {
   const [isEnabled, setIsEnabled] = useState(false);
-  const [lookupResult, setLookupResult] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const fetcher = useFetcher<AustraliaPostLookupData>();
 
-  const performLookup = async () => {
-    setError(null);
-    setLookupResult(null);
-
-    const fromPostcode = '3000'; // Melbourne
-    const toPostcode = '2000'; // Sydney
-    const length = '10';
-    const width = '10';
-    const height = '10';
-    const weight = '1';
-
-    try {
-      const response = await fetch(`https://digitalapi.auspost.com.au/postage/parcel/domestic/calculate.json?from_postcode=${fromPostcode}&to_postcode=${toPostcode}&length=${length}&width=${width}&height=${height}&weight=${weight}`, {
-        headers: {
-          'AUTH-KEY': API_KEY
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch data from Australia Post API');
-      }
-
-      const data = await response.json();
-      setLookupResult(JSON.stringify(data, null, 2));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
-    }
+  const performLookup = () => {
+    fetcher.submit(
+      { apiKey: API_KEY },
+      { method: 'post', action: '/api/australia-post-lookup' }
+    );
   };
 
   return (
@@ -66,14 +50,20 @@ export function AustraliaPostCard() {
             onChange={(checked) => setIsEnabled(!checked)}
           />
           <Button onClick={performLookup}>Test API Connection</Button>
-          {error && (
+          <Text as="p" variant="bodyMd">
+            This test will attempt to calculate shipping for a standard parcel (10x10x10cm, 1kg) from Melbourne (3000) to Sydney (2000).
+          </Text>
+          {fetcher.data && 'success' in fetcher.data && !fetcher.data.success && (
             <Banner tone="critical">
-              {error}
+              <p>Error: {fetcher.data.error || 'An unknown error occurred'}</p>
+              <p>API Key used: {API_KEY}</p>
+              <p>Please check your API key and try again. If the problem persists, contact Australia Post support or refer to the <Link url="https://developers.auspost.com.au/apis/pac/reference" external>API documentation</Link>.</p>
             </Banner>
           )}
-          {lookupResult && (
+          {fetcher.data && 'success' in fetcher.data && fetcher.data.success && (
             <Banner tone="success" title="API Connection Successful">
-              <pre>{lookupResult}</pre>
+              <p>API Key used: {API_KEY}</p>
+              <pre>{JSON.stringify(fetcher.data.data, null, 2)}</pre>
             </Banner>
           )}
         </FormLayout>
