@@ -10,6 +10,15 @@ Visit the [`shopify.dev` documentation](https://shopify.dev/docs/api/shopify-app
 
 Shippy Wippy is a Shopify app designed to connect stores to Australia Post Carrier Calculated Shipping Rates. This integration allows merchants to provide accurate, real-time shipping rates from Australia Post to their customers during checkout.
 
+## Color Palette
+
+The following colors are used in the Shippy Wippy app, outside of the Polaris Design System:
+
+- `#FF4500` (Orange-Red)
+- `#8B008B` (Dark Magenta)
+- `#FF6347` (Tomato)
+- `#4B0082` (Indigo)
+
 ## Quick start
 
 ### Prerequisites
