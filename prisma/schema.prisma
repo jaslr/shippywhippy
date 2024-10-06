@@ -21,7 +21,8 @@ model Session {
   scope         String?
   expires       DateTime?
   accessToken   String
-  userId        BigInt?
+  userId        Int?      // Changed from BigInt to Int to match User model
+  user          User?     @relation(fields: [userId], references: [id])
   firstName     String?
   lastName      String?
   email         String?
@@ -29,4 +30,20 @@ model Session {
   locale        String?
   collaborator  Boolean?  @default(false)
   emailVerified Boolean?  @default(false)
+}
+
+model User {
+  id         Int        @id @default(autoincrement())
+  username   String     @unique
+  shopifyName String
+  carriers   Carrier[]  @relation("UserCarriers")
+  sessions   Session[]
+}
+
+model Carrier {
+  id        Int     @id @default(autoincrement())
+  name      String
+  apiKey    String
+  userId    Int
+  user      User    @relation("UserCarriers", fields: [userId], references: [id])
 }
