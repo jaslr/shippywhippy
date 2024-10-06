@@ -2,20 +2,20 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "type": "shell",
-            "label": "Create Sitemap",
-            "command": "bash",
-            "args": [
-                "-c",
-                "echo 'Starting sitemap creation...' && WORKSPACE='${workspaceFolder}' && echo \"Workspace root: $WORKSPACE\" && SITEMAP=\"$WORKSPACE/sitemap.md\" && echo '# Sitemap' > \"$SITEMAP\" && echo 'Created sitemap file.' && echo '## Root' >> \"$SITEMAP\" && if ls -1 \"$WORKSPACE\" | sed 's/^/- /' >> \"$SITEMAP\"; then echo 'Added root directory contents.' && echo '## /app' >> \"$SITEMAP\" && if ls -1 \"$WORKSPACE/app\" | sed 's/^/- /' >> \"$SITEMAP\"; then echo 'Added /app directory contents.' && echo \"Sitemap created successfully at $SITEMAP\" && cat \"$SITEMAP\"; else echo 'Error: Failed to add /app directory contents.'; fi; else echo 'Error: Failed to add root directory contents.'; fi"
+            "label": "🚀 Run npm dev",
+            "type": "npm",
+            "script": "dev",
+            "problemMatcher": [
+                "$tsc-watch"
             ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
+            "isBackground": true,
             "presentation": {
                 "reveal": "always",
                 "panel": "new"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
             }
         }
     ]
