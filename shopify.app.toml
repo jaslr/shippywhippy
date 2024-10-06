@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywippy"
 handle = "shippywippy"
-application_url = "https://revelation-navigator-companion-supplies.trycloudflare.com"
+application_url = "https://plenty-rugby-deaths-sim.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_products,read_shipping,write_products"
 
 [auth]
 redirect_urls = [
-  "https://revelation-navigator-companion-supplies.trycloudflare.com/auth/callback",
-  "https://revelation-navigator-companion-supplies.trycloudflare.com/auth/shopify/callback",
-  "https://revelation-navigator-companion-supplies.trycloudflare.com/api/auth/callback"
+  "https://plenty-rugby-deaths-sim.trycloudflare.com/auth/callback",
+  "https://plenty-rugby-deaths-sim.trycloudflare.com/auth/shopify/callback",
+  "https://plenty-rugby-deaths-sim.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

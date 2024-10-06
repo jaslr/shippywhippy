@@ -16,7 +16,8 @@
     "shopify": "shopify",
     "prisma": "prisma",
     "graphql-codegen": "graphql-codegen",
-    "vite": "vite"
+    "vite": "vite",
+    "compodoc": "npx compodoc -p tsconfig.json -s"
   },
   "type": "module",
   "engines": {
@@ -39,6 +40,7 @@
     "vite-tsconfig-paths": "^5.0.1"
   },
   "devDependencies": {
+    "@compodoc/compodoc": "^1.1.25",
     "@remix-run/eslint-config": "^2.7.1",
     "@shopify/api-codegen-preset": "^1.1.1",
     "@types/eslint": "^8.40.0",

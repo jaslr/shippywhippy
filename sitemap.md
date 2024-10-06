@@ -3,7 +3,6 @@
 ## Root
 - CHANGELOG.md
 - Dockerfile
-- PROJECT_STRUCTURE.md
 - README.md
 - env.d.ts
 - package-lock.json
@@ -15,6 +14,19 @@
 - vite.config.ts
 
 ## app
+- components/
+  - carriers/
+    - aramex/
+      - AramexCard.tsx
+      - constants.ts
+      - index.tsx
+    - australia-post/
+      - AustraliaPostCard.tsx
+      - constants.ts
+      - index.tsx
+    - shared/
+      - ApiKeyInput.tsx
+      - CarrierCard.tsx
 - db.server.ts
 - entry.server.tsx
 - globals.d.ts
