@@ -18,6 +18,8 @@ import {
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import { useLoaderData } from "@remix-run/react";
+import { AustraliaPost } from "../components/carriers/australia-post";
+import { Aramex } from "../components/carriers/aramex";
 
 const SHOP_QUERY = `#graphql
   query {
@@ -65,25 +67,6 @@ export default function Index() {
   const { isDevelopmentStore, hasCarrierCalculatedShipping } = useLoaderData<typeof loader>();
   const shopify = useAppBridge();
 
-  const [carriers, setCarriers] = useState([
-    { name: "Australia Post", apiKey: "", enabled: false },
-    { name: "Aramex (formerly Fastway)", apiKey: "", enabled: false },
-    { name: "Sendle", apiKey: "", enabled: false },
-    { name: "DHL", apiKey: "", enabled: false },
-  ]);
-
-  const handleApiKeyChange = (value: string, index: number) => {
-    const updatedCarriers = [...carriers];
-    updatedCarriers[index].apiKey = value;
-    setCarriers(updatedCarriers);
-  };
-
-  const handleRadioChange = (checked: boolean, index: number) => {
-    const updatedCarriers = [...carriers];
-    updatedCarriers[index].enabled = checked;
-    setCarriers(updatedCarriers);
-  };
-
   return (
     <Page>
       <BlockStack gap="800">
@@ -106,37 +89,8 @@ export default function Index() {
                   Carrier-Calculated Shipping Configuration
                 </Text>
                 <FormLayout>
-                  {carriers.map((carrier, index) => (
-                    <Card key={carrier.name}>
-                      <BlockStack gap="400">
-                        <Text as="h3" variant="headingMd">
-                          {carrier.name}
-                        </Text>
-                        <FormLayout>
-                          <TextField
-                            label="API Key"
-                            value={carrier.apiKey}
-                            onChange={(value) => handleApiKeyChange(value, index)}
-                            autoComplete="off"
-                          />
-                          <RadioButton
-                            label="Enable"
-                            checked={carrier.enabled}
-                            id={`${carrier.name}-enable`}
-                            name={`${carrier.name}-status`}
-                            onChange={(checked) => handleRadioChange(checked, index)}
-                          />
-                          <RadioButton
-                            label="Disable"
-                            checked={!carrier.enabled}
-                            id={`${carrier.name}-disable`}
-                            name={`${carrier.name}-status`}
-                            onChange={(checked) => handleRadioChange(!checked, index)}
-                          />
-                        </FormLayout>
-                      </BlockStack>
-                    </Card>
-                  ))}
+                  <AustraliaPost />
+                  <Aramex />
                 </FormLayout>
               </BlockStack>
             </Card>

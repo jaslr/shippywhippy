@@ -1,0 +1,1 @@
+export const AUSTRALIA_POST_NAME = "Australia Post";
