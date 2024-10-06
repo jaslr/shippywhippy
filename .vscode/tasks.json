@@ -34,8 +34,10 @@
             "command": "${workspaceFolder}/scripts/kill_processes.sh",
             "presentation": {
                 "reveal": "always",
-                "panel": "new"
-            }
+                "panel": "new",
+                "close": true
+            },
+            "problemMatcher": []
         },
         {
             "label": "Generate Site Structure",

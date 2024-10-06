@@ -38,6 +38,7 @@
       - carrier.ts
     - utils/
       - carrierHelpers.ts
+      - sessionToken.ts
 - prisma.ts
 - root.tsx
 - routes/

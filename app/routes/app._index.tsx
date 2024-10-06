@@ -20,6 +20,7 @@ import { authenticate } from "../shopify.server";
 import { useLoaderData } from "@remix-run/react";
 import { AustraliaPost } from "../components/carriers/australia-post";
 import { Aramex } from "../components/carriers/aramex";
+import { getSessionTokenFromApp } from "../libs/carriers/utils/sessionToken";
 
 const SHOP_QUERY = `#graphql
   query {
@@ -65,7 +66,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export default function Index() {
   const { isDevelopmentStore, hasCarrierCalculatedShipping } = useLoaderData<typeof loader>();
-  const shopify = useAppBridge();
+  const app = useAppBridge();
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSessionToken = async () => {
+      const token = await getSessionTokenFromApp(app);
+      setSessionToken(token);
+    };
+
+    fetchSessionToken();
+  }, [app]);
 
   return (
     <Page>
@@ -77,6 +88,9 @@ export default function Index() {
             </List.Item>
             <List.Item>
               Development Store: {isDevelopmentStore ? 'Yes' : 'No'}
+            </List.Item>
+            <List.Item>
+              Session Token: {sessionToken ? 'Retrieved' : 'Not available'}
             </List.Item>
           </List>
         </Banner>
