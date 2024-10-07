@@ -17,10 +17,12 @@ import {
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, useRouteError } from "@remix-run/react";
 import { AustraliaPost } from "../components/carriers/australia-post";
 import { Aramex } from "../components/carriers/aramex";
 import { getSessionToken } from "../libs/carriers/utils/sessionToken";
+import { boundary } from "@shopify/shopify-app-remix/server";
+import { HeadersFunction } from "@remix-run/node";
 
 const SHOP_QUERY = `#graphql
   query {
@@ -108,3 +110,12 @@ export default function Index() {
     </Page>
   );
 }
+
+// Add error boundary and headers
+export function ErrorBoundary() {
+  return boundary.error(useRouteError());
+}
+
+export const headers: HeadersFunction = (headersArgs) => {
+  return boundary.headers(headersArgs);
+};

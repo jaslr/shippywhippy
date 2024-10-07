@@ -1,3 +1,4 @@
+import { json, LoaderFunctionArgs } from "@remix-run/node";
 import {
   Links,
   Meta,
@@ -7,28 +8,16 @@ import {
   useLoaderData,
   useRouteError,
 } from "@remix-run/react";
-import { json, LoaderFunctionArgs, HeadersFunction } from "@remix-run/node";
-import { boundary } from "@shopify/shopify-app-remix/server";
 import { AppProvider } from "@shopify/shopify-app-remix/react";
-import shopify from "~/shopify.server";
+import { boundary } from "@shopify/shopify-app-remix/server";
+
+import shopify from "./shopify.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  console.log("Root loader: Authenticating admin request");
-  try {
-    await shopify.authenticate.admin(request);
-    console.log("Root loader: Authentication successful");
-  } catch (error) {
-    console.error("Root loader: Authentication error", error);
-    throw error;
-  }
-
-  const apiKey = process.env.SHOPIFY_API_KEY;
-  if (!apiKey) {
-    throw new Error("SHOPIFY_API_KEY is not set");
-  }
+  await shopify.authenticate.admin(request);
 
   return json({
-    apiKey,
+    apiKey: process.env.SHOPIFY_API_KEY || '',
   });
 };
 
@@ -40,16 +29,11 @@ export default function App() {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <link rel="preconnect" href="https://cdn.shopify.com/" />
-        <link
-          rel="stylesheet"
-          href="https://cdn.shopify.com/static/fonts/inter/v4/styles.css"
-        />
         <Meta />
         <Links />
       </head>
       <body>
-        <AppProvider apiKey={apiKey} isEmbeddedApp>
+        <AppProvider isEmbeddedApp apiKey={apiKey}>
           <Outlet />
         </AppProvider>
         <ScrollRestoration />
@@ -59,12 +43,11 @@ export default function App() {
   );
 }
 
+// Add error boundary and headers
 export function ErrorBoundary() {
-  const error = useRouteError();
-  console.error("Root error boundary:", error);
-  return boundary.error(error);
+  return boundary.error(useRouteError());
 }
 
-export const headers: HeadersFunction = (headersArgs) => {
+export const headers = (headersArgs: any) => {
   return boundary.headers(headersArgs);
 };

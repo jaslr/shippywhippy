@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { useLoaderData } from '@remix-run/react';
+import { useLoaderData, useRouteError } from '@remix-run/react';
 import { json, LoaderFunctionArgs } from '@remix-run/node';
 import shopify from '../shopify.server';
+import { boundary } from "@shopify/shopify-app-remix/server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await shopify.authenticate.admin(request);
@@ -35,3 +36,9 @@ export default function App() {
     </div>
   );
 }
+
+export function ErrorBoundary() {
+  return boundary.error(useRouteError());
+}
+
+export const headers = boundary.headers;
