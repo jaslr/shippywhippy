@@ -17,7 +17,7 @@ import {
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
-import { useLoaderData, useRouteError } from "@remix-run/react";
+import { useLoaderData, useRouteError, useOutletContext } from "@remix-run/react";
 import { AustraliaPost } from "../components/carriers/australia-post";
 import { Aramex } from "../components/carriers/aramex";
 import { getSessionToken } from "../libs/carriers/utils/sessionToken";
@@ -70,6 +70,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export default function Index() {
   const { isDevelopmentStore, hasCarrierCalculatedShipping, sessionToken } = useLoaderData<typeof loader>();
+  const { shop } = useOutletContext<{ shop: string }>();
 
   return (
     <Page>
@@ -84,6 +85,9 @@ export default function Index() {
             </List.Item>
             <List.Item>
               Session Token: {sessionToken ? 'Retrieved' : 'Not available'}
+            </List.Item>
+            <List.Item>
+              Shop: {shop}
             </List.Item>
           </List>
         </Banner>

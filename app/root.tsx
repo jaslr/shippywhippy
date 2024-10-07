@@ -10,6 +10,7 @@ import {
 } from "@remix-run/react";
 import { AppProvider } from "@shopify/shopify-app-remix/react";
 import { boundary } from "@shopify/shopify-app-remix/server";
+import "@shopify/polaris/build/esm/styles.css";
 
 import shopify from "./shopify.server";
 

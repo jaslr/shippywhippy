@@ -1,10 +1,7 @@
 import { PassThrough } from "stream";
 import { renderToPipeableStream } from "react-dom/server";
 import { RemixServer } from "@remix-run/react";
-import {
-  createReadableStreamFromReadable,
-  type EntryContext,
-} from "@remix-run/node";
+import { createReadableStreamFromReadable, type EntryContext } from "@remix-run/node";
 import { isbot } from "isbot";
 import shopify from "./shopify.server";
 
@@ -18,8 +15,7 @@ export default async function handleRequest(
 ) {
   shopify.addDocumentResponseHeaders(request, responseHeaders);
 
-  const userAgent = request.headers.get("user-agent");
-  const callbackName = isbot(userAgent ?? '')
+  const callbackName = isbot(request.headers.get("user-agent"))
     ? "onAllReady"
     : "onShellReady";
 
