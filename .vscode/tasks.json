@@ -2,13 +2,31 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "🚀 Full Development Setup",
+            "label": "Kill PostgreSQL",
             "type": "shell",
-            "command": "echo",
-            "args": ["Starting Full Development Setup"],
-            "problemMatcher": [],
+            "command": "sudo kill $(sudo lsof -t -i:5432) || true",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Start PostgreSQL",
+            "type": "shell",
+            "command": "sudo pg_ctlcluster 14 main start",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🚀 Full Development Setup",
             "dependsOn": [
                 "Kill existing processes",
+                "Kill PostgreSQL",
+                "Start PostgreSQL",
                 "Run Prisma Studio",
                 "Run compodoc",
                 "Generate Site Structure",
