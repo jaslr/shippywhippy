@@ -2,9 +2,9 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Kill PostgreSQL",
+            "label": "Kill PostgreSQL Ports",
             "type": "shell",
-            "command": "sudo kill $(sudo lsof -t -i:5432) || true",
+            "command": "npx kill-port 5432 5433",
             "presentation": {
                 "reveal": "always",
                 "panel": "new"
@@ -34,7 +34,7 @@
         {
             "label": "🚀 Full Development Setup",
             "dependsOn": [
-                "Stop PostgreSQL",
+                "Kill PostgreSQL Ports",
                 "Start PostgreSQL",
                 "Run Prisma Studio",
                 "Run compodoc",

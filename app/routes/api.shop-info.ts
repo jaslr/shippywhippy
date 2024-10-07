@@ -3,40 +3,42 @@ import shopify from '../shopify.server';
 import { prisma } from '../prisma';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-	const { admin, session } = await shopify.authenticate.admin(request);
+    const { admin, session } = await shopify.authenticate.admin(request);
 
-	const { shop } = session;
+    const { shop } = session;
 
-	let user = await prisma.user.findUnique({
-		where: { username: shop },
-	});
+    let shopData = await prisma.shop.findUnique({
+        where: { username: shop },
+    });
 
-	if (!user) {
-		const shopData = await admin.rest.resources.Shop.all({ session });
-		const shopInfo = shopData.data[0];
-		const shopUrl = shopInfo?.myshopify_domain || shop;
+    if (!shopData) {
+        const shopifyData = await admin.rest.resources.Shop.all({ session });
+        const shopInfo = shopifyData.data[0];
+        const shopUrl = shopInfo?.myshopify_domain || shop;
 
-		user = await prisma.user.create({
-			data: {
-				username: shop,
-				shopifyName: shopUrl,
-				// Remove shopUrl from here
-			},
-		});
-	} else {
-		// Update existing user with latest Shopify data
-		const shopData = await admin.rest.resources.Shop.all({ session });
-		const shopInfo = shopData.data[0];
-		const shopUrl = shopInfo?.myshopify_domain || shop;
+        shopData = await prisma.shop.create({
+            data: {
+                username: shop,
+                shopifyName: shopUrl,
+                shopifyUrl: shopUrl,
+                isActive: true,
+            },
+        });
+    } else {
+        // Update existing shop with latest Shopify data
+        const shopifyData = await admin.rest.resources.Shop.all({ session });
+        const shopInfo = shopifyData.data[0];
+        const shopUrl = shopInfo?.myshopify_domain || shop;
 
-		user = await prisma.user.update({
-			where: { id: user.id },
-			data: {
-				shopifyName: shopUrl,
-				// Remove shopUrl from here
-			},
-		});
-	}
+        shopData = await prisma.shop.update({
+            where: { id: shopData.id },
+            data: {
+                shopifyName: shopUrl,
+                shopifyUrl: shopUrl,
+                isActive: true,
+            },
+        });
+    }
 
-	return json({ shop, user });
+    return json({ shop, shopData });
 };

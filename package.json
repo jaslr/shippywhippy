@@ -20,7 +20,8 @@
     "compodoc": "npx compodoc -p tsconfig.json -s",
     "test-db": "node --loader ts-node/esm test_db_connection.ts",
     "pg:start": "sudo service postgresql start",
-    "pg:stop": "sudo service postgresql stop"
+    "pg:stop": "sudo service postgresql stop",
+    "kill-ports": "npx kill-port 5432 5433"
   },
   "type": "module",
   "engines": {
