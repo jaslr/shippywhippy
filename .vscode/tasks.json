@@ -14,7 +14,17 @@
         {
             "label": "Start PostgreSQL",
             "type": "shell",
-            "command": "sudo pg_ctlcluster 14 main start",
+            "command": "sudo service postgresql start",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Stop PostgreSQL",
+            "type": "shell",
+            "command": "sudo service postgresql stop",
             "presentation": {
                 "reveal": "always",
                 "panel": "new"
@@ -24,8 +34,7 @@
         {
             "label": "🚀 Full Development Setup",
             "dependsOn": [
-                "Kill existing processes",
-                "Kill PostgreSQL",
+                "Stop PostgreSQL",
                 "Start PostgreSQL",
                 "Run Prisma Studio",
                 "Run compodoc",

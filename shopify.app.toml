@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywippy"
 handle = "shippywippy"
-application_url = "https://periods-lauren-tubes-fit.trycloudflare.com"
+application_url = "https://reality-cleveland-par-historic.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_products,read_shipping,write_products"
 
 [auth]
 redirect_urls = [
-  "https://periods-lauren-tubes-fit.trycloudflare.com/auth/callback",
-  "https://periods-lauren-tubes-fit.trycloudflare.com/auth/shopify/callback",
-  "https://periods-lauren-tubes-fit.trycloudflare.com/api/auth/callback"
+  "https://reality-cleveland-par-historic.trycloudflare.com/auth/callback",
+  "https://reality-cleveland-par-historic.trycloudflare.com/auth/shopify/callback",
+  "https://reality-cleveland-par-historic.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

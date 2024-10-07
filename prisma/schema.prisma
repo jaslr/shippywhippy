@@ -21,8 +21,9 @@ model Session {
   scope          String
   expires        DateTime?
   accessToken    String
+  userId         String?  // Add this line back
+  shopId         Int?     
   user           Shop?    @relation(fields: [shopId], references: [id])
-  shopId         Int?     // Change this line  
   firstName      String?
   lastName       String?
   email          String?

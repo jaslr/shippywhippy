@@ -18,7 +18,9 @@
     "graphql-codegen": "graphql-codegen",
     "vite": "vite",
     "compodoc": "npx compodoc -p tsconfig.json -s",
-    "test-db": "node --loader ts-node/esm test_db_connection.ts"
+    "test-db": "node --loader ts-node/esm test_db_connection.ts",
+    "pg:start": "sudo service postgresql start",
+    "pg:stop": "sudo service postgresql stop"
   },
   "type": "module",
   "engines": {
@@ -62,7 +64,7 @@
     "extensions/*"
   ],
   "trustedDependencies": [
-    "@shopify/plugin-cloudflare"
+    "@shopify/plugin-cloudflare" 
   ],
   "resolutions": {},
   "overrides": {},

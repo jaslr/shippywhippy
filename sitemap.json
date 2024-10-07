@@ -132,6 +132,10 @@
   "migration.sql": null
 }
 ,
+  "20241007071405_add_userid_to_session": {
+  "migration.sql": null
+}
+,
   "migration_lock.toml": null
 }
 ,
