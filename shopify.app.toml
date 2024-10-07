@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywippy"
 handle = "shippywippy"
-application_url = "https://locations-sf-plenty-reservoir.trycloudflare.com"
+application_url = "https://valuable-interpreted-classics-professor.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_products,read_shipping,write_products"
 
 [auth]
 redirect_urls = [
-  "https://locations-sf-plenty-reservoir.trycloudflare.com/auth/callback",
-  "https://locations-sf-plenty-reservoir.trycloudflare.com/auth/shopify/callback",
-  "https://locations-sf-plenty-reservoir.trycloudflare.com/api/auth/callback"
+  "https://valuable-interpreted-classics-professor.trycloudflare.com/auth/callback",
+  "https://valuable-interpreted-classics-professor.trycloudflare.com/auth/shopify/callback",
+  "https://valuable-interpreted-classics-professor.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

@@ -3,7 +3,7 @@ const { Client } = pg;
 
 const client = new Client({
     host: 'localhost',
-    port: 5433,
+    port: 5432,
     database: 'shippywippy_db',
     user: 'chippy',
     password: 'new_secure_password'  // Use the new password you set

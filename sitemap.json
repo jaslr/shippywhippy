@@ -124,11 +124,7 @@
   "dev.sqlite": null
 ,
   "migrations": {
-  "20241006195144_init": {
-  "migration.sql": null
-}
-,
-  "20241007054823_add_carrier_and_shipping_config_models": {
+  "20241007070634_init": {
   "migration.sql": null
 }
 ,
