@@ -18,11 +18,18 @@ model Session {
   shop           String
   state          String
   isOnline       Boolean
-  scope          String   // Add this line
+  scope          String
   expires        DateTime?
   accessToken    String
-  userId         Int?     // Change to Int if Shop.id is Int
-  user      Shop?    @relation(fields: [userId], references: [id])
+  user           Shop?    @relation(fields: [shopId], references: [id])
+  shopId         Int?     // Change this line  
+  firstName      String?
+  lastName       String?
+  email          String?
+  accountOwner   Boolean  @default(false)
+  locale         String?
+  collaborator   Boolean  @default(false)
+  emailVerified  Boolean  @default(false)
 }
 
 model Shop {
@@ -37,16 +44,8 @@ model Shop {
   carriers       CarrierConfig[] @relation("ShopCarriers")
   sessions       Session[]
   locations      Location[] @relation("ShopLocations")
-  // Move these fields from Session to Shop
-  accessToken  String?
-  scope        String?
-  firstName    String?
-  lastName     String?
-  email        String?
-  accountOwner Boolean   @default(false)
-  locale       String?
-  collaborator Boolean?  @default(false)
-  emailVerified Boolean? @default(false)
+  // Remove these fields from Shop as they're now in Session
+  // accessToken, scope, firstName, lastName, email, accountOwner, locale, collaborator, emailVerified
 }
 
 model Carrier {
