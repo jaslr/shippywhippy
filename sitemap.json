@@ -104,6 +104,8 @@
   "route.tsx": null
 }
 ,
+  "auth.login.tsx": null
+,
   "webhooks.app.uninstalled.tsx": null
 ,
   "webhooks.customers.data_request.tsx": null
@@ -119,8 +121,14 @@
     "prisma": {
   "dev.sqlite": null
 ,
+  "dev.sqlite-journal": null
+,
   "migrations": {
   "20241006195144_init": {
+  "migration.sql": null
+}
+,
+  "20241007054823_add_carrier_and_shipping_config_models": {
   "migration.sql": null
 }
 ,

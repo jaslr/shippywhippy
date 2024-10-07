@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywippy"
 handle = "shippywippy"
-application_url = "https://javascript-patent-tall-recommends.trycloudflare.com"
+application_url = "https://participants-peer-hire-very.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_products,read_shipping,write_products"
 
 [auth]
 redirect_urls = [
-  "https://javascript-patent-tall-recommends.trycloudflare.com/auth/callback",
-  "https://javascript-patent-tall-recommends.trycloudflare.com/auth/shopify/callback",
-  "https://javascript-patent-tall-recommends.trycloudflare.com/api/auth/callback"
+  "https://participants-peer-hire-very.trycloudflare.com/auth/callback",
+  "https://participants-peer-hire-very.trycloudflare.com/auth/shopify/callback",
+  "https://participants-peer-hire-very.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

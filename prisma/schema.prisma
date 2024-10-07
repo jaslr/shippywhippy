@@ -14,37 +14,93 @@ datasource db {
 }
 
 model Session {
-  id            String    @id
-  shop          String
-  state         String
-  isOnline      Boolean   @default(false)
-  scope         String?
-  expires       DateTime?
-  accessToken   String
-  userId        Int?      // Changed from BigInt to Int to match Shop model
-  user          Shop?     @relation(fields: [userId], references: [id])
-  firstName     String?
-  lastName      String?
-  email         String?
-  accountOwner  Boolean   @default(false)
-  locale        String?
-  collaborator  Boolean?  @default(false)
-  emailVerified Boolean?  @default(false)
+  id        String   @id
+  shop      String
+  state     String
+  isOnline  Boolean  @default(false)
+  expires   DateTime?
+  userId    Int?
+  user      Shop?    @relation(fields: [userId], references: [id])
 }
 
 model Shop {
-  id          Int       @id @default(autoincrement())
-  username    String    @unique
-  shopifyName String
-  shopifyUrl  String    // Add this line
-  carriers    Carrier[] @relation("ShopCarriers")
-  sessions    Session[]
+  id             Int       @id @default(autoincrement())
+  username       String    @unique
+  shopifyName    String
+  shopifyUrl     String
+  isActive       Boolean   @default(false)
+  daysActive     Int       @default(0)
+  installedAt    DateTime  @default(now())
+  uninstalledAt  DateTime?
+  carriers       CarrierConfig[] @relation("ShopCarriers")
+  sessions       Session[]
+  locations      Location[] @relation("ShopLocations")
+  // Move these fields from Session to Shop
+  accessToken  String?
+  scope        String?
+  firstName    String?
+  lastName     String?
+  email        String?
+  accountOwner Boolean   @default(false)
+  locale       String?
+  collaborator Boolean?  @default(false)
+  emailVerified Boolean? @default(false)
 }
 
 model Carrier {
-  id     Int    @id @default(autoincrement())
-  name   String
-  apiKey String
-  shopId Int
-  shop   Shop   @relation("ShopCarriers", fields: [shopId], references: [id])
+  id             Int       @id @default(autoincrement())
+  name           String    @unique
+  shopConfigs    CarrierConfig[] @relation("CarrierConfigs")
+  shippingMethods ShippingMethod[] @relation("CarrierShippingMethods")
+}
+
+model CarrierConfig {
+  id             Int       @id @default(autoincrement())
+  shop           Shop      @relation("ShopCarriers", fields: [shopId], references: [id])
+  shopId         Int
+  carrier        Carrier   @relation("CarrierConfigs", fields: [carrierId], references: [id])
+  carrierId      Int
+  isActive       Boolean   @default(false)
+  apiKey         String?
+  memberNumber   String?
+  shippingMethodConfigs ShippingMethodConfig[] @relation("CarrierConfigShippingMethods")
+
+  @@unique([shopId, carrierId])
+}
+
+model ShippingMethod {
+  id             Int       @id @default(autoincrement())
+  carrier        Carrier   @relation("CarrierShippingMethods", fields: [carrierId], references: [id])
+  carrierId      Int
+  name           String
+  configs        ShippingMethodConfig[] @relation("ShippingMethodConfigs")
+}
+
+model ShippingMethodConfig {
+  id             Int       @id @default(autoincrement())
+  carrierConfig  CarrierConfig @relation("CarrierConfigShippingMethods", fields: [carrierConfigId], references: [id])
+  carrierConfigId Int
+  shippingMethod ShippingMethod @relation("ShippingMethodConfigs", fields: [shippingMethodId], references: [id])
+  shippingMethodId Int
+  isActive       Boolean   @default(true)
+  customName     String?
+  additionalFlatRate Decimal?
+  additionalPercentage Decimal?
+
+  @@unique([carrierConfigId, shippingMethodId])
+}
+
+model Location {
+  id             Int       @id @default(autoincrement())
+  shop           Shop      @relation("ShopLocations", fields: [shopId], references: [id])
+  shopId         Int
+  name           String
+  address1       String
+  address2       String?
+  city           String
+  province       String
+  country        String
+  zip            String
+  phone          String?
+  shopifyLocationId String @unique
 }
