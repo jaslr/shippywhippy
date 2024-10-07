@@ -7,17 +7,22 @@ import {
 import { PrismaSessionStorage } from '@shopify/shopify-app-session-storage-prisma';
 import { prisma } from './prisma';
 
+console.log('Initializing Shopify app with environment variables:');
+console.log('SHOPIFY_API_KEY:', process.env.SHOPIFY_API_KEY);
+console.log('SHOPIFY_API_SECRET:', process.env.SHOPIFY_API_SECRET ? '[REDACTED]' : 'Not set');
+console.log('SHOPIFY_APP_URL:', process.env.SHOPIFY_APP_URL);
+
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY!,
   apiSecretKey: process.env.SHOPIFY_API_SECRET!,
   appUrl: process.env.SHOPIFY_APP_URL!,
-  scopes: ['read_products', 'read_shop'],
+  scopes: process.env.SCOPES?.split(',') || ['read_products', 'write_products'],
   apiVersion: LATEST_API_VERSION,
   sessionStorage: new PrismaSessionStorage(prisma),
   isEmbeddedApp: true,
   auth: {
-    path: '/api/auth',
-    callbackPath: '/api/auth/callback',
+    path: '/auth',
+    callbackPath: '/auth/callback',
   },
   webhooks: {
     APP_UNINSTALLED: {
@@ -30,6 +35,8 @@ const shopify = shopifyApp({
     },
   },
 });
+
+console.log('Shopify app initialized successfully');
 
 export default shopify;
 export const authenticate = shopify.authenticate;
