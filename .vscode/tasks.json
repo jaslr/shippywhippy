@@ -29,6 +29,16 @@
             }
         },
         {
+            "label": "Generate Site Structure",
+            "type": "shell",
+            "command": "bash",
+            "args": ["./tasks/generate_site_structure.sh"],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
             "label": "Kill existing processes",
             "type": "shell",
             "command": "${workspaceFolder}/scripts/kill_processes.sh",
@@ -38,16 +48,6 @@
                 "close": true
             },
             "problemMatcher": []
-        },
-        {
-            "label": "Generate Site Structure",
-            "type": "shell",
-            "command": "bash",
-            "args": ["./tasks/generate_site_structure.sh"],
-            "presentation": {
-                "reveal": "always",
-                "panel": "new"
-            }
         },
         {
             "label": "Run npm dev",

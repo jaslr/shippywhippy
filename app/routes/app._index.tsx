@@ -15,12 +15,12 @@ import {
   RadioButton,
   FormLayout,
 } from "@shopify/polaris";
-import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
+import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import { useLoaderData } from "@remix-run/react";
 import { AustraliaPost } from "../components/carriers/australia-post";
 import { Aramex } from "../components/carriers/aramex";
-import { getSessionTokenFromApp } from "../libs/carriers/utils/sessionToken";
+import { getSessionToken } from "../libs/carriers/utils/sessionToken";
 
 const SHOP_QUERY = `#graphql
   query {
@@ -61,22 +61,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const isDevelopmentStore = shop.plan.partnerDevelopment || shop.plan.displayName === 'developer preview';
   const hasCarrierCalculatedShipping = carrierServices.edges.length > 0;
 
-  return json({ isDevelopmentStore, hasCarrierCalculatedShipping });
+  const sessionToken = await getSessionToken(request);
+
+  return json({ isDevelopmentStore, hasCarrierCalculatedShipping, sessionToken });
 };
 
 export default function Index() {
-  const { isDevelopmentStore, hasCarrierCalculatedShipping } = useLoaderData<typeof loader>();
-  const app = useAppBridge();
-  const [sessionToken, setSessionToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchSessionToken = async () => {
-      const token = await getSessionTokenFromApp(app);
-      setSessionToken(token);
-    };
-
-    fetchSessionToken();
-  }, [app]);
+  const { isDevelopmentStore, hasCarrierCalculatedShipping, sessionToken } = useLoaderData<typeof loader>();
 
   return (
     <Page>

@@ -1,0 +1,135 @@
+{
+  "root": {
+    "CHANGELOG.md": null
+,
+    "Dockerfile": null
+,
+    "README.md": null
+,
+    "env.d.ts": null
+,
+    "package-lock.json": null
+,
+    "package.json": null
+,
+    "shopify.app.toml": null
+,
+    "shopify.web.toml": null
+,
+    "sitemap.json": null
+,
+    "tsconfig.json": null
+,
+    "vite.config.ts": null
+,
+    "app": {
+  "components": {
+  "carriers": {
+  "aramex": {
+  "AramexCard.tsx": null
+,
+  "constants.ts": null
+,
+  "index.tsx": null
+}
+,
+  "australia-post": {
+  "AustraliaPostCard.tsx": null
+,
+  "constants.ts": null
+,
+  "index.tsx": null
+}
+,
+  "shared": {
+  "ApiKeyInput.tsx": null
+,
+  "CarrierCard.tsx": null
+}
+}
+}
+,
+  "db.server.ts": null
+,
+  "entry.server.tsx": null
+,
+  "globals.d.ts": null
+,
+  "libs": {
+  "carriers": {
+  "hooks": {
+  "useCarrier.ts": null
+}
+,
+  "types": {
+  "carrier.ts": null
+}
+,
+  "utils": {
+  "carrierHelpers.ts": null
+,
+  "sessionToken.ts": null
+}
+}
+}
+,
+  "prisma.ts": null
+,
+  "root.tsx": null
+,
+  "routes": {
+  "_index": {
+  "route.tsx": null
+,
+  "styles.module.css": null
+}
+,
+  "api.australia-post-lookup.ts": null
+,
+  "api.shop-info.ts": null
+,
+  "app._index.tsx": null
+,
+  "app.additional.tsx": null
+,
+  "app.tsx": null
+,
+  "auth.$.tsx": null
+,
+  "auth.login": {
+  "error.server.tsx": null
+,
+  "route.tsx": null
+}
+,
+  "webhooks.app.uninstalled.tsx": null
+,
+  "webhooks.customers.data_request.tsx": null
+,
+  "webhooks.customers.redact.tsx": null
+,
+  "webhooks.shop.redact.tsx": null
+}
+,
+  "shopify.server.ts": null
+}
+,
+    "prisma": {
+  "dev.sqlite": null
+,
+  "migrations": {
+  "20241006195144_init": {
+  "migration.sql": null
+}
+,
+  "migration_lock.toml": null
+}
+,
+  "schema.prisma": null
+}
+,
+    "public": {
+  "favicon.ico": null
+}
+  }
+}

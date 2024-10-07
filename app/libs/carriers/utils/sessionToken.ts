@@ -1,11 +1,13 @@
-import { getSessionToken } from "@shopify/app-bridge-utils";
-import { useAppBridge } from "@shopify/app-bridge-react";
+import shopify from '../../../shopify.server';
+import { Session } from '@shopify/shopify-api';
 
-export async function getSessionTokenFromApp(app: ReturnType<typeof useAppBridge>) {
+export async function getSessionToken(request: Request): Promise<string | null> {
     try {
-        // Cast the app to any to bypass the type check
-        const sessionToken = await getSessionToken(app as any);
-        return sessionToken;
+        const { session } = await shopify.authenticate.admin(request);
+        if (session && session.accessToken) {
+            return session.accessToken;
+        }
+        return null;
     } catch (error) {
         console.error('Error getting session token:', error);
         return null;

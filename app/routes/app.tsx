@@ -1,42 +1,37 @@
-import type { HeadersFunction, LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
-import { Link, Outlet, useLoaderData, useRouteError } from "@remix-run/react";
-import { boundary } from "@shopify/shopify-app-remix/server";
-import { AppProvider } from "@shopify/shopify-app-remix/react";
-import { NavMenu } from "@shopify/app-bridge-react";
-import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
-
-import { authenticate } from "../shopify.server";
-
-export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
+import { useEffect } from 'react';
+import { useLoaderData } from '@remix-run/react';
+import { json, LoaderFunctionArgs } from '@remix-run/node';
+import shopify from '../shopify.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticate.admin(request);
+  const { session } = await shopify.authenticate.admin(request);
 
-  return json({ apiKey: process.env.SHOPIFY_API_KEY || "" });
+  return json({
+    shop: session.shop,
+  });
 };
 
 export default function App() {
-  const { apiKey } = useLoaderData<typeof loader>();
+  const { shop } = useLoaderData<typeof loader>();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/api/products');
+        const data = await response.json();
+        console.log('Products:', data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
-    <AppProvider isEmbeddedApp apiKey={apiKey}>
-      <NavMenu>
-        <Link to="/app" rel="home">
-          Home
-        </Link>
-        <Link to="/app/additional">Additional page</Link>
-      </NavMenu>
-      <Outlet />
-    </AppProvider>
+    <div>
+      <h1>Welcome to your Shopify app, {shop}!</h1>
+      {/* Rest of your component */}
+    </div>
   );
 }
-
-// Shopify needs Remix to catch some thrown responses, so that their headers are included in the response.
-export function ErrorBoundary() {
-  return boundary.error(useRouteError());
-}
-
-export const headers: HeadersFunction = (headersArgs) => {
-  return boundary.headers(headersArgs);
-};
