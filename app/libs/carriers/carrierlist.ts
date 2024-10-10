@@ -7,21 +7,22 @@ export type CarrierStatus = {
     statusURL?: string;
 };
 
-async function checkCarrierStatus(url: string): Promise<boolean> {
+async function checkAustraliaPostStatus(): Promise<boolean> {
     try {
-        const response = await axios.get(url);
-        return response.status >= 200 && response.status < 300;
+        const formData = new FormData();
+        formData.append('apiKey', 'YOUR_API_KEY_HERE');
+        formData.append('checkType', 'uptime');
+
+        const response = await axios.post('/api/australia-post-lookup', formData);
+        return response.data.success;
     } catch (error) {
         return false;
     }
 }
 
-async function checkAustraliaPostStatus(): Promise<boolean> {
-    return await checkCarrierStatus('https://auspost.com.au/api/health-check');
-}
-
 async function checkAramexStatus(): Promise<boolean> {
-    return await checkCarrierStatus('https://www.aramex.com/api/health');
+    // Stub response: always return false (down) for now
+    return false;
 }
 
 export const carrierList: CarrierStatus[] = [

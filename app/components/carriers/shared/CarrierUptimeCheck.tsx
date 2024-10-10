@@ -51,7 +51,7 @@ export function CarrierUptimeCheck() {
         <IndexTable.Cell>
           {statusURL && (
             <Button variant="plain" url={statusURL} external>
-              View Status
+              View Carrier Uptime
             </Button>
           )}
         </IndexTable.Cell>
