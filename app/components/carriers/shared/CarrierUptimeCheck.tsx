@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Banner, IndexTable, useIndexResourceState, Spinner, Icon, Tooltip } from '@shopify/polaris';
+import { Banner, IndexTable, useIndexResourceState, Spinner, Icon, Tooltip, Button } from '@shopify/polaris';
 import { CheckCircleIcon, XCircleIcon } from '@shopify/polaris-icons';
+import { CarrierStatus, carrierList, updateCarrierStatuses } from '../../../libs/carriers/carrierlist';
 import './CarrierUptimeCheck.css'; // Make sure to create this CSS file
-
-type CarrierStatus = {
-  id: string;
-  name: string;
-  isUp: boolean;
-};
 
 export function CarrierUptimeCheck() {
   const [carrierStatuses, setCarrierStatuses] = useState<CarrierStatus[]>([]);
@@ -15,12 +10,9 @@ export function CarrierUptimeCheck() {
 
   useEffect(() => {
     const checkCarrierStatus = async () => {
-      // Simulate API calls to check carrier status
-      const statuses = [
-        { id: '1', name: 'Australia Post', isUp: Math.random() > 0.5 },
-        { id: '2', name: 'Aramex', isUp: Math.random() > 0.5 },
-      ];
-      setCarrierStatuses(statuses);
+      setIsLoading(true);
+      const updatedStatuses = await updateCarrierStatuses();
+      setCarrierStatuses(updatedStatuses);
       setIsLoading(false);
     };
 
@@ -40,7 +32,7 @@ export function CarrierUptimeCheck() {
   }
 
   const rowMarkup = carrierStatuses.map(
-    ({ id, name, isUp }, index) => (
+    ({ id, name, isUp, statusURL }, index) => (
       <IndexTable.Row
         id={id}
         key={id}
@@ -56,6 +48,13 @@ export function CarrierUptimeCheck() {
           </Tooltip>
         </IndexTable.Cell>
         <IndexTable.Cell>{name}</IndexTable.Cell>
+        <IndexTable.Cell>
+          {statusURL && (
+            <Button variant="plain" url={statusURL} external>
+              View Status
+            </Button>
+          )}
+        </IndexTable.Cell>
       </IndexTable.Row>
     ),
   );
@@ -72,6 +71,7 @@ export function CarrierUptimeCheck() {
         headings={[
           { title: 'Status', hidden: true },
           { title: 'Carrier' },
+          { title: '', hidden: true },
         ]}
         selectable={false}
       >
