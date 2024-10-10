@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywippy"
 handle = "shippywippy"
-application_url = "https://markers-alone-reject-nam.trycloudflare.com"
+application_url = "https://ranger-charleston-quarters-convicted.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_products,read_shipping,write_products"
 
 [auth]
 redirect_urls = [
-  "https://markers-alone-reject-nam.trycloudflare.com/auth/callback",
-  "https://markers-alone-reject-nam.trycloudflare.com/auth/shopify/callback",
-  "https://markers-alone-reject-nam.trycloudflare.com/api/auth/callback"
+  "https://ranger-charleston-quarters-convicted.trycloudflare.com/auth/callback",
+  "https://ranger-charleston-quarters-convicted.trycloudflare.com/auth/shopify/callback",
+  "https://ranger-charleston-quarters-convicted.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

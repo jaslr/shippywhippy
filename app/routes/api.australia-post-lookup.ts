@@ -35,6 +35,23 @@ async function performUptimeCheck(API_KEY: string) {
 }
 
 async function performShippingCalculation(API_KEY: string) {
-    // Existing shipping calculation logic
-    // ... (keep the existing code here)
+    try {
+        const response = await fetch(
+            'https://digitalapi.auspost.com.au/postage/parcel/domestic/calculate.json?from_postcode=3000&to_postcode=2000&length=10&width=10&height=10&weight=1',
+            {
+                headers: {
+                    'AUTH-KEY': API_KEY
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error('API request failed');
+        }
+
+        const data = await response.json();
+        return json({ success: true, data });
+    } catch (error) {
+        return json({ success: false, error: 'Failed to calculate shipping' }, { status: 500 });
+    }
 }

@@ -47,6 +47,10 @@
   "ApiKeyInput.tsx": null
 ,
   "CarrierCard.tsx": null
+,
+  "CarrierUptimeCheck.css": null
+,
+  "CarrierUptimeCheck.tsx": null
 }
 }
 }
@@ -59,6 +63,8 @@
 ,
   "libs": {
   "carriers": {
+  "carrierlist.ts": null
+,
   "hooks": {
   "useCarrier.ts": null
 }
