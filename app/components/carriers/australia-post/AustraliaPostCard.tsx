@@ -19,7 +19,7 @@ export function AustraliaPostCard() {
 
   const performLookup = () => {
     fetcher.submit(
-      { apiKey: API_KEY },
+      { apiKey: API_KEY, checkType: 'uptime' },
       { method: 'post', action: testUrl }
     );
   };
