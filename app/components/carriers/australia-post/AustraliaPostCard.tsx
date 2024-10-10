@@ -15,10 +15,12 @@ export function AustraliaPostCard() {
   const [isEnabled, setIsEnabled] = useState(false);
   const fetcher = useFetcher<AustraliaPostLookupData>();
 
+  const testUrl = '/api/australia-post-lookup';
+
   const performLookup = () => {
     fetcher.submit(
       { apiKey: API_KEY },
-      { method: 'post', action: '/api/australia-post-lookup' }
+      { method: 'post', action: testUrl }
     );
   };
 
@@ -63,6 +65,7 @@ export function AustraliaPostCard() {
           {fetcher.data && 'success' in fetcher.data && fetcher.data.success && (
             <Banner tone="success" title="API Connection Successful">
               <p>API Key used: {API_KEY}</p>
+              <p>API URL: {testUrl}</p>
               <pre>{JSON.stringify(fetcher.data.data, null, 2)}</pre>
             </Banner>
           )}

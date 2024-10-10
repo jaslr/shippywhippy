@@ -23,6 +23,7 @@ import { Aramex } from "../components/carriers/aramex";
 import { getSessionToken } from "../libs/carriers/utils/sessionToken";
 import { boundary } from "@shopify/shopify-app-remix/server";
 import { HeadersFunction } from "@remix-run/node";
+import { CarrierUptimeCheck } from "../components/carriers/shared/CarrierUptimeCheck";
 
 const SHOP_QUERY = `#graphql
   query {
@@ -91,6 +92,7 @@ export default function Index() {
             </List.Item>
           </List>
         </Banner>
+        <CarrierUptimeCheck />
         <TitleBar title="Shippy Wippy" />
         <Layout>
           <Layout.Section>
