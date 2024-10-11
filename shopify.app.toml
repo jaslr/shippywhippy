@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywippy"
 handle = "shippywippy"
-application_url = "https://rope-deaf-mega-redeem.trycloudflare.com"
+application_url = "https://indian-invitations-stations-brakes.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_products,read_shipping,write_products,write_shipping"
 
 [auth]
 redirect_urls = [
-  "https://rope-deaf-mega-redeem.trycloudflare.com/auth/callback",
-  "https://rope-deaf-mega-redeem.trycloudflare.com/auth/shopify/callback",
-  "https://rope-deaf-mega-redeem.trycloudflare.com/api/auth/callback"
+  "https://indian-invitations-stations-brakes.trycloudflare.com/auth/callback",
+  "https://indian-invitations-stations-brakes.trycloudflare.com/auth/shopify/callback",
+  "https://indian-invitations-stations-brakes.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
