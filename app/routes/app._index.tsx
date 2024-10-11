@@ -26,6 +26,7 @@ import { HeadersFunction } from "@remix-run/node";
 import { CarrierUptimeCheck } from "../components/carriers/shared/CarrierUptimeCheck";
 import { ShopifyRestResources } from "@shopify/shopify-api";
 import { AdminApiContext } from "node_modules/@shopify/shopify-app-remix/dist/ts/server/clients";
+import { GraphQLClient } from '@shopify/graphql-client';
 
 const SHOP_QUERY = `#graphql
   query {
