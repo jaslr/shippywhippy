@@ -59,6 +59,14 @@
 ,
   "entry.server.tsx": null
 ,
+  "extensions": {
+  "checkout-ui": {
+  "src": {
+  "index.js": null
+}
+}
+}
+,
   "globals.d.ts": null
 ,
   "libs": {
@@ -95,6 +103,8 @@
 }
 ,
   "api.australia-post-lookup.ts": null
+,
+  "api.carrier-service.ts": null
 ,
   "api.shop-info.ts": null
 ,

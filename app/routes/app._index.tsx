@@ -24,6 +24,8 @@ import { getSessionToken } from "../libs/carriers/utils/sessionToken";
 import { boundary } from "@shopify/shopify-app-remix/server";
 import { HeadersFunction } from "@remix-run/node";
 import { CarrierUptimeCheck } from "../components/carriers/shared/CarrierUptimeCheck";
+import { ShopifyRestResources } from "@shopify/shopify-api";
+import { AdminApiContext } from "node_modules/@shopify/shopify-app-remix/dist/ts/server/clients";
 
 const SHOP_QUERY = `#graphql
   query {
@@ -48,8 +50,24 @@ const CARRIER_SERVICES_QUERY = `#graphql
   }
 `;
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { admin } = await authenticate.admin(request);
+async function registerCarrierService(admin: AdminApiContext) {
+  try {
+    const response = await admin.rest.resources.CarrierService.create({
+      carrier_service: {
+        name: "Shippy Wippy",
+        callback_url: `${process.env.SHOPIFY_APP_URL}/api/carrier-service`,
+        service_discovery: true,
+      },
+    });
+    console.log("Carrier service registered:", response);
+  } catch (error) {
+    console.error("Error registering carrier service:", error);
+  }
+}
+
+export const loader = async ({ request }: { request: Request }) => {
+  const { admin, session } = await authenticate.admin(request);
+  await registerCarrierService(admin);
 
   const shopResponse = await admin.graphql(SHOP_QUERY);
   const {
