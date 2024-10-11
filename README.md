@@ -365,6 +365,14 @@ The app is built using the following technologies:
 | UI Library | [Polaris](https://polaris.shopify.com) |
 | API | [GraphQL API](https://shopify.dev/docs/api/admin-graphql) |
 | Authentication | [App Bridge](https://shopify.dev/docs/apps/tools/app-bridge) |
+| Session Management | [Shopify App Remix](https://shopify.dev/docs/api/shopify-app-remix) |
+
+The `shopify.server.ts` file is a crucial component of the app, responsible for:
+- Session management
+- App installation and authentication
+- Handling API calls to Shopify
+
+This file utilizes the `@shopify/shopify-app-remix` package to manage these core functionalities, ensuring secure and efficient communication between your app and Shopify.
 
 This tech stack provides a robust foundation for building a performant and scalable Shopify app, with Remix offering server-side rendering capabilities, Prisma handling database operations, Polaris ensuring a consistent Shopify-like UI, and GraphQL enabling efficient data fetching from the Shopify Admin API.
 
