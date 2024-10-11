@@ -43,3 +43,8 @@ api_version = "2024-10"
 
 [pos]
 embedded = false
+
+[extensions.checkout_ui_extension]
+name = "Shippy Wippy Delivery"
+type = "checkout_ui_extension"
+handle = "shippy-wippy-delivery"
