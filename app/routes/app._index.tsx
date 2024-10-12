@@ -58,15 +58,13 @@ async function registerCarrierService(admin: AdminApiContext) {
         carrierServiceCreate(input: {
           active: true,
           callbackUrl: "${process.env.SHOPIFY_APP_URL}/api/carrier-service",
-          name: "Shippy Wippy",
-          supportsServiceDiscovery: true
+          name: "Shippy Wippy"
         }) {
           carrierService {
             id
             name
             active
             callbackUrl
-            supportsServiceDiscovery
           }
           userErrors {
             field
@@ -77,14 +75,72 @@ async function registerCarrierService(admin: AdminApiContext) {
     );
     const result = await response.json();
     console.log("Carrier service registered:", result);
+    return result.data.carrierServiceCreate.carrierService;
   } catch (error) {
     console.error("Error registering carrier service:", error);
+    return null;
+  }
+}
+
+async function createDeliveryProfile(admin: AdminApiContext, carrierServiceId: string) {
+  try {
+    const response = await admin.graphql(
+      `mutation CreateDeliveryProfile {
+        deliveryProfileCreate(
+          profile: {
+            name: "Shippy Wippy Profile"
+            profileType: MERCHANT
+            merchantSettings: {
+              shippingMethods: [
+                {
+                  name: "Standard Shipping"
+                  active: true
+                  rateProvider: {
+                    carrierService: {
+                      id: "${carrierServiceId}"
+                    }
+                  }
+                },
+                {
+                  name: "Express Shipping"
+                  active: true
+                  rateProvider: {
+                    carrierService: {
+                      id: "${carrierServiceId}"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ) {
+          profile {
+            id
+            name
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }`
+    );
+    const result = await response.json();
+    console.log("Delivery profile created:", result);
+    return result.data.deliveryProfileCreate.profile;
+  } catch (error) {
+    console.error("Error creating delivery profile:", error);
+    return null;
   }
 }
 
 export const loader = async ({ request }: { request: Request }) => {
   const { admin, session } = await authenticate.admin(request);
-  await registerCarrierService(admin);
+  const carrierService = await registerCarrierService(admin);
+  
+  if (carrierService) {
+    await createDeliveryProfile(admin, carrierService.id);
+  }
 
   const shopResponse = await admin.graphql(SHOP_QUERY);
   const {
@@ -116,9 +172,17 @@ export const loader = async ({ request }: { request: Request }) => {
     }
   `);
   const carrierServiceData = await carrierServiceResponse.json();
-  const carrierService = carrierServiceData.data.carrierServices.edges[0]?.node;
+  let existingCarrierService = carrierServiceData.data.carrierServices.edges[0]?.node;
 
-  return json({ isDevelopmentStore, hasCarrierCalculatedShipping, sessionToken, carrierService });
+  if (!existingCarrierService) {
+    existingCarrierService = await registerCarrierService(admin);
+    
+    if (existingCarrierService) {
+      await createDeliveryProfile(admin, existingCarrierService.id);
+    }
+  }
+
+  return json({ isDevelopmentStore, hasCarrierCalculatedShipping, sessionToken, carrierService: existingCarrierService });
 };
 
 export default function Index() {
