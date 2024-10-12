@@ -21,7 +21,8 @@
     "test-db": "node --loader ts-node/esm test_db_connection.ts",
     "pg:start": "sudo service postgresql start",
     "pg:stop": "sudo service postgresql stop",
-    "kill-ports": "npx kill-port 5432 5433"
+    "kill-ports": "npx kill-port 5432 5433",
+    "test": "jest"
   },
   "type": "module",
   "engines": {
@@ -51,13 +52,16 @@
     "@remix-run/eslint-config": "^2.7.1",
     "@shopify/api-codegen-preset": "^1.1.1",
     "@types/eslint": "^8.40.0",
+    "@types/jest": "^29.5.13",
     "@types/node": "^22.2.0",
     "@types/pg": "^8.11.10",
     "@types/react": "^18.2.31",
     "@types/react-dom": "^18.2.14",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.1.0",
+    "jest": "^29.7.0",
     "prettier": "^3.2.4",
+    "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.2",
     "vite": "^5.1.3"

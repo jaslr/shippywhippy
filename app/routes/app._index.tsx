@@ -54,12 +54,13 @@ const CARRIER_SERVICES_QUERY = `#graphql
 
 async function registerCarrierService(admin: AdminApiContext) {
   try {
+    const appUrl = process.env.SHOPIFY_APP_URL;
     const mutation = `
       mutation RegisterCarrierService {
         carrierServiceCreate(input: {
           name: "Shippy Wippy",
           active: true,
-          callbackUrl: "${process.env.SHOPIFY_APP_URL}/api/carrier-service",
+          callbackUrl: "${appUrl}/api/carrier-service",
           supportsServiceDiscovery: true
         }) {
           carrierService {

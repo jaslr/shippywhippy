@@ -106,3 +106,14 @@ model Location {
   phone          String?
   shopifyLocationId String @unique
 }
+
+model CarrierService {
+  id             String   @id @default(cuid())
+  shopifyId      String   @unique
+  name           String
+  callbackUrl    String
+  serviceDiscovery Boolean
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}

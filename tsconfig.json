@@ -16,7 +16,7 @@
     "moduleResolution": "Bundler",
     "target": "ES2022",
     "baseUrl": ".",
-    "types": ["node"],
+    "types": ["jest", "node"],
     "paths": {
       "~/*": ["app/*"]
     }

@@ -1,100 +1,99 @@
 import shopify from '~/shopify.server';
-import { json, type LoaderFunction, type ActionFunction } from '@remix-run/node';
+import { json, type ActionFunction, type LoaderFunction } from '@remix-run/node';
 import { updateCarrierStatuses, carrierList } from '~/libs/carriers/carrierlist';
 import { CarrierStatus } from '~/libs/carriers/carrierlist';
 
 // Define the expected structure of Shopify's CarrierService request
 interface CarrierServiceRequest {
-    carrierService: {
-        id: number;
-        name: string;
-        callback_url: string;
-        service_discovery: boolean;
-    };
     rate: {
-        name: string;
-        price: string;
+        origin: {
+            country: string;
+            postal_code: string;
+            province: string;
+            city: string;
+            name: string;
+            address1: string;
+            address2: string;
+            address3: string;
+            phone: string;
+            fax: string;
+            email: string;
+            address_type: string;
+            company_name: string;
+        };
+        destination: {
+            country: string;
+            postal_code: string;
+            province: string;
+            city: string;
+            name: string;
+            address1: string;
+            address2: string;
+            address3: string;
+            phone: string;
+            fax: string;
+            email: string;
+            address_type: string;
+            company_name: string;
+        };
+        items: Array<{
+            name: string;
+            sku: string;
+            quantity: number;
+            grams: number;
+            price: number;
+            vendor: string;
+            requires_shipping: boolean;
+            taxable: boolean;
+            fulfillment_service: string;
+            properties: null;
+            product_id: number;
+            variant_id: number;
+        }>;
         currency: string;
-        min_delivery_date: string;
-        max_delivery_date: string;
-    };
-    shippingAddress: {
-        country: string;
-        province: string;
-        city: string;
-        zip: string;
-        address1: string;
-        address2: string;
+        locale: string;
     };
 }
 
-// Define the structure for shipping rates
-interface ShippingRate {
-    name: string;
-    price: string;
-    service_code?: string;
-    carrier_identifier?: string;
-    currency: string;
-}
-
-// Action function to handle Carrier Service requests
 export const action: ActionFunction = async ({ request }) => {
+    if (request.method !== "POST") {
+        return json({ error: "Method not allowed" }, { status: 405 });
+    }
+
     try {
-        const payload: CarrierServiceRequest = await request.json();
+        const body = await request.json();
+        console.log("Received rate request:", body);
+        // Simple rate calculation based on the number of items
+        const itemCount = body.rate.items.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0);
+        const baseRate = 10; // Base rate in dollars
+        const ratePerItem = 2; // Additional rate per item in dollars
 
-        // Log incoming request for debugging
-        console.log('Received Carrier Service request:', payload);
+        const totalRate = baseRate + (itemCount * ratePerItem);
 
-        // Update carrier statuses if necessary
-        const updatedCarriers: CarrierStatus[] = await updateCarrierStatuses();
-
-        // Find the carrier based on the CarrierService ID or name
-        const carrier = updatedCarriers.find(
-            (c) => c.name === payload.carrierService.name
-        );
-
-        if (!carrier || !carrier.isUp) {
-            return json(
+        const response = {
+            rates: [
                 {
-                    rates: [],
+                    service_name: "Whippy Standard Shipping",
+                    service_code: "ST",
+                    total_price: (totalRate * 100).toString(), // Convert to cents
+                    description: "Estimated 3-7 business days",
+                    currency: "USD",
                 },
-                { status: 200 }
-            );
-        }
+                {
+                    service_name: "Express Shipping",
+                    service_code: "EX",
+                    total_price: ((totalRate * 1.5) * 100).toString(), // 50% more than standard, convert to cents
+                    description: "Estimated 1-3 business days",
+                    currency: "USD",
+                }
+            ]
+        };
 
-        // Log additional information for debugging
-        console.log('Processing Carrier Service request for shop:', payload.carrierService.name);
-        console.log('Shipping Address:', payload.shippingAddress);
-
-        // Define your shipping rates here
-        const rates: ShippingRate[] = [
-            {
-                name: 'Shippy Wippy Standard Shipping',
-                price: '10.00',
-                currency: payload.rate.currency,
-            },
-            {
-                name: 'Shippy Wippy Express Shipping',
-                price: '20.00',
-                currency: payload.rate.currency,
-            },
-        ];
-
-        // Respond with the available shipping rates
-        return json(
-            {
-                rates,
-            },
-            { status: 200 }
-        );
+        console.log("Sending rate response:", response);
+        return json(response);
     } catch (error) {
-        console.error('Error processing Carrier Service request:', error);
-        return json(
-            {
-                errors: 'Failed to process shipping rates.',
-            },
-            { status: 500 }
-        );
+        console.error("Error processing rate request:", error);
+        return json({ error: "Internal server error" }, { status: 500 });
     }
 };
 
