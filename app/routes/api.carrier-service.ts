@@ -7,6 +7,7 @@ export const action: ActionFunction = async ({ request }) => {
 
     // Parse the incoming request
     const body = await request.json();
+    console.log("Received request:", body);
 
     // Basic rate calculation (you'll want to expand this)
     const rates = [
@@ -15,19 +16,19 @@ export const action: ActionFunction = async ({ request }) => {
             service_code: "SW_STANDARD",
             total_price: "1000", // $10.00
             currency: "AUD",
-            min_delivery_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            max_delivery_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+            min_delivery_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            max_delivery_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         },
         {
-            service_name: "Express Shipping",
-            service_code: "EX",
+            service_name: "Shippy Wippy Express Shipping",
+            service_code: "SW_EXPRESS",
             total_price: "2000", // $20.00
             currency: "AUD",
-            min_delivery_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-            max_delivery_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+            min_delivery_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            max_delivery_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         },
     ];
 
+    console.log("Returning rates:", rates);
     return json({ rates });
 };
-

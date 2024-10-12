@@ -59,13 +59,15 @@ async function registerCarrierService(admin: AdminApiContext) {
           active: true,
           callbackUrl: "${process.env.SHOPIFY_APP_URL}/api/carrier-service",
           name: "Shippy Wippy",
-          serviceDiscovery: true
+          serviceDiscovery: true,
+          format: JSON
         }) {
           carrierService {
             id
             name
             active
             callbackUrl
+            format
           }
           userErrors {
             field
@@ -76,12 +78,6 @@ async function registerCarrierService(admin: AdminApiContext) {
     );
     const result = await response.json();
     console.log("Carrier service registered:", result);
-
-    if (result.data.carrierServiceCreate.carrierService) {
-      const carrierServiceId = result.data.carrierServiceCreate.carrierService.id;
-      await createShippingMethod(admin, carrierServiceId);
-    }
-
     return result.data.carrierServiceCreate.carrierService;
   } catch (error) {
     console.error("Error registering carrier service:", error);
@@ -219,6 +215,37 @@ async function getExistingCarrierService(admin: AdminApiContext) {
   }
 }
 
+async function updateCarrierService(admin: AdminApiContext, id: string) {
+  try {
+    const response = await admin.graphql(
+      `mutation UpdateCarrierService {
+        carrierServiceUpdate(id: "${id}", carrierService: {
+          active: true,
+          format: JSON
+        }) {
+          carrierService {
+            id
+            name
+            active
+            callbackUrl
+            format
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }`
+    );
+    const result = await response.json();
+    console.log("Carrier service updated:", result);
+    return result.data.carrierServiceUpdate.carrierService;
+  } catch (error) {
+    console.error("Error updating carrier service:", error);
+    return null;
+  }
+}
+
 export const loader = async ({ request }: { request: Request }) => {
   const { admin, session } = await authenticate.admin(request);
   
@@ -227,13 +254,7 @@ export const loader = async ({ request }: { request: Request }) => {
     data: { shop },
   } = await shopResponse.json();
 
-  const carrierServicesResponse = await admin.graphql(CARRIER_SERVICES_QUERY);
-  const {
-    data: { carrierServices },
-  } = await carrierServicesResponse.json();
-
   const isDevelopmentStore = shop.plan.partnerDevelopment || shop.plan.displayName === 'developer preview';
-  const hasCarrierCalculatedShipping = carrierServices.edges.length > 0;
 
   const sessionToken = await getSessionToken(request);
 
@@ -241,11 +262,12 @@ export const loader = async ({ request }: { request: Request }) => {
 
   if (!existingCarrierService) {
     existingCarrierService = await registerCarrierService(admin);
-    
-    if (existingCarrierService) {
-      await createDeliveryProfile(admin, existingCarrierService.id);
-    }
+  } else if (!existingCarrierService.active || existingCarrierService.format !== 'json') {
+    // Update the carrier service if it's not active or not in JSON format
+    existingCarrierService = await updateCarrierService(admin, existingCarrierService.id);
   }
+
+  const hasCarrierCalculatedShipping = !!existingCarrierService;
 
   return json({ isDevelopmentStore, hasCarrierCalculatedShipping, sessionToken, carrierService: existingCarrierService });
 };
