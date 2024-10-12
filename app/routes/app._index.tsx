@@ -56,18 +56,17 @@ async function registerCarrierService(admin: AdminApiContext) {
     const response = await admin.graphql(
       `mutation RegisterCarrierService {
         carrierServiceCreate(input: {
+          name: "Shippy Wippy",
           active: true,
           callbackUrl: "${process.env.SHOPIFY_APP_URL}/api/carrier-service",
-          name: "Shippy Wippy",
-          serviceDiscovery: true,
-          format: JSON
+          supportsServiceDiscovery: true
         }) {
           carrierService {
             id
             name
             active
             callbackUrl
-            format
+            supportsServiceDiscovery
           }
           userErrors {
             field
@@ -85,103 +84,11 @@ async function registerCarrierService(admin: AdminApiContext) {
   }
 }
 
-async function createShippingMethod(admin: AdminApiContext, carrierServiceId: string) {
-  try {
-    const response = await admin.graphql(
-      `mutation CreateShippingMethod {
-        deliveryProfileCreate(
-          profile: {
-            name: "Shippy Wippy Profile"
-            profileType: MERCHANT
-            merchantSettings: {
-              shippingMethods: [
-                {
-                  name: "Shippy Wippy Standard Shipping"
-                  active: true
-                  rateProvider: {
-                    carrierService: {
-                      id: "${carrierServiceId}"
-                    }
-                  }
-                },
-                {
-                  name: "Shippy Wippy Express Shipping"
-                  active: true
-                  rateProvider: {
-                    carrierService: {
-                      id: "${carrierServiceId}"
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        ) {
-          profile {
-            id
-            name
-          }
-          userErrors {
-            field
-            message
-          }
-        }
-      }`
-    );
-    const result = await response.json();
-    console.log("Shipping method created:", result);
-  } catch (error) {
-    console.error("Error creating shipping method:", error);
-  }
-}
-
-async function createDeliveryProfile(admin: AdminApiContext, carrierServiceId: string) {
-  try {
-    const response = await admin.graphql(
-      `mutation CreateDeliveryProfile {
-        deliveryProfileCreate(
-          profile: {
-            name: "Shippy Wippy Profile"
-            profileType: MERCHANT
-            merchantSettings: {
-              shippingMethods: [
-                {
-                  name: "Shippy Wippy Standard Shipping"
-                  active: true
-                  rateProvider: {
-                    carrierService: {
-                      id: "${carrierServiceId}"
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        ) {
-          profile {
-            id
-            name
-          }
-          userErrors {
-            field
-            message
-          }
-        }
-      }`
-    );
-    const result = await response.json();
-    console.log("Delivery profile created:", result);
-    return result.data.deliveryProfileCreate.profile;
-  } catch (error) {
-    console.error("Error creating delivery profile:", error);
-    return null;
-  }
-}
 
 async function getExistingCarrierService(admin: AdminApiContext) {
   try {
-    const response = await admin.graphql(`
-      query {
+    const response = await admin.graphql(
+      `query {
         carrierServices(first: 1, query: "Shippy Wippy") {
           edges {
             node {
@@ -189,26 +96,14 @@ async function getExistingCarrierService(admin: AdminApiContext) {
               name
               active
               callbackUrl
-              merchantSettings {
-                shippingMethods {
-                  name
-                  active
-                  rateProvider {
-                    ... on CarrierService {
-                      id
-                    }
-                  }
-                }
-              }
             }
           }
         }
-      }
-    `);
-    const carrierServiceData = await response.json();
-    let existingCarrierService = carrierServiceData.data.carrierServices.edges[0]?.node;
-
-    return existingCarrierService;
+      }`
+    );
+    const result = await response.json();
+    console.log("Existing carrier service:", result);
+    return result.data.carrierServices.edges[0]?.node;
   } catch (error) {
     console.error("Error getting existing carrier service:", error);
     return null;
@@ -218,24 +113,30 @@ async function getExistingCarrierService(admin: AdminApiContext) {
 async function updateCarrierService(admin: AdminApiContext, id: string) {
   try {
     const response = await admin.graphql(
-      `mutation UpdateCarrierService {
-        carrierServiceUpdate(id: "${id}", carrierService: {
-          active: true,
-          format: JSON
-        }) {
+      `mutation UpdateCarrierService($id: ID!, $input: CarrierServiceInput!) {
+        carrierServiceUpdate(id: $id, input: $input) {
           carrierService {
             id
             name
             active
             callbackUrl
-            format
+            supportsServiceDiscovery
           }
           userErrors {
             field
             message
           }
         }
-      }`
+      }`,
+      {
+        variables: {
+          id: id,
+          input: {
+            active: true,
+            supportsServiceDiscovery: true
+          }
+        }
+      }
     );
     const result = await response.json();
     console.log("Carrier service updated:", result);
@@ -262,8 +163,8 @@ export const loader = async ({ request }: { request: Request }) => {
 
   if (!existingCarrierService) {
     existingCarrierService = await registerCarrierService(admin);
-  } else if (!existingCarrierService.active || existingCarrierService.format !== 'json') {
-    // Update the carrier service if it's not active or not in JSON format
+  } else if (!existingCarrierService.active) {
+    // Update the carrier service if it's not active
     existingCarrierService = await updateCarrierService(admin, existingCarrierService.id);
   }
 
@@ -303,15 +204,7 @@ export default function Index() {
                   <li>Name: {carrierService.name}</li>
                   <li>Active: {carrierService.active ? 'Yes' : 'No'}</li>
                   <li>Callback URL: {carrierService.callbackUrl}</li>
-                  <li>Shipping Methods:
-                    <ul>
-                      {carrierService.merchantSettings.shippingMethods.map((method: { name: string; active: boolean }, index: number) => (
-                        <li key={index}>
-                          {method.name} - {method.active ? 'Active' : 'Inactive'}
-                        </li>
-                      ))}
-                    </ul>
-                  </li>
+                  <li>Supports Service Discovery: {carrierService.supportsServiceDiscovery ? 'Yes' : 'No'}</li>
                 </ul>
               </List.Item>
             )}
