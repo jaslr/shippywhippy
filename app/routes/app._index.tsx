@@ -53,14 +53,28 @@ const CARRIER_SERVICES_QUERY = `#graphql
 
 async function registerCarrierService(admin: AdminApiContext) {
   try {
-    const response = await admin.rest.resources.CarrierService.create({
-      carrier_service: {
-        name: "Shippy Wippy",
-        callback_url: `${process.env.SHOPIFY_APP_URL}/api/carrier-service`,
-        service_discovery: true,
-      },
-    });
-    console.log("Carrier service registered:", response);
+    const response = await admin.graphql(
+      `mutation RegisterCarrierService {
+        carrierServiceCreate(input: {
+          active: true,
+          callbackUrl: "${process.env.SHOPIFY_APP_URL}/api/carrier-service",
+          name: "Shippy Wippy"
+        }) {
+          carrierService {
+            id
+            name
+            active
+            callbackUrl
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }`
+    );
+    const result = await response.json();
+    console.log("Carrier service registered:", result);
   } catch (error) {
     console.error("Error registering carrier service:", error);
   }
@@ -85,11 +99,28 @@ export const loader = async ({ request }: { request: Request }) => {
 
   const sessionToken = await getSessionToken(request);
 
-  return json({ isDevelopmentStore, hasCarrierCalculatedShipping, sessionToken });
+  const carrierServiceResponse = await admin.graphql(`
+    query {
+      carrierServices(first: 1, query: "Shippy Wippy") {
+        edges {
+          node {
+            id
+            name
+            active
+            callbackUrl
+          }
+        }
+      }
+    }
+  `);
+  const carrierServiceData = await carrierServiceResponse.json();
+  const carrierService = carrierServiceData.data.carrierServices.edges[0]?.node;
+
+  return json({ isDevelopmentStore, hasCarrierCalculatedShipping, sessionToken, carrierService });
 };
 
 export default function Index() {
-  const { isDevelopmentStore, hasCarrierCalculatedShipping, sessionToken } = useLoaderData<typeof loader>();
+  const { isDevelopmentStore, hasCarrierCalculatedShipping, sessionToken, carrierService } = useLoaderData<typeof loader>();
   const { shop } = useOutletContext<{ shop: string }>();
 
   return (
@@ -109,6 +140,19 @@ export default function Index() {
             <List.Item>
               Shop: {shop}
             </List.Item>
+            <List.Item>
+              Shippy Wippy Carrier Service: {carrierService ? 'Installed' : 'Not installed'}
+            </List.Item>
+            {carrierService && (
+              <List.Item>
+                Carrier Service Details: 
+                <ul>
+                  <li>Name: {carrierService.name}</li>
+                  <li>Active: {carrierService.active ? 'Yes' : 'No'}</li>
+                  <li>Callback URL: {carrierService.callbackUrl}</li>
+                </ul>
+              </List.Item>
+            )}
           </List>
         </Banner>
         <CarrierUptimeCheck />
