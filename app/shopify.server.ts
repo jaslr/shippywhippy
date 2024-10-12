@@ -12,6 +12,7 @@ console.log('SHOPIFY_API_KEY:', process.env.SHOPIFY_API_KEY);
 console.log('SHOPIFY_API_SECRET:', process.env.SHOPIFY_API_SECRET ? '[REDACTED]' : 'Not set');
 console.log('SHOPIFY_APP_URL:', process.env.SHOPIFY_APP_URL);
 
+
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY!,
   apiSecretKey: process.env.SHOPIFY_API_SECRET!,
@@ -40,3 +41,4 @@ console.log('Shopify app initialized successfully');
 
 export default shopify;
 export const authenticate = shopify.authenticate;
+
