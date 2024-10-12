@@ -16,7 +16,7 @@ const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY!,
   apiSecretKey: process.env.SHOPIFY_API_SECRET!,
   appUrl: process.env.SHOPIFY_APP_URL!,
-  scopes: process.env.SCOPES?.split(',') || ['read_products', 'write_products'],
+  scopes: process.env.SCOPES?.split(',') || ['read_products', 'write_products', 'read_shipping', 'write_shipping'],
   apiVersion: LATEST_API_VERSION,
   sessionStorage: new PrismaSessionStorage(prisma),
   isEmbeddedApp: true,
@@ -40,4 +40,3 @@ console.log('Shopify app initialized successfully');
 
 export default shopify;
 export const authenticate = shopify.authenticate;
-

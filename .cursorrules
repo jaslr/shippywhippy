@@ -1,0 +1,92 @@
+{
+  "rules": [
+    {
+      "description": "Naming Conventions",
+      "pattern": "Use lowercase with dashes for directories (e.g. components/auth-wizard)."
+    },
+    {
+      "description": "Shopify API Best Practices",
+      "pattern": [
+        "Use Shopify Admin GraphQL API (https://shopify.dev/docs/api/admin-graphql).",
+        "Manage API queries and mutations through dedicated Shopify service modules.",
+        "Ensure Shopify security practices are followed and API access is secured."
+      ]
+    },
+    {
+      "description": "Polaris and Tailwind CSS Integration",
+      "pattern": [
+        "Use Polaris components for consistent, accessible UI elements.",
+        "Utilize Tailwind's utility-first classes for rapid prototyping and responsive design.",
+        "Avoid using Tailwind's @apply directive within Polaris components; keep styles in stylesheets."
+      ]
+    },
+    {
+      "description": "Prisma Usage",
+      "pattern": [
+        "Define database schema in schema.prisma using Prisma's syntax.",
+        "Use Prisma Client for database operations.",
+        "Ensure relational integrity and make use of Prisma's relations feature."
+      ]
+    },
+    {
+      "description": "Project Specific Conventions",
+      "pattern": [
+        "Always clarify and document specific conventions within this codebase.",
+        "Ask questions when uncertain about established conventions.",
+        "Admit when unsure about the implementation details."
+      ]
+    },
+    {
+      "description": "Code Quality and Reviews",
+      "pattern": [
+        "Conduct regular code reviews, focusing on clarity, performance, and security.",
+        "Incorporate feedback to evolve coding practices."
+      ]
+    },
+    {
+      "description": "Testing",
+      "pattern": [
+        "Write unit tests for Node.js services and Polaris components.",
+        "Use Jest and Mocha for test specifications.",
+        "Implement integration tests for critical user flows."
+      ]
+    }
+  ],
+  "policy": [
+    {
+      "description": "Collaborative Development",
+      "pattern": [
+        "Ask for clarification on conventions continuously.",
+        "Engage in discussions about implementation trade-offs and choices."
+      ]
+    }
+  ],
+  "linters": {
+    "eslint": {
+      "enabled": true
+    },
+    "tailwindcss": {
+      "enabled": true
+    },
+    "prisma": {
+      "enabled": true
+    }
+  },
+  "suggestions": {
+    "node": {
+      "preferModernSyntax": true,
+      "useESModules": true
+    },
+    "css": {
+      "preferTailwindClasses": true,
+      "usePolarisComponents": true
+    },
+    "database": {
+      "usePrisma": true,
+      "preferShopifyAPI": true
+    }
+  },
+  "communication": {
+    "preferTerseResponses": true
+  }
+}

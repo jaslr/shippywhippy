@@ -14,6 +14,7 @@ import {
   TextField,
   RadioButton,
   FormLayout,
+  Button
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -53,8 +54,8 @@ const CARRIER_SERVICES_QUERY = `#graphql
 
 async function registerCarrierService(admin: AdminApiContext) {
   try {
-    const response = await admin.graphql(
-      `mutation RegisterCarrierService {
+    const mutation = `
+      mutation RegisterCarrierService {
         carrierServiceCreate(input: {
           name: "Shippy Wippy",
           active: true,
@@ -73,8 +74,10 @@ async function registerCarrierService(admin: AdminApiContext) {
             message
           }
         }
-      }`
-    );
+      }
+    `;
+
+    const response = await admin.graphql(mutation);
     const result = await response.json();
     console.log("Carrier service registered:", result);
     return result.data.carrierServiceCreate.carrierService;
@@ -84,11 +87,10 @@ async function registerCarrierService(admin: AdminApiContext) {
   }
 }
 
-
 async function getExistingCarrierService(admin: AdminApiContext) {
   try {
-    const response = await admin.graphql(
-      `query {
+    const query = `
+      query {
         carrierServices(first: 1, query: "Shippy Wippy") {
           edges {
             node {
@@ -99,8 +101,10 @@ async function getExistingCarrierService(admin: AdminApiContext) {
             }
           }
         }
-      }`
-    );
+      }
+    `;
+
+    const response = await admin.graphql(query);
     const result = await response.json();
     console.log("Existing carrier service:", result);
     return result.data.carrierServices.edges[0]?.node;
@@ -112,8 +116,8 @@ async function getExistingCarrierService(admin: AdminApiContext) {
 
 async function updateCarrierService(admin: AdminApiContext, id: string) {
   try {
-    const response = await admin.graphql(
-      `mutation UpdateCarrierService($id: ID!, $input: CarrierServiceInput!) {
+    const mutation = `
+      mutation UpdateCarrierService($id: ID!, $input: CarrierServiceUpdateInput!) {
         carrierServiceUpdate(id: $id, input: $input) {
           carrierService {
             id
@@ -127,15 +131,21 @@ async function updateCarrierService(admin: AdminApiContext, id: string) {
             message
           }
         }
-      }`,
+      }
+    `;
+
+    const variables = {
+      id: id,
+      input: {
+        active: true,
+        supportsServiceDiscovery: true
+      }
+    };
+
+    const response = await admin.graphql(
+      mutation,
       {
-        variables: {
-          id: id,
-          input: {
-            active: true,
-            supportsServiceDiscovery: true
-          }
-        }
+        variables: variables,
       }
     );
     const result = await response.json();
