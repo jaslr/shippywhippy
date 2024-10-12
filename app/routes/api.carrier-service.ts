@@ -69,12 +69,12 @@ export const action: ActionFunction = async ({ request }) => {
         // Define your shipping rates here
         const rates: ShippingRate[] = [
             {
-                name: 'Standard Shipping',
+                name: 'Shippy Wippy Standard Shipping',
                 price: '10.00',
                 currency: payload.rate.currency,
             },
             {
-                name: 'Express Shipping',
+                name: 'Shippy Wippy Express Shipping',
                 price: '20.00',
                 currency: payload.rate.currency,
             },
