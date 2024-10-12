@@ -93,7 +93,7 @@ async function createDeliveryProfile(admin: AdminApiContext, carrierServiceId: s
             merchantSettings: {
               shippingMethods: [
                 {
-                  name: "Standard Shipping"
+                  name: "Shippy Wippy Standard Shipping"
                   active: true
                   rateProvider: {
                     carrierService: {
@@ -102,7 +102,7 @@ async function createDeliveryProfile(admin: AdminApiContext, carrierServiceId: s
                   }
                 },
                 {
-                  name: "Express Shipping"
+                  name: "Shippy Wippy Express Shipping"
                   active: true
                   rateProvider: {
                     carrierService: {
@@ -166,6 +166,17 @@ export const loader = async ({ request }: { request: Request }) => {
             name
             active
             callbackUrl
+            merchantSettings {
+              shippingMethods {
+                name
+                active
+                rateProvider {
+                  ... on CarrierService {
+                    id
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -216,6 +227,15 @@ export default function Index() {
                   <li>Name: {carrierService.name}</li>
                   <li>Active: {carrierService.active ? 'Yes' : 'No'}</li>
                   <li>Callback URL: {carrierService.callbackUrl}</li>
+                  <li>Shipping Methods:
+                    <ul>
+                      {carrierService.merchantSettings.shippingMethods.map((method: { name: string; active: boolean }, index: number) => (
+                        <li key={index}>
+                          {method.name} - {method.active ? 'Active' : 'Inactive'}
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
                 </ul>
               </List.Item>
             )}
