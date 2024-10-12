@@ -58,7 +58,8 @@ async function registerCarrierService(admin: AdminApiContext) {
         carrierServiceCreate(input: {
           active: true,
           callbackUrl: "${process.env.SHOPIFY_APP_URL}/api/carrier-service",
-          name: "Shippy Wippy"
+          name: "Shippy Wippy",
+          serviceDiscovery: true
         }) {
           carrierService {
             id
@@ -75,6 +76,12 @@ async function registerCarrierService(admin: AdminApiContext) {
     );
     const result = await response.json();
     console.log("Carrier service registered:", result);
+
+    if (result.data.carrierServiceCreate.carrierService) {
+      const carrierServiceId = result.data.carrierServiceCreate.carrierService.id;
+      await createShippingMethod(admin, carrierServiceId);
+    }
+
     return result.data.carrierServiceCreate.carrierService;
   } catch (error) {
     console.error("Error registering carrier service:", error);
@@ -82,10 +89,10 @@ async function registerCarrierService(admin: AdminApiContext) {
   }
 }
 
-async function createDeliveryProfile(admin: AdminApiContext, carrierServiceId: string) {
+async function createShippingMethod(admin: AdminApiContext, carrierServiceId: string) {
   try {
     const response = await admin.graphql(
-      `mutation CreateDeliveryProfile {
+      `mutation CreateShippingMethod {
         deliveryProfileCreate(
           profile: {
             name: "Shippy Wippy Profile"
@@ -126,6 +133,47 @@ async function createDeliveryProfile(admin: AdminApiContext, carrierServiceId: s
       }`
     );
     const result = await response.json();
+    console.log("Shipping method created:", result);
+  } catch (error) {
+    console.error("Error creating shipping method:", error);
+  }
+}
+
+async function createDeliveryProfile(admin: AdminApiContext, carrierServiceId: string) {
+  try {
+    const response = await admin.graphql(
+      `mutation CreateDeliveryProfile {
+        deliveryProfileCreate(
+          profile: {
+            name: "Shippy Wippy Profile"
+            profileType: MERCHANT
+            merchantSettings: {
+              shippingMethods: [
+                {
+                  name: "Shippy Wippy Standard Shipping"
+                  active: true
+                  rateProvider: {
+                    carrierService: {
+                      id: "${carrierServiceId}"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ) {
+          profile {
+            id
+            name
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }`
+    );
+    const result = await response.json();
     console.log("Delivery profile created:", result);
     return result.data.deliveryProfileCreate.profile;
   } catch (error) {
@@ -134,14 +182,46 @@ async function createDeliveryProfile(admin: AdminApiContext, carrierServiceId: s
   }
 }
 
+async function getExistingCarrierService(admin: AdminApiContext) {
+  try {
+    const response = await admin.graphql(`
+      query {
+        carrierServices(first: 1, query: "Shippy Wippy") {
+          edges {
+            node {
+              id
+              name
+              active
+              callbackUrl
+              merchantSettings {
+                shippingMethods {
+                  name
+                  active
+                  rateProvider {
+                    ... on CarrierService {
+                      id
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `);
+    const carrierServiceData = await response.json();
+    let existingCarrierService = carrierServiceData.data.carrierServices.edges[0]?.node;
+
+    return existingCarrierService;
+  } catch (error) {
+    console.error("Error getting existing carrier service:", error);
+    return null;
+  }
+}
+
 export const loader = async ({ request }: { request: Request }) => {
   const { admin, session } = await authenticate.admin(request);
-  const carrierService = await registerCarrierService(admin);
   
-  if (carrierService) {
-    await createDeliveryProfile(admin, carrierService.id);
-  }
-
   const shopResponse = await admin.graphql(SHOP_QUERY);
   const {
     data: { shop },
@@ -157,33 +237,7 @@ export const loader = async ({ request }: { request: Request }) => {
 
   const sessionToken = await getSessionToken(request);
 
-  const carrierServiceResponse = await admin.graphql(`
-    query {
-      carrierServices(first: 1, query: "Shippy Wippy") {
-        edges {
-          node {
-            id
-            name
-            active
-            callbackUrl
-            merchantSettings {
-              shippingMethods {
-                name
-                active
-                rateProvider {
-                  ... on CarrierService {
-                    id
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `);
-  const carrierServiceData = await carrierServiceResponse.json();
-  let existingCarrierService = carrierServiceData.data.carrierServices.edges[0]?.node;
+  let existingCarrierService = await getExistingCarrierService(admin);
 
   if (!existingCarrierService) {
     existingCarrierService = await registerCarrierService(admin);

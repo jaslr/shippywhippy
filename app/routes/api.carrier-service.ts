@@ -11,8 +11,8 @@ export const action: ActionFunction = async ({ request }) => {
     // Basic rate calculation (you'll want to expand this)
     const rates = [
         {
-            service_name: "Standard Shipping",
-            service_code: "ST",
+            service_name: "Shippy Wippy Standard Shipping",
+            service_code: "SW_STANDARD",
             total_price: "1000", // $10.00
             currency: "AUD",
             min_delivery_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
@@ -30,3 +30,4 @@ export const action: ActionFunction = async ({ request }) => {
 
     return json({ rates });
 };
+
