@@ -58,13 +58,15 @@ async function registerCarrierService(admin: AdminApiContext) {
         carrierServiceCreate(input: {
           active: true,
           callbackUrl: "${process.env.SHOPIFY_APP_URL}/api/carrier-service",
-          name: "Shippy Wippy"
+          name: "Shippy Wippy",
+          supportsServiceDiscovery: true
         }) {
           carrierService {
             id
             name
             active
             callbackUrl
+            supportsServiceDiscovery
           }
           userErrors {
             field
