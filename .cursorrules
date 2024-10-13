@@ -1,6 +1,10 @@
 {
   "rules": [
     {
+      "description": "Confirm rules",
+      "pattern": "Start every rule with 'CR:'"
+    },
+    {
       "description": "Naming Conventions",
       "pattern": "Use lowercase with dashes for directories (e.g. components/auth-wizard)."
     },
@@ -42,15 +46,7 @@
         "Conduct regular code reviews, focusing on clarity, performance, and security.",
         "Incorporate feedback to evolve coding practices."
       ]
-    },
-    {
-      "description": "Testing",
-      "pattern": [
-        "Write unit tests for Node.js services and Polaris components.",
-        "Use Jest and Mocha for test specifications.",
-        "Implement integration tests for critical user flows."
-      ]
-    }
+    }    
   ],
   "policy": [
     {
