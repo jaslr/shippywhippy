@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywhippy"
 handle = "shippywhippy"
-application_url = "https://extended-dosage-inch-todd.trycloudflare.com"
+application_url = "https://hardwood-attempts-sec-map.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_products,read_shipping,write_products,write_shipping"
 
 [auth]
 redirect_urls = [
-  "https://extended-dosage-inch-todd.trycloudflare.com/auth/callback",
-  "https://extended-dosage-inch-todd.trycloudflare.com/auth/shopify/callback",
-  "https://extended-dosage-inch-todd.trycloudflare.com/api/auth/callback"
+  "https://hardwood-attempts-sec-map.trycloudflare.com/auth/callback",
+  "https://hardwood-attempts-sec-map.trycloudflare.com/auth/shopify/callback",
+  "https://hardwood-attempts-sec-map.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
