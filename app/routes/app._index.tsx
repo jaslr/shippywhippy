@@ -194,7 +194,7 @@ export default function Index() {
         <Banner title="Diagnostics" tone="info">
           <List>
             <List.Item>
-              Carrier-Calculated Shipping: {hasCarrierCalculatedShipping ? 'Enabled' : 'Not enabled'}
+              Carrier-Calculated Shippings: {hasCarrierCalculatedShipping ? 'Enabled' : 'Not enabled'}
             </List.Item>
             <List.Item>
               Development Store: {isDevelopmentStore ? 'Yes' : 'No'}
