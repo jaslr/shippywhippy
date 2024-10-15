@@ -4,7 +4,7 @@
         {
             "label": "Kill PostgreSQL Ports",
             "type": "shell",
-            "command": "npx kill-port 5432 5433",
+            "command": "npx kill-port 5432 5433 8080",
             "presentation": {
                 "reveal": "always",
                 "panel": "new"
@@ -136,7 +136,7 @@
             "label": "Run Prisma Studio",
             "type": "shell",
             "command": "npx",
-            "args": ["prisma", "studio"],
+            "args": ["prisma", "studio", "--browser", "none"],
             "isBackground": true,
             "presentation": {
                 "reveal": "always",
