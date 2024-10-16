@@ -28,6 +28,8 @@ import { CarrierUptimeCheck } from "../components/carriers/shared/CarrierUptimeC
 import { ShopifyRestResources } from "@shopify/shopify-api";
 import { AdminApiContext } from "node_modules/@shopify/shopify-app-remix/dist/ts/server/clients";
 import { GraphQLClient } from '@shopify/graphql-client';
+import { AustraliaPostCard } from "../components/carriers/australia-post/AustraliaPostCard";
+import { AramexCard } from "../components/carriers/aramex/AramexCard";
 
 const SHOP_QUERY = `#graphql
   query {
@@ -231,8 +233,8 @@ export default function Index() {
                   Carrier-Calculated Shipping Configuration
                 </Text>
                 <FormLayout>
-                  <AustraliaPost />
-                  <Aramex />
+                  <AustraliaPostCard />
+                  <AramexCard />
                 </FormLayout>
               </BlockStack>
             </Card>

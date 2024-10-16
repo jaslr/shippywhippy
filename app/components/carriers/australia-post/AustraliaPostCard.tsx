@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Card, BlockStack, Text, TextField, RadioButton, FormLayout, Button, Banner, Link } from '@shopify/polaris';
+import React, { useState, useCallback } from 'react';
+import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, SettingToggle } from '@shopify/polaris';
 import { AUSTRALIA_POST_NAME, AUSTRALIA_POST_API_KEY } from './constants';
 import { useFetcher } from '@remix-run/react';
 
@@ -17,12 +17,18 @@ export function AustraliaPostCard() {
 
   const testUrl = '/api/australia-post-lookup';
 
+  const handleToggle = useCallback(() => {
+    setIsEnabled((enabled) => !enabled);
+  }, []);
+
   const performLookup = () => {
     fetcher.submit(
       { apiKey: API_KEY, checkType: 'uptime' },
       { method: 'post', action: testUrl }
     );
   };
+
+  const contentStatus = isEnabled ? 'Disable' : 'Enable';
 
   return (
     <Card>
@@ -37,21 +43,16 @@ export function AustraliaPostCard() {
             readOnly
             autoComplete="off"
           />
-          <RadioButton
-            label="Enable"
-            checked={isEnabled}
-            id="australia-post-enable"
-            name="australia-post-status"
-            onChange={(checked) => setIsEnabled(checked)}
-          />
-          <RadioButton
-            label="Disable"
-            checked={!isEnabled}
-            id="australia-post-disable"
-            name="australia-post-status"
-            onChange={(checked) => setIsEnabled(!checked)}
-          />
-          <Button onClick={performLookup}>Test API Connection</Button>
+          <SettingToggle
+            action={{
+              content: contentStatus,
+              onAction: handleToggle,
+            }}
+            enabled={isEnabled}
+          >
+            This carrier is {isEnabled ? 'enabled' : 'disabled'}
+          </SettingToggle>
+          <Button onClick={performLookup} disabled={!isEnabled}>Test API Connection</Button>
           <Text as="p" variant="bodyMd">
             This test will attempt to calculate shipping for a standard parcel (10x10x10cm, 1kg) from Melbourne (3000) to Sydney (2000).
           </Text>
