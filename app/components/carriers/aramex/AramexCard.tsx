@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, SettingToggle } from '@shopify/polaris';
+import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link } from '@shopify/polaris';
 import { useFetcher } from '@remix-run/react';
 
 // Define constants here if the constants file is not set up
@@ -29,7 +29,7 @@ export function AramexCard() {
         );
     };
 
-    const contentStatus = isEnabled ? 'Disable' : 'Enable';
+    const toggleButtonText = isEnabled ? 'Disable' : 'Enable';
 
     return (
         <Card>
@@ -44,15 +44,17 @@ export function AramexCard() {
                         readOnly
                         autoComplete="off"
                     />
-                    <SettingToggle
-                        action={{
-                            content: contentStatus,
-                            onAction: handleToggle,
-                        }}
-                        enabled={isEnabled}
+                    <Button
+                        onClick={handleToggle}
+                        pressed={isEnabled}
+                        role="switch"
+                        ariaChecked={isEnabled ? 'true' : 'false'}
                     >
+                        {toggleButtonText}
+                    </Button>
+                    <Text as="p" variant="bodyMd">
                         This carrier is {isEnabled ? 'enabled' : 'disabled'}
-                    </SettingToggle>
+                    </Text>
                     <Button onClick={performLookup} disabled={!isEnabled}>Test API Connection</Button>
                     <Text as="p" variant="bodyMd">
                         This test will attempt to calculate shipping for a standard parcel from Dubai to Riyadh.
