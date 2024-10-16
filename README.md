@@ -390,3 +390,49 @@ This tech stack provides a robust foundation for building a performant and scala
 - [App extensions](https://shopify.dev/docs/apps/app-extensions/list)
 - [Shopify Functions](https://shopify.dev/docs/api/functions)
 - [Getting started with internationalizing your app](https://shopify.dev/docs/apps/best-practices/internationalization/getting-started)
+
+## GitHub Repository Setup
+
+### Personal Access Token (PAT)
+
+To push changes to this repository, you'll need to use a GitHub Personal Access Token (PAT) instead of your account password. This is due to GitHub's security policy that removed support for password authentication in Git operations.
+
+#### Creating a Personal Access Token:
+
+1. Go to GitHub and log in to your account.
+2. Click on your profile picture in the top-right corner and select "Settings".
+3. Scroll down the left sidebar and click on "Developer settings".
+4. In the left sidebar, click on "Personal access tokens", then "Tokens (classic)".
+5. Click "Generate new token" and select "Generate new token (classic)".
+6. Give your token a descriptive name under "Note".
+7. Select the necessary scopes (permissions). For basic repository operations, "repo" is usually sufficient.
+8. Click "Generate token" at the bottom of the page.
+9. Copy the generated token immediately. You won't be able to see it again!
+
+#### Using the Personal Access Token:
+
+1. When pushing to the repository for the first time, you'll be prompted for your username and password.
+2. Use your GitHub username as the username.
+3. Use the Personal Access Token as the password.
+
+Alternatively, you can update your Git configuration to use the token:
+
+```bash
+git config --global credential.helper store
+git push
+```
+
+When prompted, use your GitHub username and the PAT as the password.
+
+### Submitting Changes to the Repository
+
+1. Make sure you have the latest version of the repository:
+   ```bash
+   git pull origin main
+   ```
+2. Push your changes to the repository:
+   ```bash
+   git push origin main
+   ```
+
+When prompted, use your GitHub username and the PAT as the password.
