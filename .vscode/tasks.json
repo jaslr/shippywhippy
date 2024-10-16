@@ -1,15 +1,21 @@
 {
     "version": "2.0.0",
+    "options": {
+        "shell": {
+            "args": ["-ic"]
+        }
+    },
     "tasks": [
         {
-            "label": "Kill PostgreSQL Ports",
+            "label": "Kill Ports",
             "type": "shell",
-            "command": "npx kill-port 5432 5433 8080",
+            "command": "npm",
+            "args": ["run", "kill-ports"],
+            "problemMatcher": [],
             "presentation": {
                 "reveal": "always",
                 "panel": "new"
-            },
-            "problemMatcher": []
+            }
         },
         {
             "label": "Start PostgreSQL",
@@ -34,7 +40,7 @@
         {
             "label": "🚀 Full Development Setup",
             "dependsOn": [
-                "Kill PostgreSQL Ports",
+                "Kill Ports",
                 "Start PostgreSQL",
                 "Run Prisma Studio",
                 "Run compodoc",

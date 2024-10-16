@@ -2,8 +2,8 @@
 
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywhippy"
-handle = "shippywhippy"
-application_url = "https://rica-neil-laser-soc.trycloudflare.com"
+handle = "shippywippy"
+application_url = "https://moment-vids-relax-parameters.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_products,read_shipping,write_products,write_shipping"
 
 [auth]
 redirect_urls = [
-  "https://rica-neil-laser-soc.trycloudflare.com/auth/callback",
-  "https://rica-neil-laser-soc.trycloudflare.com/auth/shopify/callback",
-  "https://rica-neil-laser-soc.trycloudflare.com/api/auth/callback"
+  "https://moment-vids-relax-parameters.trycloudflare.com/auth/callback",
+  "https://moment-vids-relax-parameters.trycloudflare.com/auth/shopify/callback",
+  "https://moment-vids-relax-parameters.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

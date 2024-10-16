@@ -139,8 +139,6 @@
 }
 ,
     "prisma": {
-  "dev.sqlite": null
-,
   "migrations": {
   "20241007070634_init": {
   "migration.sql": null
