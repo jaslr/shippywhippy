@@ -41,7 +41,7 @@
             "label": "🚀 Full Development Setup",
             "dependsOn": [
                 "Kill Ports",
-                "Start PostgreSQL",
+                "Start PostgreSQL with Password",
                 "Run Prisma Studio",
                 "Run compodoc",
                 "Generate Site Structure",
@@ -165,6 +165,20 @@
                     }
                 }
             ]
+        },
+        {
+            "label": "Start PostgreSQL with Password",
+            "type": "shell",
+            "command": "expect",
+            "args": [
+                "-c",
+                "spawn sudo service postgresql start; expect \"password for\"; send \"0643\\n\"; expect eof"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
         }
     ]
 }

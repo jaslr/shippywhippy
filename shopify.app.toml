@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywhippy"
 handle = "shippywippy"
-application_url = "https://sheer-atom-extend-affected.trycloudflare.com"
+application_url = "https://intimate-graham-laboratory-indianapolis.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_products,read_shipping,write_products,write_shipping"
 
 [auth]
 redirect_urls = [
-  "https://sheer-atom-extend-affected.trycloudflare.com/auth/callback",
-  "https://sheer-atom-extend-affected.trycloudflare.com/auth/shopify/callback",
-  "https://sheer-atom-extend-affected.trycloudflare.com/api/auth/callback"
+  "https://intimate-graham-laboratory-indianapolis.trycloudflare.com/auth/callback",
+  "https://intimate-graham-laboratory-indianapolis.trycloudflare.com/auth/shopify/callback",
+  "https://intimate-graham-laboratory-indianapolis.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
