@@ -52,7 +52,7 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
 
   const handleApiKeyChange = useCallback((value: string) => {
     setApiKey(value);
-  }, []);
+  }, [setApiKey]);
 
   const handleSaveApiKey = useCallback(async () => {
     try {

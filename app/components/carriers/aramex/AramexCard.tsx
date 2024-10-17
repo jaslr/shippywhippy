@@ -3,11 +3,10 @@ import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, In
 import { useFetcher } from '@remix-run/react';
 import { updateCarrierStatus } from '../../../libs/carriers/utils/carrierHelpers';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
-import { getApiKey } from '../../../libs/carriers/utils/getApiKey';
+import { useApiKey } from '../../../hooks/useApiKey';
 
 const ARAMEX_NAME = 'Aramex';
 const aramexConfig = getCarrierByName(ARAMEX_NAME);
-const ARAMEX_API_KEY = import.meta.env.VITE_ARAMEX_API_KEY || 'your-default-api-key';
 
 type AramexLookupData = {
     success: boolean;
@@ -17,22 +16,10 @@ type AramexLookupData = {
 
 export function AramexCard({ shop }: { shop: string }) {
     const [isEnabled, setIsEnabled] = useState(false);
-    const [apiKey, setApiKey] = useState<string | null>(null);
+    const { apiKey, setApiKey, isLoading, error } = useApiKey(shop, ARAMEX_NAME);
     const fetcher = useFetcher<AramexLookupData>();
 
     const testUrl = '/api/aramex-lookup';
-
-    useEffect(() => {
-        async function fetchApiKey() {
-            try {
-                const key = await getApiKey(shop, ARAMEX_NAME);
-                setApiKey(key);
-            } catch (error) {
-                console.error('Failed to fetch API key:', error);
-            }
-        }
-        fetchApiKey();
-    }, [shop]);
 
     const handleToggle = useCallback(async () => {
         const newStatus = !isEnabled;
@@ -55,6 +42,15 @@ export function AramexCard({ shop }: { shop: string }) {
     }, [apiKey, fetcher, testUrl]);
 
     const toggleButtonText = isEnabled ? 'Disable' : 'Enable';
+
+    useEffect(() => {
+        if (!shop || !ARAMEX_NAME) return;
+
+        fetcher.submit(
+            { shop, carrierName: ARAMEX_NAME },
+            { method: 'post', action: '/api/get-api-key' }
+        );
+    }, [shop, ARAMEX_NAME, fetcher]);
 
     return (
         <Card>
@@ -81,7 +77,7 @@ export function AramexCard({ shop }: { shop: string }) {
                 <FormLayout>
                     <TextField
                         label="API Key"
-                        value={apiKey || ARAMEX_API_KEY}
+                        value={apiKey || ''}
                         readOnly
                         autoComplete="off"
                     />
@@ -94,13 +90,13 @@ export function AramexCard({ shop }: { shop: string }) {
                     {fetcher.data && 'success' in fetcher.data && !fetcher.data.success && (
                         <Banner tone="critical">
                             <p>Error: {fetcher.data.error || 'An unknown error occurred'}</p>
-                            <p>API Key used: {apiKey || ARAMEX_API_KEY}</p>
+                            <p>API Key used: {apiKey || ''}</p>
                             <p>Please check your API key and try again. If the problem persists, contact Aramex support or refer to the <Link url="https://www.aramex.com/developers/apis" external>API documentation</Link>.</p>
                         </Banner>
                     )}
                     {fetcher.data && 'success' in fetcher.data && fetcher.data.success && (
                         <Banner tone="success" title="API Connection Successful">
-                            <p>API Key used: {apiKey || ARAMEX_API_KEY}</p>
+                            <p>API Key used: {apiKey || ''}</p>
                             <p>API URL: {testUrl}</p>
                             <pre>{JSON.stringify(fetcher.data.data, null, 2)}</pre>
                         </Banner>
