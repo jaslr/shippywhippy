@@ -5,6 +5,8 @@ export type CarrierStatus = {
     name: string;
     isUp: boolean;
     statusURL?: string;
+    apiKeyEnvVar: string;
+    defaultApiKey: string;
 };
 
 async function checkAustraliaPostStatus(): Promise<boolean> {
@@ -26,9 +28,31 @@ async function checkAramexStatus(): Promise<boolean> {
 }
 
 export const carrierList: CarrierStatus[] = [
-    { id: '1', name: 'Australia Post', isUp: true, statusURL: 'https://status.developers.auspost.com.au/' },
-    { id: '2', name: 'Aramex', isUp: true, statusURL: 'https://www.aramex.com/us/en/service-updates' },
+    { 
+        id: '1', 
+        name: 'Australia Post', 
+        isUp: true, 
+        statusURL: 'https://status.developers.auspost.com.au/', 
+        apiKeyEnvVar: 'AUSTRALIA_POST_API_KEY',
+        defaultApiKey: 'your-default-australia-post-api-key'
+    },
+    { 
+        id: '2', 
+        name: 'Aramex', 
+        isUp: true, 
+        statusURL: 'https://www.aramex.com/us/en/service-updates', 
+        apiKeyEnvVar: 'ARAMEX_API_KEY',
+        defaultApiKey: 'your-default-aramex-api-key'
+    },
 ];
+
+export function getCarrierById(id: string): CarrierStatus | undefined {
+    return carrierList.find(carrier => carrier.id === id);
+}
+
+export function getCarrierByName(name: string): CarrierStatus | undefined {
+    return carrierList.find(carrier => carrier.name.toLowerCase() === name.toLowerCase());
+}
 
 export async function updateCarrierStatuses(): Promise<CarrierStatus[]> {
     const updatedList = await Promise.all(carrierList.map(async (carrier) => {
@@ -48,4 +72,3 @@ export async function updateCarrierStatuses(): Promise<CarrierStatus[]> {
 
     return updatedList;
 }
-

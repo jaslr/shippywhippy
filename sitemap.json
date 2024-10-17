@@ -86,6 +86,8 @@
   "utils": {
   "carrierHelpers.ts": null
 ,
+  "getApiKey.ts": null
+,
   "sessionToken.ts": null
 }
 }
@@ -152,10 +154,16 @@
   "migration.sql": null
 }
 ,
+  "20241017015844_add_default_api_key_to_carrier": {
+  "migration.sql": null
+}
+,
   "migration_lock.toml": null
 }
 ,
   "schema.prisma": null
+,
+  "seed.ts": null
 }
 ,
     "public": {

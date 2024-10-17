@@ -1,7 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack } from '@shopify/polaris';
-import { AUSTRALIA_POST_NAME, AUSTRALIA_POST_API_KEY } from './constants';
 import { useFetcher } from '@remix-run/react';
+import { updateCarrierStatus, saveApiKey } from '../../../libs/carriers/utils/carrierHelpers';
+import { getCarrierByName } from '../../../libs/carriers/carrierlist';
+import { getApiKey } from '../../../libs/carriers/utils/getApiKey';
+
+const AUSTRALIA_POST_NAME = 'Australia Post';
 
 type AustraliaPostLookupData = {
   success: boolean;
@@ -9,22 +13,58 @@ type AustraliaPostLookupData = {
   data?: any;
 };
 
-export function AustraliaPostCard() {
+export function AustraliaPostCard({ shop }: { shop: string }) {
   const [isEnabled, setIsEnabled] = useState(false);
+  const [apiKey, setApiKey] = useState<string>('');
+  const [isEditing, setIsEditing] = useState(false);
   const fetcher = useFetcher<AustraliaPostLookupData>();
 
   const testUrl = '/api/australia-post-lookup';
 
-  const handleToggle = useCallback(() => {
-    setIsEnabled((enabled) => !enabled);
+  useEffect(() => {
+    async function fetchApiKey() {
+      try {
+        const key = await getApiKey(shop, AUSTRALIA_POST_NAME);
+        setApiKey(key || '');
+      } catch (error) {
+        console.error('Failed to fetch API key:', error);
+      }
+    }
+    fetchApiKey();
+  }, [shop]);
+
+  const handleToggle = useCallback(async () => {
+    const newStatus = !isEnabled;
+    setIsEnabled(newStatus);
+    try {
+      await updateCarrierStatus(shop, AUSTRALIA_POST_NAME, newStatus);
+    } catch (error) {
+      console.error('Failed to update Australia Post status:', error);
+      setIsEnabled(!newStatus); // Revert the state if update fails
+    }
+  }, [isEnabled, shop]);
+
+  const performLookup = useCallback(() => {
+    if (apiKey) {
+      fetcher.submit(
+        { apiKey, checkType: 'uptime' },
+        { method: 'post', action: testUrl }
+      );
+    }
+  }, [apiKey, fetcher, testUrl]);
+
+  const handleApiKeyChange = useCallback((value: string) => {
+    setApiKey(value);
   }, []);
 
-  const performLookup = () => {
-    fetcher.submit(
-      { apiKey: AUSTRALIA_POST_API_KEY, checkType: 'uptime' },
-      { method: 'post', action: testUrl }
-    );
-  };
+  const handleSaveApiKey = useCallback(async () => {
+    try {
+      await saveApiKey(shop, AUSTRALIA_POST_NAME, apiKey);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Failed to save API key:', error);
+    }
+  }, [shop, apiKey]);
 
   const toggleButtonText = isEnabled ? 'Disable' : 'Enable';
 
@@ -53,10 +93,22 @@ export function AustraliaPostCard() {
         <FormLayout>
           <TextField
             label="API Key"
-            value={AUSTRALIA_POST_API_KEY}
-            readOnly
+            value={apiKey}
+            onChange={handleApiKeyChange}
             autoComplete="off"
+            readOnly={!isEditing}
           />
+          <InlineStack gap="200">
+            {isEditing ? (
+              <Button onClick={handleSaveApiKey} variant="primary">
+                Save API Key
+              </Button>
+            ) : (
+              <Button onClick={() => setIsEditing(true)}>
+                Edit API Key
+              </Button>
+            )}
+          </InlineStack>
           <Text as="p" variant="bodyMd">
             This carrier is {isEnabled ? 'enabled' : 'disabled'}
           </Text>
@@ -66,13 +118,13 @@ export function AustraliaPostCard() {
           {fetcher.data && 'success' in fetcher.data && !fetcher.data.success && (
             <Banner tone="critical">
               <p>Error: {fetcher.data.error || 'An unknown error occurred'}</p>
-              <p>API Key used: {AUSTRALIA_POST_API_KEY}</p>
+              <p>API Key used: {apiKey}</p>
               <p>Please check your API key and try again. If the problem persists, contact Australia Post support or refer to the <Link url="https://developers.auspost.com.au/apis/pac/reference" external>API documentation</Link>.</p>
             </Banner>
           )}
           {fetcher.data && 'success' in fetcher.data && fetcher.data.success && (
             <Banner tone="success" title="API Connection Successful">
-              <p>API Key used: {AUSTRALIA_POST_API_KEY}</p>
+              <p>API Key used: {apiKey}</p>
               <p>API URL: {testUrl}</p>
               <pre>{JSON.stringify(fetcher.data.data, null, 2)}</pre>
             </Banner>

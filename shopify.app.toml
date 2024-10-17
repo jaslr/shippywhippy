@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywhippy"
 handle = "shippywippy"
-application_url = "https://pct-activated-brunette-nasa.trycloudflare.com"
+application_url = "https://sheer-atom-extend-affected.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_products,read_shipping,write_products,write_shipping"
 
 [auth]
 redirect_urls = [
-  "https://pct-activated-brunette-nasa.trycloudflare.com/auth/callback",
-  "https://pct-activated-brunette-nasa.trycloudflare.com/auth/shopify/callback",
-  "https://pct-activated-brunette-nasa.trycloudflare.com/api/auth/callback"
+  "https://sheer-atom-extend-affected.trycloudflare.com/auth/callback",
+  "https://sheer-atom-extend-affected.trycloudflare.com/auth/shopify/callback",
+  "https://sheer-atom-extend-affected.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

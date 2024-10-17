@@ -52,6 +52,7 @@ model Shop {
 model Carrier {
   id             Int       @id @default(autoincrement())
   name           String    @unique
+  defaultApiKey  String    // Add this line
   shopConfigs    CarrierConfig[] @relation("CarrierConfigs")
   shippingMethods ShippingMethod[] @relation("CarrierShippingMethods")
 }
