@@ -5,6 +5,10 @@
       "pattern": "Start every rule with 'CR:'"
     },
     {
+      "description": "Solution Presentation",
+      "pattern": "Only provide the solution, omit any before (pre solution) codeblocks."
+    },
+    {
       "description": "Naming Conventions",
       "pattern": "Use lowercase with dashes for directories (e.g. components/auth-wizard)."
     },
@@ -46,7 +50,7 @@
         "Conduct regular code reviews, focusing on clarity, performance, and security.",
         "Incorporate feedback to evolve coding practices."
       ]
-    }    
+    }  
   ],
   "policy": [
     {

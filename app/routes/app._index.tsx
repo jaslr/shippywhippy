@@ -212,7 +212,7 @@ export default function Index() {
                 </Text>
                 <FormLayout>
                   <AustraliaPostCard shop={shop} />
-                  <AramexCard shop={shop} />
+                  
                 </FormLayout>
               </BlockStack>
             </Card>

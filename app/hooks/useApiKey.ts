@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useFetcher } from '@remix-run/react';
 
 type ApiKeyResponse = {
@@ -11,23 +11,25 @@ export function useApiKey(shop: string, carrierName: string) {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const fetcher = useFetcher<ApiKeyResponse>();
+    const hasFetchedRef = useRef(false);
 
     useEffect(() => {
-        if (!shop || !carrierName) return;
+        if (!shop || !carrierName || hasFetchedRef.current) return;
 
-        fetcher.submit(
-            { shop, carrierName },
-            { method: 'post', action: '/api/get-api-key' }
-        );
+        if (fetcher.state === 'idle' && !fetcher.data) {
+            hasFetchedRef.current = true;
+            fetcher.submit(
+                { shop, carrierName },
+                { method: 'post', action: '/api/get-api-key' }
+            );
+        }
     }, [shop, carrierName, fetcher]);
 
     useEffect(() => {
         if (fetcher.data) {
             setApiKey(fetcher.data.apiKey || '');
             setIsLoading(false);
-            if (fetcher.data.error) {
-                setError(fetcher.data.error);
-            }
+            setError(fetcher.data.error || null);
         }
     }, [fetcher.data]);
 
