@@ -4,6 +4,7 @@ import { useFetcher } from '@remix-run/react';
 import { updateCarrierStatus, saveApiKey } from '../../../libs/carriers/utils/carrierHelpers';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
 import { getApiKey } from '../../../libs/carriers/utils/getApiKey';
+import { useApiKey } from '../../../hooks/useApiKey';
 
 const AUSTRALIA_POST_NAME = 'Australia Post';
 
@@ -15,23 +16,19 @@ type AustraliaPostLookupData = {
 
 export function AustraliaPostCard({ shop }: { shop: string }) {
   const [isEnabled, setIsEnabled] = useState(false);
-  const [apiKey, setApiKey] = useState<string>('');
+  const { apiKey, setApiKey, isLoading, error } = useApiKey(shop, AUSTRALIA_POST_NAME);
   const [isEditing, setIsEditing] = useState(false);
   const fetcher = useFetcher<AustraliaPostLookupData>();
 
   const testUrl = '/api/australia-post-lookup';
 
-  useEffect(() => {
-    async function fetchApiKey() {
-      try {
-        const key = await getApiKey(shop, AUSTRALIA_POST_NAME);
-        setApiKey(key || '');
-      } catch (error) {
-        console.error('Failed to fetch API key:', error);
-      }
-    }
-    fetchApiKey();
-  }, [shop]);
+  if (isLoading) {
+    return <Text as="p">Loading API key...</Text>;
+  }
+
+  if (error) {
+    return <Banner tone="critical">Error loading API key: {error}</Banner>;
+  }
 
   const handleToggle = useCallback(async () => {
     const newStatus = !isEnabled;

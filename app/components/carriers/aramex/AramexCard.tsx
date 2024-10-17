@@ -7,7 +7,7 @@ import { getApiKey } from '../../../libs/carriers/utils/getApiKey';
 
 const ARAMEX_NAME = 'Aramex';
 const aramexConfig = getCarrierByName(ARAMEX_NAME);
-const ARAMEX_API_KEY = aramexConfig?.apiKeyEnvVar ? process.env[aramexConfig.apiKeyEnvVar] : 'your-default-api-key';
+const ARAMEX_API_KEY = import.meta.env.VITE_ARAMEX_API_KEY || 'your-default-api-key';
 
 type AramexLookupData = {
     success: boolean;
