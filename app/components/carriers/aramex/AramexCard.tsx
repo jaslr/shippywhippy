@@ -16,7 +16,7 @@ type AramexLookupData = {
 
 export function AramexCard({ shop }: { shop: string }) {
     const [isEnabled, setIsEnabled] = useState(false);
-    const { apiKey, setApiKey, isLoading, error } = useApiKey(shop, ARAMEX_NAME);
+    const { apiKey, isLoading, error } = useApiKey(shop, ARAMEX_NAME);
     const fetcher = useFetcher<AramexLookupData>();
 
     const testUrl = '/api/aramex-lookup';
@@ -44,13 +44,17 @@ export function AramexCard({ shop }: { shop: string }) {
     const toggleButtonText = isEnabled ? 'Disable' : 'Enable';
 
     useEffect(() => {
-        if (!shop || !ARAMEX_NAME) return;
+        if (!shop || !ARAMEX_NAME || apiKey !== '') return;
 
-        fetcher.submit(
-            { shop, carrierName: ARAMEX_NAME },
-            { method: 'post', action: '/api/get-api-key' }
-        );
-    }, [shop, ARAMEX_NAME, fetcher]);
+        const fetchApiKey = async () => {
+            const response = await fetcher.submit(
+                { shop, carrierName: ARAMEX_NAME },
+                { method: 'post', action: '/api/get-api-key' }
+            );
+        };
+
+        fetchApiKey();
+    }, [shop, ARAMEX_NAME, apiKey]);
 
     return (
         <Card>

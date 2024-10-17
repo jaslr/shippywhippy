@@ -212,7 +212,7 @@ export default function Index() {
                 </Text>
                 <FormLayout>
                   <AustraliaPostCard shop={shop} />
-                  
+                  <AramexCard shop={shop} />
                 </FormLayout>
               </BlockStack>
             </Card>
@@ -234,3 +234,4 @@ export function ErrorBoundary() {
 export const headers: HeadersFunction = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
+
