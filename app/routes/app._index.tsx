@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import {
   Page,
@@ -8,26 +6,17 @@ import {
   Card,
   BlockStack,
   List,
-  Link,
-  InlineStack,
   Banner,
-  TextField,
-  RadioButton,
-  FormLayout,
-  Button
+  FormLayout
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import { useLoaderData, useRouteError, useOutletContext } from "@remix-run/react";
-import { AustraliaPost } from "../components/carriers/australia-post";
-import { Aramex } from "../components/carriers/aramex";
 import { getSessionToken } from "../libs/carriers/utils/sessionToken";
 import { boundary } from "@shopify/shopify-app-remix/server";
 import { HeadersFunction } from "@remix-run/node";
 import { CarrierUptimeCheck } from "../components/carriers/shared/CarrierUptimeCheck";
-import { ShopifyRestResources } from "@shopify/shopify-api";
 import { AdminApiContext } from "node_modules/@shopify/shopify-app-remix/dist/ts/server/clients";
-import { GraphQLClient } from '@shopify/graphql-client';
 import { AustraliaPostCard } from "../components/carriers/australia-post/AustraliaPostCard";
 import { AramexCard } from "../components/carriers/aramex/AramexCard";
 
@@ -42,17 +31,7 @@ const SHOP_QUERY = `#graphql
   }
 `;
 
-const CARRIER_SERVICES_QUERY = `#graphql
-  query {
-    carrierServices(first: 250) {
-      edges {
-        node {
-          id
-        }
-      }
-    }
-  }
-`;
+
 
 async function registerCarrierService(admin: AdminApiContext) {
   try {
@@ -223,7 +202,6 @@ export default function Index() {
             )}
           </List>
         </Banner>
-        <CarrierUptimeCheck />
         <TitleBar title="Shippy Wippy" />
         <Layout>
           <Layout.Section>
