@@ -211,7 +211,7 @@ export default function Index() {
                   Carrier-Calculated Shipping Configuration
                 </Text>
                 <FormLayout>
-                  <AustraliaPostCard shop={shop} />
+                  {/* <AustraliaPostCard shop={shop} /> */}
                   <AramexCard shop={shop} />
                 </FormLayout>
               </BlockStack>
@@ -234,4 +234,5 @@ export function ErrorBoundary() {
 export const headers: HeadersFunction = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
+
 

@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywhippy"
 handle = "shippywippy"
-application_url = "https://elliott-cologne-golf-klein.trycloudflare.com"
+application_url = "https://publicity-id-sound-hazard.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_products,read_shipping,write_products,write_shipping"
 
 [auth]
 redirect_urls = [
-  "https://elliott-cologne-golf-klein.trycloudflare.com/auth/callback",
-  "https://elliott-cologne-golf-klein.trycloudflare.com/auth/shopify/callback",
-  "https://elliott-cologne-golf-klein.trycloudflare.com/api/auth/callback"
+  "https://publicity-id-sound-hazard.trycloudflare.com/auth/callback",
+  "https://publicity-id-sound-hazard.trycloudflare.com/auth/shopify/callback",
+  "https://publicity-id-sound-hazard.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

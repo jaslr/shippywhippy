@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack } from '@shopify/polaris';
+import React, { useState, useCallback } from 'react';
+import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner } from '@shopify/polaris';
 import { useFetcher } from '@remix-run/react';
 import { updateCarrierStatus, saveApiKey } from '../../../libs/carriers/utils/carrierHelpers';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
@@ -23,11 +23,22 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
   const testUrl = '/api/australia-post-lookup';
 
   if (isLoading) {
-    return <Text as="p">Loading API key...</Text>;
+    return (
+      <Card>
+        <BlockStack gap="400">
+          <Text as="p">Loading API key...</Text>
+          <Spinner accessibilityLabel="Loading API key" size="small" />
+        </BlockStack>
+      </Card>
+    );
   }
 
   if (error) {
-    return <Banner tone="critical">Error loading API key: {error}</Banner>;
+    return (
+      <Card>
+        <Banner tone="critical">Error loading API key: {error}</Banner>
+      </Card>
+    );
   }
 
   const handleToggle = useCallback(async () => {

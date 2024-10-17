@@ -3,6 +3,7 @@
 interface ImportMetaEnv {
     VITE_DATABASE_URL: string;
     VITE_ARAMEX_API_KEY: string;
+    VITE_DEFAULT_AUSTRALIA_POST_API_KEY: string;
     // Add other environment variables here
 }
 

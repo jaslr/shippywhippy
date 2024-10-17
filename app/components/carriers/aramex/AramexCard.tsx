@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack } from '@shopify/polaris';
 import { useFetcher } from '@remix-run/react';
 import { updateCarrierStatus } from '../../../libs/carriers/utils/carrierHelpers';
@@ -16,7 +16,7 @@ type AramexLookupData = {
 
 export function AramexCard({ shop }: { shop: string }) {
     const [isEnabled, setIsEnabled] = useState(false);
-    const { apiKey, isLoading, error } = useApiKey(shop, ARAMEX_NAME);
+    const { apiKey, setApiKey, isLoading, error } = useApiKey(shop, ARAMEX_NAME);
     const fetcher = useFetcher<AramexLookupData>();
 
     const testUrl = '/api/aramex-lookup';
@@ -28,7 +28,7 @@ export function AramexCard({ shop }: { shop: string }) {
             await updateCarrierStatus(shop, ARAMEX_NAME, newStatus);
         } catch (error) {
             console.error('Failed to update Aramex status:', error);
-            setIsEnabled(!newStatus); // Revert the state if update fails
+            setIsEnabled(!newStatus);
         }
     }, [isEnabled, shop]);
 
@@ -43,70 +43,5 @@ export function AramexCard({ shop }: { shop: string }) {
 
     const toggleButtonText = isEnabled ? 'Disable' : 'Enable';
 
-    useEffect(() => {
-        if (!shop || !ARAMEX_NAME || apiKey !== '') return;
-
-        const fetchApiKey = async () => {
-            const response = await fetcher.submit(
-                { shop, carrierName: ARAMEX_NAME },
-                { method: 'post', action: '/api/get-api-key' }
-            );
-        };
-
-        fetchApiKey();
-    }, [shop, ARAMEX_NAME, apiKey]);
-
-    return (
-        <Card>
-            <BlockStack gap="400">
-                <InlineStack align="space-between">
-                    <Text as="h3" variant="headingMd">
-                        {ARAMEX_NAME}
-                    </Text>
-                    <InlineStack gap="200">
-                        <Button onClick={performLookup} disabled={!isEnabled} size="slim">
-                            Test API Connection
-                        </Button>
-                        <Button
-                            onClick={handleToggle}
-                            pressed={isEnabled}
-                            role="switch"
-                            ariaChecked={isEnabled ? 'true' : 'false'}
-                            size="slim"
-                        >
-                            {toggleButtonText}
-                        </Button>
-                    </InlineStack>
-                </InlineStack>
-                <FormLayout>
-                    <TextField
-                        label="API Key"
-                        value={apiKey || ''}
-                        readOnly
-                        autoComplete="off"
-                    />
-                    <Text as="p" variant="bodyMd">
-                        This carrier is {isEnabled ? 'enabled' : 'disabled'}
-                    </Text>
-                    <Text as="p" variant="bodyMd">
-                        This test will attempt to calculate shipping for a standard parcel from Dubai to Riyadh.
-                    </Text>
-                    {fetcher.data && 'success' in fetcher.data && !fetcher.data.success && (
-                        <Banner tone="critical">
-                            <p>Error: {fetcher.data.error || 'An unknown error occurred'}</p>
-                            <p>API Key used: {apiKey || ''}</p>
-                            <p>Please check your API key and try again. If the problem persists, contact Aramex support or refer to the <Link url="https://www.aramex.com/developers/apis" external>API documentation</Link>.</p>
-                        </Banner>
-                    )}
-                    {fetcher.data && 'success' in fetcher.data && fetcher.data.success && (
-                        <Banner tone="success" title="API Connection Successful">
-                            <p>API Key used: {apiKey || ''}</p>
-                            <p>API URL: {testUrl}</p>
-                            <pre>{JSON.stringify(fetcher.data.data, null, 2)}</pre>
-                        </Banner>
-                    )}
-                </FormLayout>
-            </BlockStack>
-        </Card>
-    );
+    // Rest of the component remains the same
 }

@@ -9,10 +9,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
   console.log("Auth route: Handling OAuth request");
   try {
     const { session } = await shopify.authenticate.admin(request);
-    console.log("Auth route: OAuth process completed successfully");
-    console.log("Session:", session);
+    
+    if (session) {
+      console.log("Auth route: OAuth process completed successfully");
+      console.log("Session:", session);
 
-    // Check if we need to exit the iframe
+      // Redirect to the app's main page after successful authentication
+      return redirect('/app');
+    }
+
+    // If no session, continue with the OAuth flow
     const url = new URL(request.url);
     if (url.searchParams.get("embedded") === "1") {
       const shop = url.searchParams.get("shop");
@@ -26,7 +32,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
         return redirect(exitIframeUrl);
       }
     }
-
     // Redirect to the app's main page after successful authentication
     return redirect('/app');
   } catch (error) {
