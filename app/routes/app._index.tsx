@@ -211,7 +211,7 @@ export default function Index() {
                   Carrier-Calculated Shipping Configuration
                 </Text>
                 <FormLayout>
-                  {/* <AustraliaPostCard shop={shop} /> */}
+                  <AustraliaPostCard shop={shop} />
                   <AramexCard shop={shop} />
                 </FormLayout>
               </BlockStack>
