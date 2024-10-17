@@ -3,6 +3,7 @@ import { redirect } from '@remix-run/node';
 import shopify from '~/shopify.server';
 import { useRouteError } from '@remix-run/react';
 import { boundary } from '@shopify/shopify-app-remix/server';
+import { ActionFunctionArgs } from '@remix-run/node';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   console.log("Auth route: Handling OAuth request");
@@ -30,6 +31,22 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return redirect('/app');
   } catch (error) {
     console.error("Auth route: OAuth error", error);
+    throw error;
+  }
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+  console.log("Auth route: Handling action request");
+  try {
+    const { session } = await shopify.authenticate.admin(request);
+    console.log("Auth route: Action completed successfully");
+    console.log("Session:", session);
+
+    // Handle any POST requests here if needed
+    // For now, we'll just redirect to the app's main page
+    return redirect('/app');
+  } catch (error) {
+    console.error("Auth route: Action error", error);
     throw error;
   }
 }
