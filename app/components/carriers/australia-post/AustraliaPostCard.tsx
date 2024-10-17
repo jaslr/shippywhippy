@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link } from '@shopify/polaris';
+import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack } from '@shopify/polaris';
 import { AUSTRALIA_POST_NAME, AUSTRALIA_POST_API_KEY } from './constants';
 import { useFetcher } from '@remix-run/react';
 
@@ -31,9 +31,25 @@ export function AustraliaPostCard() {
   return (
     <Card>
       <BlockStack gap="400">
-        <Text as="h3" variant="headingMd">
-          {AUSTRALIA_POST_NAME}
-        </Text>
+        <InlineStack align="space-between">
+          <Text as="h3" variant="headingMd">
+            {AUSTRALIA_POST_NAME}
+          </Text>
+          <InlineStack gap="200">
+            <Button
+              onClick={handleToggle}
+              pressed={isEnabled}
+              role="switch"
+              ariaChecked={isEnabled ? 'true' : 'false'}
+              size="slim"
+            >
+              {toggleButtonText}
+            </Button>
+            <Button onClick={performLookup} disabled={!isEnabled} size="slim">
+              Test API Connection
+            </Button>
+          </InlineStack>
+        </InlineStack>
         <FormLayout>
           <TextField
             label="API Key"
@@ -41,18 +57,9 @@ export function AustraliaPostCard() {
             readOnly
             autoComplete="off"
           />
-          <Button
-            onClick={handleToggle}
-            pressed={isEnabled}
-            role="switch"
-            ariaChecked={isEnabled ? 'true' : 'false'}
-          >
-            {toggleButtonText}
-          </Button>
           <Text as="p" variant="bodyMd">
             This carrier is {isEnabled ? 'enabled' : 'disabled'}
           </Text>
-          <Button onClick={performLookup} disabled={!isEnabled}>Test API Connection</Button>
           <Text as="p" variant="bodyMd">
             This test will attempt to calculate shipping for a standard parcel (10x10x10cm, 1kg) from Melbourne (3000) to Sydney (2000).
           </Text>

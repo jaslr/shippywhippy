@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link } from '@shopify/polaris';
+import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack } from '@shopify/polaris';
 import { useFetcher } from '@remix-run/react';
 
 // Define constants here if the constants file is not set up
@@ -34,9 +34,25 @@ export function AramexCard() {
     return (
         <Card>
             <BlockStack gap="400">
-                <Text as="h3" variant="headingMd">
-                    {ARAMEX_NAME}
-                </Text>
+                <InlineStack align="space-between">
+                    <Text as="h3" variant="headingMd">
+                        {ARAMEX_NAME}
+                    </Text>
+                    <InlineStack gap="200">
+                        <Button onClick={performLookup} disabled={!isEnabled} size="slim">
+                            Test API Connection
+                        </Button>
+                        <Button
+                            onClick={handleToggle}
+                            pressed={isEnabled}
+                            role="switch"
+                            ariaChecked={isEnabled ? 'true' : 'false'}
+                            size="slim"
+                        >
+                            {toggleButtonText}
+                        </Button>
+                    </InlineStack>
+                </InlineStack>
                 <FormLayout>
                     <TextField
                         label="API Key"
@@ -44,18 +60,9 @@ export function AramexCard() {
                         readOnly
                         autoComplete="off"
                     />
-                    <Button
-                        onClick={handleToggle}
-                        pressed={isEnabled}
-                        role="switch"
-                        ariaChecked={isEnabled ? 'true' : 'false'}
-                    >
-                        {toggleButtonText}
-                    </Button>
                     <Text as="p" variant="bodyMd">
                         This carrier is {isEnabled ? 'enabled' : 'disabled'}
                     </Text>
-                    <Button onClick={performLookup} disabled={!isEnabled}>Test API Connection</Button>
                     <Text as="p" variant="bodyMd">
                         This test will attempt to calculate shipping for a standard parcel from Dubai to Riyadh.
                     </Text>
