@@ -43,5 +43,23 @@ export function AramexCard({ shop }: { shop: string }) {
 
     const toggleButtonText = isEnabled ? 'Disable' : 'Enable';
 
-    // Rest of the component remains the same
+    return (
+        <Card>
+            <BlockStack gap="400">
+                <Text as="h3" variant="headingMd">
+                    {ARAMEX_NAME}
+                </Text>
+                <FormLayout>
+                    <TextField
+                        label="API Key"
+                        value={apiKey}
+                        onChange={setApiKey}
+                        autoComplete="off"
+                    />
+                    <Button onClick={handleToggle}>{toggleButtonText}</Button>
+                    <Button onClick={performLookup}>Test Connection</Button>
+                </FormLayout>
+            </BlockStack>
+        </Card>
+    );
 }
