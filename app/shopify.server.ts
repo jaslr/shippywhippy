@@ -6,6 +6,7 @@ import {
 } from '@shopify/shopify-app-remix/server';
 import { PrismaSessionStorage } from '@shopify/shopify-app-session-storage-prisma';
 import { prisma } from './prisma';
+import { restResources } from "@shopify/shopify-api/rest/admin/2023-04";
 
 console.log('Initializing Shopify app with environment variables:');
 console.log('SHOPIFY_API_KEY:', process.env.SHOPIFY_API_KEY);
@@ -35,6 +36,7 @@ const shopify = shopifyApp({
       },
     },
   },
+  restResources,
 });
 
 console.log('Shopify app initialized successfully');

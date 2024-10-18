@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner } from '@shopify/polaris';
 import { useFetcher } from '@remix-run/react';
-import { updateCarrierStatus } from '../../../libs/carriers/utils/carrierHelpers';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
 import { useApiKey } from '../../../hooks/useApiKey';
 
@@ -15,7 +14,7 @@ type AustraliaPostLookupData = {
 };
 
 type ApiKeySaverData = {
-  success?: boolean;
+  success: boolean;
   error?: string;
 };
 
@@ -68,6 +67,8 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
   }, [setApiKey]);
 
   const handleSaveApiKey = useCallback(() => {
+    console.log('Saving API key for:', AUSTRALIA_POST_NAME);
+    console.log('API Key:', apiKey);
     apiKeySaver.submit(
       { carrierName: AUSTRALIA_POST_NAME, apiKey },
       { method: 'post', action: '/api/save-api-key' }
@@ -75,14 +76,16 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
     setIsEditing(false);
   }, [apiKeySaver, apiKey]);
 
-  // Add this useEffect to log the response
   useEffect(() => {
-    if (apiKeySaver.state === 'submitting') {
-      console.log('Submitting API key...');
-    } else if (apiKeySaver.state === 'loading') {
-      console.log('Loading API key save response...');
-    } else if (apiKeySaver.data) {
+    if (apiKeySaver.state === 'idle' && apiKeySaver.data) {
       console.log('API Key Save Response:', apiKeySaver.data);
+      if (apiKeySaver.data.error) {
+        console.error('Error saving API key:', apiKeySaver.data.error);
+        // Handle error (e.g., show error message to user)
+      } else if (apiKeySaver.data.success) {
+        console.log('API key saved successfully', apiKeySaver.data);
+        // Handle success (e.g., show success message to user)
+      }
     }
   }, [apiKeySaver.state, apiKeySaver.data]);
 
@@ -158,11 +161,16 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
               <pre>{JSON.stringify(fetcher.data.data, null, 2)}</pre>
             </Banner>
           )}
-          {apiKeySaver.data?.error && (
-            <Banner tone="critical">Error saving API key: {apiKeySaver.data.error}</Banner>
+          {apiKeySaver.data && 'success' in apiKeySaver.data && !apiKeySaver.data.success && (
+            <Banner tone="critical">
+              <p>Error: {apiKeySaver.data.error || 'An unknown error occurred while saving the API key'}</p>
+              <p>Please try again. If the problem persists, contact support.</p>
+            </Banner>
           )}
-          {apiKeySaver.data?.success && (
-            <Banner tone="success">API key saved successfully</Banner>
+          {apiKeySaver.data && 'success' in apiKeySaver.data && apiKeySaver.data.success && (
+            <Banner tone="success" title="API Key Saved Successfully">
+              <p>Your Australia Post API key has been saved.</p>
+            </Banner>
           )}
         </FormLayout>
       </BlockStack>
