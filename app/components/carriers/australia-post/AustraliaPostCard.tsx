@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner } from '@shopify/polaris';
 import { useFetcher } from '@remix-run/react';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
+import { CarrierCardProps, CarrierCardState } from '../../../libs/carriers/types/carrier';
 
 const AUSTRALIA_POST_NAME = 'Australia Post';
 const australiaPostConfig = getCarrierByName(AUSTRALIA_POST_NAME);
@@ -29,12 +30,23 @@ type CarrierStatusData = {
   error?: string;
 };
 
-export function AustraliaPostCard({ shop }: { shop: string }) {
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [apiKey, setApiKey] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+export function AustraliaPostCard({ 
+  shop, 
+  carrierName = 'Australia Post', 
+  statusURL, 
+  apiKeyEnvVar = 'AUSTRALIA_POST_API_KEY', 
+  defaultApiKey = '' 
+}: CarrierCardProps) {
+  const [state, setState] = useState<CarrierCardState>({
+    isEnabled: false,
+    apiKey: '',
+    isLoading: true,
+    error: null,
+    isEditing: false,
+  });
+
+  const [isApiKeySaveInitiated, setIsApiKeySaveInitiated] = useState(false);
+
   const fetcher = useFetcher<AustraliaPostLookupData>();
   const apiKeySaver = useFetcher<ApiKeySaverData>();
   const apiKeyFetcher = useFetcher<ApiKeyFetcherData>();
@@ -46,47 +58,47 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
   useEffect(() => {
     const fetchInitialData = () => {
       carrierStatusFetcher.submit(
-        { carrierName: AUSTRALIA_POST_NAME },
+        { carrierName },
         { method: 'post', action: '/api/get-carrier-status' }
       );
       apiKeyFetcher.submit(
-        { carrierName: AUSTRALIA_POST_NAME },
+        { carrierName },
         { method: 'post', action: '/api/get-api-key' }
       );
     };
 
     fetchInitialData();
-  }, []);
+  }, [carrierName]);
 
   // Update state when carrier status is fetched
   useEffect(() => {
     if (carrierStatusFetcher.state === 'idle' && carrierStatusFetcher.data) {
-      setIsLoading(false);
-      if (carrierStatusFetcher.data.success) {
-        setIsEnabled(carrierStatusFetcher.data.isActive);
-      } else {
-        setError(carrierStatusFetcher.data.error || 'Failed to fetch carrier status');
-      }
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        isEnabled: carrierStatusFetcher.data?.success ? carrierStatusFetcher.data.isActive : prev.isEnabled,
+        error: carrierStatusFetcher.data?.success ? null : (carrierStatusFetcher.data?.error || 'Failed to fetch carrier status'),
+      }));
     }
   }, [carrierStatusFetcher.state, carrierStatusFetcher.data]);
 
   // Update state when API key is fetched
   useEffect(() => {
     if (apiKeyFetcher.state === 'idle' && apiKeyFetcher.data) {
-      setIsLoading(false);
-      if (apiKeyFetcher.data.success) {
-        setApiKey(apiKeyFetcher.data.apiKey || '');
-      } else {
-        setError(apiKeyFetcher.data.error || 'Failed to fetch API key');
-      }
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        apiKey: apiKeyFetcher.data?.success ? (apiKeyFetcher.data.apiKey || '') : prev.apiKey,
+        error: apiKeyFetcher.data?.success ? null : (apiKeyFetcher.data?.error || 'Failed to fetch API key'),
+      }));
     }
   }, [apiKeyFetcher.state, apiKeyFetcher.data]);
 
   const handleToggle = useCallback(async () => {
-    const newStatus = !isEnabled;
+    const newStatus = !state.isEnabled;
     try {
       const formData = new FormData();
-      formData.append('carrierName', AUSTRALIA_POST_NAME);
+      formData.append('carrierName', carrierName);
       formData.append('isActive', newStatus.toString());
 
       const response = await fetch('/api/update-carrier-status', {
@@ -97,99 +109,112 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
       if (!response.ok) {
         throw new Error(data.error || 'Failed to update carrier status');
       }
-      setIsEnabled(newStatus);
+      setState(prev => ({ ...prev, isEnabled: newStatus }));
       console.log('Carrier status updated successfully:', data);
     } catch (error: unknown) {
-      console.error('Failed to update Australia Post status:', error);
+      console.error(`Failed to update ${carrierName} status:`, error);
       if (error instanceof Error) {
         console.error('Error details:', error.message);
       }
-      setError('Failed to update carrier status');
+      setState(prev => ({ ...prev, error: 'Failed to update carrier status' }));
     }
-  }, [isEnabled]);
+  }, [state.isEnabled, carrierName]);
 
   const performLookup = useCallback(() => {
-    if (apiKey) {
+    if (state.apiKey) {
       fetcher.submit(
-        { apiKey, checkType: 'uptime' },
+        { apiKey: state.apiKey, checkType: 'uptime' },
         { method: 'post', action: testUrl }
       );
     }
-  }, [apiKey, fetcher, testUrl]);
+  }, [state.apiKey, fetcher, testUrl]);
 
   const handleApiKeyChange = useCallback((value: string) => {
-    setApiKey(value);
-  }, [setApiKey]);
+    setState(prev => ({ ...prev, apiKey: value }));
+  }, []);
 
   const handleSaveApiKey = useCallback(() => {
-    console.log('Saving API key for:', AUSTRALIA_POST_NAME);
-    console.log('API Key:', apiKey);
+    console.log('Saving API key for:', carrierName);
+    console.log('API Key:', state.apiKey);
     apiKeySaver.submit(
-      { carrierName: AUSTRALIA_POST_NAME, apiKey },
+      { carrierName, apiKey: state.apiKey },
       { method: 'post', action: '/api/save-api-key' }
     );
-    setIsEditing(false);
-  }, [apiKeySaver, apiKey]);
+    setIsApiKeySaveInitiated(true);
+    setState(prev => ({ ...prev, isEditing: false }));
+  }, [apiKeySaver, carrierName, state.apiKey]);
 
   useEffect(() => {
-    if (apiKeySaver.state === 'idle' && apiKeySaver.data) {
-      console.log('API Key Save Response:', apiKeySaver.data);
-      if (apiKeySaver.data.error) {
-        console.error('Error saving API key:', apiKeySaver.data.error);
-        // Handle error (e.g., show error message to user)
-      } else if (apiKeySaver.data.success) {
-        console.log('API key saved successfully', apiKeySaver.data);
-        // Handle success (e.g., show success message to user)
+    if (!isApiKeySaveInitiated) return;
+
+    console.log('apiKeySaver state:', apiKeySaver.state);
+    console.log('apiKeySaver data:', apiKeySaver.data);
+
+    if (apiKeySaver.state === 'idle') {
+      if (apiKeySaver.data) {
+        const data = apiKeySaver.data as ApiKeySaverData;
+        if ('error' in data && data.error) {
+          console.error('Error saving API key:', data.error);
+          setState(prev => ({ ...prev, error: data.error || 'Unknown error occurred' }));
+        } else if ('success' in data && data.success) {
+          console.log('API key saved successfully', data);
+          setState(prev => ({ ...prev, error: null }));
+        } else {
+          console.warn('Unexpected data structure from apiKeySaver:', data);
+          setState(prev => ({ ...prev, error: 'Unexpected response when saving API key' }));
+        }
+      } else {
+        console.log('apiKeySaver is idle but no data is present');
       }
     }
-  }, [apiKeySaver.state, apiKeySaver.data]);
+  }, [apiKeySaver.state, apiKeySaver.data, isApiKeySaveInitiated]);
 
-  const toggleButtonText = isEnabled ? 'Disable' : 'Enable';
+  const toggleButtonText = state.isEnabled ? 'Disable' : 'Enable';
 
   return (
     <Card>
       <BlockStack gap="400">
         <InlineStack align="space-between">
           <Text as="h3" variant="headingMd">
-            {AUSTRALIA_POST_NAME}
+            {carrierName}
           </Text>
           <InlineStack gap="200">
             <Button
               onClick={handleToggle}
-              pressed={isEnabled}
+              pressed={state.isEnabled}
               role="switch"
-              ariaChecked={isEnabled ? 'true' : 'false'}
+              ariaChecked={state.isEnabled ? 'true' : 'false'}
               size="slim"
             >
               {toggleButtonText}
             </Button>
-            <Button onClick={performLookup} disabled={!isEnabled} size="slim">
+            <Button onClick={performLookup} disabled={!state.isEnabled} size="slim">
               Test API Connection
             </Button>
           </InlineStack>
         </InlineStack>
         <FormLayout>
-          {isLoading ? (
+          {state.isLoading ? (
             <Spinner accessibilityLabel="Loading carrier data" size="small" />
           ) : (
             <>
-              {error && (
-                <Banner tone="critical">Error loading API key: {error}</Banner>
+              {state.error && (
+                <Banner tone="critical">Error: {state.error}</Banner>
               )}
               <TextField
                 label="API Key"
-                value={apiKey}
+                value={state.apiKey}
                 onChange={handleApiKeyChange}
                 autoComplete="off"
-                readOnly={!isEditing}
+                readOnly={!state.isEditing}
               />
               <InlineStack gap="200">
-                {isEditing ? (
+                {state.isEditing ? (
                   <Button onClick={handleSaveApiKey} variant="primary">
                     Save API Key
                   </Button>
                 ) : (
-                  <Button onClick={() => setIsEditing(true)}>
+                  <Button onClick={() => setState(prev => ({ ...prev, isEditing: true }))}>
                     Edit API Key
                   </Button>
                 )}
@@ -197,7 +222,7 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
             </>
           )}
           <Text as="p" variant="bodyMd">
-            This carrier is {isEnabled ? 'enabled' : 'disabled'}
+            This carrier is {state.isEnabled ? 'enabled' : 'disabled'}
           </Text>
           <Text as="p" variant="bodyMd">
             This test will attempt to calculate shipping for a standard parcel (10x10x10cm, 1kg) from Melbourne (3000) to Sydney (2000).
@@ -205,13 +230,13 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
           {fetcher.data && 'success' in fetcher.data && !fetcher.data.success && (
             <Banner tone="critical">
               <p>Error: {fetcher.data.error || 'An unknown error occurred'}</p>
-              <p>API Key used: {apiKey}</p>
+              <p>API Key used: {state.apiKey}</p>
               <p>Please check your API key and try again. If the problem persists, contact Australia Post support or refer to the <Link url="https://developers.auspost.com.au/apis/pac/reference" external>API documentation</Link>.</p>
             </Banner>
           )}
           {fetcher.data && 'success' in fetcher.data && fetcher.data.success && (
             <Banner tone="success" title="API Connection Successful">
-              <p>API Key used: {apiKey}</p>
+              <p>API Key used: {state.apiKey}</p>
               <p>API URL: {testUrl}</p>
               <pre>{JSON.stringify(fetcher.data.data, null, 2)}</pre>
             </Banner>
