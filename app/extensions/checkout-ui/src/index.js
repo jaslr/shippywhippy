@@ -17,7 +17,7 @@ extend('Checkout::DeliveryAddress::RenderAfter', (root) => {
             BlockStack,
             {},
             [
-                root.createComponent(Heading, {}, "Shippy Wippy Delivery"),
+                root.createComponent(Heading, {}, "Shippy Whippy Delivery"),
                 root.createComponent(
                     Button,
                     {

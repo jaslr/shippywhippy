@@ -39,7 +39,7 @@ async function registerCarrierService(admin: AdminApiContext) {
     const mutation = `
       mutation RegisterCarrierService {
         carrierServiceCreate(input: {
-          name: "Shippy Wippy",
+          name: "Shippy Whippy",
           active: true,
           callbackUrl: "${appUrl}/api/carrier-service",
           supportsServiceDiscovery: true
@@ -73,7 +73,7 @@ async function getExistingCarrierService(admin: AdminApiContext) {
   try {
     const query = `
       query {
-        carrierServices(first: 1, query: "Shippy Wippy") {
+        carrierServices(first: 1, query: "Shippy Whippy") {
           edges {
             node {
               id
@@ -189,7 +189,7 @@ export default function Index() {
               Shop: {shop}
             </List.Item>
             <List.Item>
-              Shippy Wippy Carrier Service: {carrierService ? 'Installed' : 'Not installed'}
+              Shippy Whippy Carrier Service: {carrierService ? 'Installed' : 'Not installed'}
             </List.Item>
             {carrierService && (
               <List.Item>
@@ -204,7 +204,7 @@ export default function Index() {
             )}
           </List>
         </Banner>
-        <TitleBar title="Shippy Wippy" />
+        <TitleBar title="Shippy Whippy" />
         <Layout>
           <Layout.Section>
             <Card>

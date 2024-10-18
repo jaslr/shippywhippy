@@ -113,14 +113,17 @@
 }
 ,
   "api": {
-  "get-api-key.ts": null
-,
-  "save-api-key.tsx": null
 }
 ,
   "api.australia-post-lookup.ts": null
 ,
   "api.carrier-service.ts": null
+,
+  "api.get-api-key.ts": null
+,
+  "api.get-carrier-status.ts": null
+,
+  "api.save-api-key.ts": null
 ,
   "api.shop-info.ts": null
 ,

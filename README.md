@@ -6,9 +6,9 @@ Rather than cloning this repo, you can use your preferred package manager and th
 
 Visit the [`shopify.dev` documentation](https://shopify.dev/docs/api/shopify-app-remix) for more details on the Remix app package.
 
-## About Shippy Wippy
+## About Shippy Whippy
 
-Shippy Wippy is a Shopify app designed to connect stores to Australia Post Carrier Calculated Shipping Rates. This integration allows merchants to provide accurate, real-time shipping rates from Australia Post to their customers during checkout.
+Shippy Whippy is a Shopify app designed to connect stores to Australia Post Carrier Calculated Shipping Rates. This integration allows merchants to provide accurate, real-time shipping rates from Australia Post to their customers during checkout.
 
 ## API Routes Documentation
 
@@ -16,7 +16,7 @@ For detailed information about the API routes used in this application, please r
 
 ## Color Palette
 
-The following colors are used in the Shippy Wippy app, outside of the Polaris Design System:
+The following colors are used in the Shippy Whippy app, outside of the Polaris Design System:
 
 - `#FF4500` (Orange-Red)
 - `#8B008B` (Dark Magenta)
