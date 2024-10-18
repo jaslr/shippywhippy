@@ -4,7 +4,13 @@ import { prisma } from '~/prisma';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   try {
-    const { admin, session } = await shopify.authenticate.admin(request);
+    const authResult = await shopify.authenticate.admin(request);
+
+    if (authResult instanceof Response) {
+      return authResult;
+    }
+
+    const { session } = authResult;
 
     if (session) {
       const { shop } = session;
@@ -25,8 +31,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       return redirect('/app');
     }
 
-    // If no session, start the auth process
-    return await shopify.authenticate.admin(request);
+    // If no session, redirect to auth
+    return redirect('/auth');
   } catch (error) {
     console.error('Error in auth flow:', error);
     throw error;
