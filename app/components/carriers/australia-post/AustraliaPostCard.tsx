@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner } from '@shopify/polaris';
 import { useFetcher } from '@remix-run/react';
 import { updateCarrierStatus } from '../../../libs/carriers/utils/carrierHelpers';
@@ -74,6 +74,17 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
     );
     setIsEditing(false);
   }, [apiKeySaver, apiKey]);
+
+  // Add this useEffect to log the response
+  useEffect(() => {
+    if (apiKeySaver.state === 'submitting') {
+      console.log('Submitting API key...');
+    } else if (apiKeySaver.state === 'loading') {
+      console.log('Loading API key save response...');
+    } else if (apiKeySaver.data) {
+      console.log('API Key Save Response:', apiKeySaver.data);
+    }
+  }, [apiKeySaver.state, apiKeySaver.data]);
 
   const toggleButtonText = isEnabled ? 'Disable' : 'Enable';
 
