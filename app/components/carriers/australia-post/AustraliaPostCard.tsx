@@ -23,6 +23,12 @@ type ApiKeyFetcherData = {
   error?: string;
 };
 
+type CarrierStatusData = {
+  success: boolean;
+  isActive: boolean;
+  error?: string;
+};
+
 export function AustraliaPostCard({ shop }: { shop: string }) {
   const [isEnabled, setIsEnabled] = useState(false);
   const [apiKey, setApiKey] = useState('');
@@ -32,21 +38,39 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
   const fetcher = useFetcher<AustraliaPostLookupData>();
   const apiKeySaver = useFetcher<ApiKeySaverData>();
   const apiKeyFetcher = useFetcher<ApiKeyFetcherData>();
+  const carrierStatusFetcher = useFetcher<CarrierStatusData>();
 
   const testUrl = '/api/australia-post-lookup';
 
+  // Fetch carrier status and API key on component mount
   useEffect(() => {
-    const fetchApiKey = async () => {
-      setIsLoading(true);
+    const fetchInitialData = () => {
+      carrierStatusFetcher.submit(
+        { carrierName: AUSTRALIA_POST_NAME },
+        { method: 'post', action: '/api/get-carrier-status' }
+      );
       apiKeyFetcher.submit(
         { carrierName: AUSTRALIA_POST_NAME },
         { method: 'post', action: '/api/get-api-key' }
       );
     };
 
-    fetchApiKey();
-  }, []); // Add an empty dependency array here
+    fetchInitialData();
+  }, []);
 
+  // Update state when carrier status is fetched
+  useEffect(() => {
+    if (carrierStatusFetcher.state === 'idle' && carrierStatusFetcher.data) {
+      setIsLoading(false);
+      if (carrierStatusFetcher.data.success) {
+        setIsEnabled(carrierStatusFetcher.data.isActive);
+      } else {
+        setError(carrierStatusFetcher.data.error || 'Failed to fetch carrier status');
+      }
+    }
+  }, [carrierStatusFetcher.state, carrierStatusFetcher.data]);
+
+  // Update state when API key is fetched
   useEffect(() => {
     if (apiKeyFetcher.state === 'idle' && apiKeyFetcher.data) {
       setIsLoading(false);
@@ -60,7 +84,6 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
 
   const handleToggle = useCallback(async () => {
     const newStatus = !isEnabled;
-    setIsEnabled(newStatus);
     try {
       const formData = new FormData();
       formData.append('carrierName', AUSTRALIA_POST_NAME);
@@ -74,13 +97,14 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
       if (!response.ok) {
         throw new Error(data.error || 'Failed to update carrier status');
       }
+      setIsEnabled(newStatus);
       console.log('Carrier status updated successfully:', data);
     } catch (error: unknown) {
       console.error('Failed to update Australia Post status:', error);
       if (error instanceof Error) {
         console.error('Error details:', error.message);
       }
-      setIsEnabled(!newStatus);
+      setError('Failed to update carrier status');
     }
   }, [isEnabled]);
 
@@ -146,7 +170,7 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
         </InlineStack>
         <FormLayout>
           {isLoading ? (
-            <Spinner accessibilityLabel="Loading API key" size="small" />
+            <Spinner accessibilityLabel="Loading carrier data" size="small" />
           ) : (
             <>
               {error && (
