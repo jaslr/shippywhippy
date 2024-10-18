@@ -6,15 +6,13 @@ import { boundary } from "@shopify/shopify-app-remix/server";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin, session } = await shopify.authenticate.admin(request);
 
-  // If we have a valid session, return it without re-authenticating
-  if (session) {
-    return json({
-      shop: session.shop,
-    });
+  if (!session) {
+    return redirect('/auth');
   }
-  const { shop } = useLoaderData<typeof loader>();
-  // If no session, redirect to auth
-  return redirect('/auth');
+
+  return json({
+    shop: session.shop,
+  });
 };
 
 export default function App() {

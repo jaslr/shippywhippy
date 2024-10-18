@@ -4,11 +4,11 @@ import { prisma } from '~/prisma';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   try {
-    const { session } = await shopify.authenticate.admin(request);
+    const { admin, session } = await shopify.authenticate.admin(request);
 
     if (session) {
       const { shop } = session;
-      console.log(`Attempting to upsert shop record for ${shop}`);
+      console.log(`Authenticated session for ${shop}`);
       
       const shopData = await prisma.shop.upsert({
         where: { username: shop },
