@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywhippy"
 handle = "shippywippy"
-application_url = "https://eden-trained-reliable-sponsor.trycloudflare.com"
+application_url = "https://ferrari-causing-beauty-organizations.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_products,read_shipping,write_products,write_shipping"
 
 [auth]
 redirect_urls = [
-  "https://eden-trained-reliable-sponsor.trycloudflare.com/auth/callback",
-  "https://eden-trained-reliable-sponsor.trycloudflare.com/auth/shopify/callback",
-  "https://eden-trained-reliable-sponsor.trycloudflare.com/api/auth/callback"
+  "https://ferrari-causing-beauty-organizations.trycloudflare.com/auth/callback",
+  "https://ferrari-causing-beauty-organizations.trycloudflare.com/auth/shopify/callback",
+  "https://ferrari-causing-beauty-organizations.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

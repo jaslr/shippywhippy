@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner } from '@shopify/polaris';
 import { useFetcher } from '@remix-run/react';
-import { updateCarrierStatus, saveApiKey } from '../../../libs/carriers/utils/carrierHelpers';
+import { updateCarrierStatus } from '../../../libs/carriers/utils/carrierHelpers';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
 import { useApiKey } from '../../../hooks/useApiKey';
 
@@ -14,11 +14,17 @@ type AustraliaPostLookupData = {
   data?: any;
 };
 
+type ApiKeySaverData = {
+  success?: boolean;
+  error?: string;
+};
+
 export function AustraliaPostCard({ shop }: { shop: string }) {
   const [isEnabled, setIsEnabled] = useState(false);
   const { apiKey, setApiKey, isLoading, error } = useApiKey(shop, AUSTRALIA_POST_NAME);
   const [isEditing, setIsEditing] = useState(false);
   const fetcher = useFetcher<AustraliaPostLookupData>();
+  const apiKeySaver = useFetcher<ApiKeySaverData>();
 
   const testUrl = '/api/australia-post-lookup';
 
@@ -61,14 +67,13 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
     setApiKey(value);
   }, [setApiKey]);
 
-  const handleSaveApiKey = useCallback(async () => {
-    try {
-      await saveApiKey(shop, AUSTRALIA_POST_NAME, apiKey);
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Failed to save API key:', error);
-    }
-  }, [shop, apiKey]);
+  const handleSaveApiKey = useCallback(() => {
+    apiKeySaver.submit(
+      { carrierName: AUSTRALIA_POST_NAME, apiKey },
+      { method: 'post', action: '/api/save-api-key' }
+    );
+    setIsEditing(false);
+  }, [apiKeySaver, apiKey]);
 
   const toggleButtonText = isEnabled ? 'Disable' : 'Enable';
 
@@ -141,6 +146,12 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
               <p>API URL: {testUrl}</p>
               <pre>{JSON.stringify(fetcher.data.data, null, 2)}</pre>
             </Banner>
+          )}
+          {apiKeySaver.data?.error && (
+            <Banner tone="critical">Error saving API key: {apiKeySaver.data.error}</Banner>
+          )}
+          {apiKeySaver.data?.success && (
+            <Banner tone="success">API key saved successfully</Banner>
           )}
         </FormLayout>
       </BlockStack>

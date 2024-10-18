@@ -26,7 +26,6 @@ export async function updateCarrierStatus(shopName: string, carrierName: string,
         });
 
         if (!shop) {
-            // If shop doesn't exist, create it
             shop = await prisma.shop.create({
                 data: {
                     username: shopName,
@@ -35,14 +34,27 @@ export async function updateCarrierStatus(shopName: string, carrierName: string,
                     isActive: true,
                 },
             });
-            console.log(`Created new shop: ${shopName}`);
+        }
+
+        // Ensure the Carrier exists in the database
+        let dbCarrier = await prisma.carrier.findUnique({
+            where: { name: carrierName },
+        });
+
+        if (!dbCarrier) {
+            dbCarrier = await prisma.carrier.create({
+                data: {
+                    name: carrierName,
+                    defaultApiKey: carrier.defaultApiKey || '',
+                },
+            });
         }
 
         await prisma.carrierConfig.upsert({
             where: {
                 shopId_carrierId: {
                     shopId: shop.id,
-                    carrierId: parseInt(carrier.id),
+                    carrierId: dbCarrier.id,
                 }
             },
             update: {
@@ -50,7 +62,7 @@ export async function updateCarrierStatus(shopName: string, carrierName: string,
             },
             create: {
                 shopId: shop.id,
-                carrierId: parseInt(carrier.id),
+                carrierId: dbCarrier.id,
                 isActive,
             },
         });
