@@ -18,15 +18,24 @@ export async function updateCarrierStatus(shopName: string, carrierName: string,
     try {
         const carrier = getCarrierByName(carrierName);
         if (!carrier) {
-            throw new Error('Carrier not found');
+            throw new Error(`Carrier not found: ${carrierName}`);
         }
 
-        const shop = await prisma.shop.findUnique({
+        let shop = await prisma.shop.findUnique({
             where: { username: shopName },
         });
 
         if (!shop) {
-            throw new Error(`Shop not found: ${shopName}`);
+            // If shop doesn't exist, create it
+            shop = await prisma.shop.create({
+                data: {
+                    username: shopName,
+                    shopifyName: shopName,
+                    shopifyUrl: `https://${shopName}`,
+                    isActive: true,
+                },
+            });
+            console.log(`Created new shop: ${shopName}`);
         }
 
         await prisma.carrierConfig.upsert({
@@ -45,9 +54,15 @@ export async function updateCarrierStatus(shopName: string, carrierName: string,
                 isActive,
             },
         });
+
+        console.log(`Updated carrier status for ${carrierName} to ${isActive} for shop ${shopName}`);
     } catch (error) {
         console.error('Error updating carrier status:', error);
-        throw new Error('Failed to update carrier status');
+        if (error instanceof Error) {
+            throw new Error(`Failed to update carrier status: ${error.message}`);
+        } else {
+            throw new Error('Failed to update carrier status: Unknown error');
+        }
     }
 }
 

@@ -26,10 +26,13 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
     const newStatus = !isEnabled;
     setIsEnabled(newStatus);
     try {
+      const formData = new FormData();
+      formData.append('carrierName', AUSTRALIA_POST_NAME);
+      formData.append('isActive', newStatus.toString());
+
       const response = await fetch('/api/update-carrier-status', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ shop, carrierName: AUSTRALIA_POST_NAME, isActive: newStatus }),
+        body: formData,
       });
       const data = await response.json();
       if (!response.ok) {
@@ -43,7 +46,7 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
       }
       setIsEnabled(!newStatus);
     }
-  }, [isEnabled, shop]);
+  }, [isEnabled]);
 
   const performLookup = useCallback(() => {
     if (apiKey) {
