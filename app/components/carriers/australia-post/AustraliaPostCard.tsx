@@ -2,7 +2,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner } from '@shopify/polaris';
 import { useFetcher } from '@remix-run/react';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
-import { useApiKey } from '../../../hooks/useApiKey';
 
 const AUSTRALIA_POST_NAME = 'Australia Post';
 const australiaPostConfig = getCarrierByName(AUSTRALIA_POST_NAME);
@@ -18,14 +17,46 @@ type ApiKeySaverData = {
   error?: string;
 };
 
+type ApiKeyFetcherData = {
+  success: boolean;
+  apiKey?: string;
+  error?: string;
+};
+
 export function AustraliaPostCard({ shop }: { shop: string }) {
   const [isEnabled, setIsEnabled] = useState(false);
-  const { apiKey, setApiKey, isLoading, error } = useApiKey(shop, AUSTRALIA_POST_NAME);
+  const [apiKey, setApiKey] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const fetcher = useFetcher<AustraliaPostLookupData>();
   const apiKeySaver = useFetcher<ApiKeySaverData>();
+  const apiKeyFetcher = useFetcher<ApiKeyFetcherData>();
 
   const testUrl = '/api/australia-post-lookup';
+
+  useEffect(() => {
+    const fetchApiKey = async () => {
+      setIsLoading(true);
+      apiKeyFetcher.submit(
+        { carrierName: AUSTRALIA_POST_NAME },
+        { method: 'post', action: '/api/get-api-key' }
+      );
+    };
+
+    fetchApiKey();
+  }, []); // Add an empty dependency array here
+
+  useEffect(() => {
+    if (apiKeyFetcher.state === 'idle' && apiKeyFetcher.data) {
+      setIsLoading(false);
+      if (apiKeyFetcher.data.success) {
+        setApiKey(apiKeyFetcher.data.apiKey || '');
+      } else {
+        setError(apiKeyFetcher.data.error || 'Failed to fetch API key');
+      }
+    }
+  }, [apiKeyFetcher.state, apiKeyFetcher.data]);
 
   const handleToggle = useCallback(async () => {
     const newStatus = !isEnabled;
