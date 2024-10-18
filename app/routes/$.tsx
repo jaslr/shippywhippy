@@ -1,4 +1,4 @@
-import { LoaderFunctionArgs } from '@remix-run/node';
+import { LoaderFunctionArgs, json, type ActionFunctionArgs } from '@remix-run/node';
 import { redirect } from '@remix-run/node';
 import shopify from '~/shopify.server';
 import { useRouteError } from '@remix-run/react';
@@ -50,3 +50,23 @@ export function ErrorBoundary() {
 }
 
 export const headers = boundary.headers;
+
+export async function action({ request }: ActionFunctionArgs) {
+  // Handle POST, PUT, PATCH, or DELETE requests here
+  const { admin } = await shopify.authenticate.admin(request);
+  
+  // Example: handle form submission
+  const formData = await request.formData();
+  const action = formData.get('action');
+
+  switch (action) {
+    case 'updateShop':
+      // Handle shop update
+      break;
+    // Add more cases as needed
+    default:
+      return json({ error: 'Invalid action' }, { status: 400 });
+  }
+
+  return json({ success: true });
+}
