@@ -35,7 +35,6 @@ export function useApiKey(shop: string, carrierName: string) {
                 { method: 'post', action: '/api/get-api-key' }
             );
         } else if (fetchAttempts.current >= 3 && !apiKey) {
-            console.table(attemptLogs.current);
             setError('Failed to fetch API key after 3 attempts');
             setIsLoading(false);
         }

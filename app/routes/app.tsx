@@ -12,7 +12,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       shop: session.shop,
     });
   }
-
+  const { shop } = useLoaderData<typeof loader>();
   // If no session, redirect to auth
   return redirect('/auth');
 };

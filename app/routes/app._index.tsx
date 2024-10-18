@@ -162,6 +162,8 @@ export const loader = async ({ request }: { request: Request }) => {
 
   const hasCarrierCalculatedShipping = !!existingCarrierService;
 
+  await fetch(`${process.env.APP_URL}/api/shop-info`);
+
   return json({ isDevelopmentStore, hasCarrierCalculatedShipping, sessionToken, carrierService: existingCarrierService });
 };
 

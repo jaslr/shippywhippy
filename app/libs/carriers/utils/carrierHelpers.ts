@@ -14,25 +14,25 @@ export function getActiveCarriers(carriers: Carrier[]): Carrier[] {
     return carriers.filter(carrier => carrier.isActive);
 }
 
-export async function updateCarrierStatus(shop: string, carrierName: string, isActive: boolean): Promise<void> {
+export async function updateCarrierStatus(shopName: string, carrierName: string, isActive: boolean): Promise<void> {
     try {
         const carrier = getCarrierByName(carrierName);
         if (!carrier) {
             throw new Error('Carrier not found');
         }
 
-        const shopRecord = await prisma.shop.findUnique({
-            where: { username: shop },
+        const shop = await prisma.shop.findUnique({
+            where: { username: shopName },
         });
 
-        if (!shopRecord) {
-            throw new Error('Shop not found');
+        if (!shop) {
+            throw new Error(`Shop not found: ${shopName}`);
         }
 
         await prisma.carrierConfig.upsert({
             where: {
                 shopId_carrierId: {
-                    shopId: shopRecord.id,
+                    shopId: shop.id,
                     carrierId: parseInt(carrier.id),
                 }
             },
@@ -40,7 +40,7 @@ export async function updateCarrierStatus(shop: string, carrierName: string, isA
                 isActive,
             },
             create: {
-                shopId: shopRecord.id,
+                shopId: shop.id,
                 carrierId: parseInt(carrier.id),
                 isActive,
             },

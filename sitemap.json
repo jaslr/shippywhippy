@@ -120,6 +120,8 @@
 ,
   "api.shop-info.ts": null
 ,
+  "api.update-carrier-status.ts": null
+,
   "app._index.tsx": null
 ,
   "app.additional.tsx": null

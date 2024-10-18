@@ -6,7 +6,7 @@
     },
     {
       "description": "Solution Presentation",
-      "pattern": "Only provide the solution, omit any before (pre solution) codeblocks."
+      "pattern": "Provide only the solution without any preceding content or 'Current:' section."
     },
     {
       "description": "Naming Conventions",

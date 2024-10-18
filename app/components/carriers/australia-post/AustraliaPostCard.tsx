@@ -26,9 +26,21 @@ export function AustraliaPostCard({ shop }: { shop: string }) {
     const newStatus = !isEnabled;
     setIsEnabled(newStatus);
     try {
-      await updateCarrierStatus(shop, AUSTRALIA_POST_NAME, newStatus);
-    } catch (error) {
+      const response = await fetch('/api/update-carrier-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shop, carrierName: AUSTRALIA_POST_NAME, isActive: newStatus }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update carrier status');
+      }
+      console.log('Carrier status updated successfully:', data);
+    } catch (error: unknown) {
       console.error('Failed to update Australia Post status:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+      }
       setIsEnabled(!newStatus);
     }
   }, [isEnabled, shop]);

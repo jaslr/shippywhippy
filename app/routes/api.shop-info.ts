@@ -11,6 +11,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         where: { username: shop },
     });
 
+    let action = 'No change';
+
     if (!shopData) {
         const shopifyData = await admin.rest.resources.Shop.all({ session });
         const shopInfo = shopifyData.data[0];
@@ -24,8 +26,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
                 isActive: true,
             },
         });
+        action = 'Created';
     } else {
-        // Update existing shop with latest Shopify data
         const shopifyData = await admin.rest.resources.Shop.all({ session });
         const shopInfo = shopifyData.data[0];
         const shopUrl = shopInfo?.myshopify_domain || shop;
@@ -38,7 +40,19 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
                 isActive: true,
             },
         });
+        action = 'Updated';
     }
+
+    console.table({
+        Action: action,
+        ID: shopData.id,
+        Username: shopData.username,
+        ShopifyName: shopData.shopifyName,
+        ShopifyURL: shopData.shopifyUrl,
+        IsActive: shopData.isActive,
+        DaysActive: shopData.daysActive,
+        InstalledAt: shopData.installedAt,
+    });
 
     return json({ shop, shopData });
 };
