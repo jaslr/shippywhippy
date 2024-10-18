@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywhippy"
 handle = "shippywippy"
-application_url = "https://contest-success-interval-sixth.trycloudflare.com"
+application_url = "https://eden-trained-reliable-sponsor.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_products,read_shipping,write_products,write_shipping"
 
 [auth]
 redirect_urls = [
-  "https://contest-success-interval-sixth.trycloudflare.com/auth/callback",
-  "https://contest-success-interval-sixth.trycloudflare.com/auth/shopify/callback",
-  "https://contest-success-interval-sixth.trycloudflare.com/api/auth/callback"
+  "https://eden-trained-reliable-sponsor.trycloudflare.com/auth/callback",
+  "https://eden-trained-reliable-sponsor.trycloudflare.com/auth/shopify/callback",
+  "https://eden-trained-reliable-sponsor.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
