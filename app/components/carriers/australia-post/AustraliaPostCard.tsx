@@ -257,7 +257,7 @@ export function AustraliaPostCard({
                   <p>Australia Post activated</p>
                   {(!state.apiKey || state.apiKey === defaultApiKey) && (
                     <p>
-                      <Link url="https://www.australiapost.com.au" external>
+                      <Link url="https://developers.auspost.com.au/apis/st-registration" external>
                         Connect your API Key
                       </Link>
                     </p>
