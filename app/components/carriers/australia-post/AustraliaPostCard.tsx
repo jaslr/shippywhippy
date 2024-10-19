@@ -31,12 +31,12 @@ type CarrierStatusData = {
   error?: string;
 };
 
-export function AustraliaPostCard({ 
-  shop, 
-  carrierName = 'Australia Post', 
-  statusURL, 
-  apiKeyEnvVar = 'AUSTRALIA_POST_API_KEY', 
-  defaultApiKey = '' 
+export function AustraliaPostCard({
+  shop,
+  carrierName = 'Australia Post',
+  statusURL,
+  apiKeyEnvVar = 'AUSTRALIA_POST_API_KEY',
+  defaultApiKey = ''
 }: CarrierCardProps) {
   const [state, setState] = useState<CarrierCardState>({
     isEnabled: false,
@@ -262,7 +262,7 @@ export function AustraliaPostCard({
                       </Link>
                     </p>
                   )}
-                </BlockStack>                
+                </BlockStack>
               </InlineStack>
             </Banner>
           )}
@@ -290,8 +290,8 @@ export function AustraliaPostCard({
                       </Banner>
                     )}
                     <InlineStack>
-                      <Button 
-                        onClick={handleSaveApiKey} 
+                      <Button
+                        onClick={handleSaveApiKey}
                         variant="primary"
                         disabled={!hasApiKeyChanged}
                       >
@@ -300,9 +300,7 @@ export function AustraliaPostCard({
                     </InlineStack>
                   </BlockStack>
                 </BlockStack>
-                <Text as="p" variant="bodyMd">
-                  This test will attempt to calculate shipping for a standard parcel (10x10x10cm, 1kg) from Melbourne (3000) to Sydney (2000).
-                </Text>
+
                 {fetcher.data && 'success' in fetcher.data && !fetcher.data.success && (
                   <Banner tone="critical">
                     <p>Error: {fetcher.data.error || 'An unknown error occurred'}</p>
