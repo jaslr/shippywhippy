@@ -10,7 +10,7 @@ interface ShippingRate {
 }
 
 export const action: ActionFunction = async ({ request }) => {
-    console.log("Australia Post lookup action called");
+    console.log("Australia Post lookup action called - Initial log");
     if (request.method !== "POST") {
         return json({ error: "Method not allowed" }, { status: 405 });
     }
@@ -29,7 +29,7 @@ export const action: ActionFunction = async ({ request }) => {
         const shopCarrier = await prisma.carrierConfig.findFirst({
             where: {
                 shop: {
-                    shopifyUrl: shopUrl,
+                    shopifyUrl: `https://${shopUrl}`,
                 },
                 isActive: true,
                 carrier: {

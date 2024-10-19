@@ -85,7 +85,7 @@ export const action: ActionFunction = async ({ request }) => {
 
         const shop = await prisma.shop.findFirst({
             where: {
-                username: shopUrl,
+                shopifyUrl: `https://${shopUrl}`,
             },
         });
         console.log("Shop details:", JSON.stringify(shop, null, 2));
@@ -117,7 +117,7 @@ export const action: ActionFunction = async ({ request }) => {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-Shopify-Shop-Domain': shopUrl,
+                            'X-Shopify-Shop-Domain': shop.shopifyUrl.replace('https://', ''),
                         },
                         body: JSON.stringify(body)
                     });
