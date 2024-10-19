@@ -72,55 +72,69 @@ export const action: ActionFunction = async ({ request }) => {
     }
 
     try {
-        // Remove the session authentication
-        // const { session } = await authenticate.admin(request);
         const body: CarrierServiceRequest = await request.json();
         console.log("Received rate request:", body);
 
-        // Use a different method to get the shop URL
         const shopUrl = request.headers.get('X-Shopify-Shop-Domain');
 
         if (!shopUrl) {
             throw new Error('Shop URL not provided in headers');
         }
 
-        const shopCarriers = await prisma.carrierConfig.findMany({
+        console.log("Shop URL:", shopUrl);
+
+        const shop = await prisma.shop.findFirst({
             where: {
-                shop: {
-                    shopifyUrl: shopUrl,
-                },
+                shopifyUrl: shopUrl,
+            },
+        });
+        console.log("Shop details:", JSON.stringify(shop, null, 2));
+
+        const activeCarriers = await prisma.carrierConfig.findMany({
+            where: {
                 isActive: true,
+                shop: {
+                    shopifyUrl: shopUrl
+                }
             },
             include: {
                 carrier: true,
+                shop: true,
             },
         });
+        console.log("All active carriers:", JSON.stringify(activeCarriers, null, 2));
 
         let rates: ShippingRate[] = [];
 
-        for (const shopCarrier of shopCarriers) {
+        for (const shopCarrier of activeCarriers) {
             if (shopCarrier.carrier.name === "Australia Post") {
+                console.log("Attempting to call Australia Post API");
                 try {
                     const australiaPostResponse = await fetch(`${process.env.APP_URL}/api/australia-post-lookup`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': request.headers.get('Authorization') || '',
+                            'X-Shopify-Shop-Domain': shopUrl,
                         },
                         body: JSON.stringify(body)
                     });
 
+                    console.log("Australia Post API response status:", australiaPostResponse.status);
+
                     if (!australiaPostResponse.ok) {
                         console.error(`Australia Post API error: ${australiaPostResponse.statusText}`);
+                        const errorText = await australiaPostResponse.text();
+                        console.error("Error details:", errorText);
                         continue;
                     }
 
                     const australiaPostRates = await australiaPostResponse.json();
-                    console.log("Australia Post rates:", australiaPostRates);
+                    console.log("Australia Post rates:", JSON.stringify(australiaPostRates, null, 2));
+
                     if (australiaPostRates.success && Array.isArray(australiaPostRates.rates)) {
                         rates = rates.concat(australiaPostRates.rates);
                     } else {
-                        console.error('Invalid response from Australia Post API');
+                        console.error('Invalid response from Australia Post API:', australiaPostRates);
                     }
                 } catch (error) {
                     console.error("Error fetching Australia Post rates:", error);

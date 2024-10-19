@@ -1,5 +1,4 @@
 import { json, type ActionFunction } from '@remix-run/node';
-import { authenticate } from "~/shopify.server";
 import { prisma } from '~/prisma';
 
 interface ShippingRate {
@@ -11,19 +10,26 @@ interface ShippingRate {
 }
 
 export const action: ActionFunction = async ({ request }) => {
+    console.log("Australia Post lookup action called");
     if (request.method !== "POST") {
         return json({ error: "Method not allowed" }, { status: 405 });
     }
 
     try {
-        const { session } = await authenticate.admin(request);
         const body = await request.json();
-        console.log("Received Australia Post lookup request:", body);
+        console.log("Received Australia Post lookup request:", JSON.stringify(body, null, 2));
+
+        const shopUrl = request.headers.get('X-Shopify-Shop-Domain');
+        console.log("Shop URL:", shopUrl);
+
+        if (!shopUrl) {
+            throw new Error('Shop URL not provided in headers');
+        }
 
         const shopCarrier = await prisma.carrierConfig.findFirst({
             where: {
                 shop: {
-                    shopifyUrl: session.shop,
+                    shopifyUrl: shopUrl,
                 },
                 isActive: true,
                 carrier: {
@@ -32,10 +38,14 @@ export const action: ActionFunction = async ({ request }) => {
             },
             include: {
                 carrier: true,
+                shop: true,
             },
         });
 
+        console.log("Shop carrier config:", JSON.stringify(shopCarrier, null, 2));
+
         if (!shopCarrier) {
+            console.log("Australia Post carrier not configured for this shop");
             return json({ success: false, error: "Australia Post carrier not configured" }, { status: 400 });
         }
 
