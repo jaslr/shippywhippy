@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner, Popover, ActionList } from '@shopify/polaris';
+import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner, Popover, ActionList, Icon } from '@shopify/polaris';
+import { CheckIcon, XSmallIcon } from '@shopify/polaris-icons';
 import { useFetcher } from '@remix-run/react';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
 import { CarrierCardProps, CarrierCardState } from '../../../libs/carriers/types/carrier';
@@ -42,11 +43,14 @@ export function AustraliaPostCard({
     apiKey: '',
     isLoading: true,
     error: null,
-    isEditing: false,
+    isEditing: true, // Set to true by default
   });
 
   const [isApiKeySaveInitiated, setIsApiKeySaveInitiated] = useState(false);
   const [popoverActive, setPopoverActive] = useState(false);
+  const [showApiKeyUI, setShowApiKeyUI] = useState(false);
+  const [hasApiKeyChanged, setHasApiKeyChanged] = useState(false);
+  const [showActivationBanner, setShowActivationBanner] = useState(false);
 
   const fetcher = useFetcher<AustraliaPostLookupData>();
   const apiKeySaver = useFetcher<ApiKeySaverData>();
@@ -132,6 +136,7 @@ export function AustraliaPostCard({
 
   const handleApiKeyChange = useCallback((value: string) => {
     setState(prev => ({ ...prev, apiKey: value }));
+    setHasApiKeyChanged(true);
   }, []);
 
   const handleSaveApiKey = useCallback(() => {
@@ -142,7 +147,7 @@ export function AustraliaPostCard({
       { method: 'post', action: '/api/save-api-key' }
     );
     setIsApiKeySaveInitiated(true);
-    setState(prev => ({ ...prev, isEditing: false }));
+    setHasApiKeyChanged(false);
   }, [apiKeySaver, carrierName, state.apiKey]);
 
   useEffect(() => {
@@ -182,49 +187,85 @@ export function AustraliaPostCard({
     setPopoverActive(false);
   }, [handleToggle]);
 
+  const handleManageAction = useCallback((action: string) => {
+    setPopoverActive(false);
+    if (action === 'apiKey') {
+      setShowApiKeyUI(true);
+    } else if (action === 'disable') {
+      handleDisable();
+    }
+  }, [handleDisable]);
+
   const activator = (
-    <Button onClick={togglePopoverActive} disclosure>
+    <Button onClick={togglePopoverActive} disclosure >
       Manage
     </Button>
   );
 
+  const handleDismissBanner = useCallback(() => {
+    setShowActivationBanner(false);
+  }, []);
+
   return (
     <Card>
       <BlockStack gap="400">
-        <InlineStack align="space-between">
-          <Text as="h3" variant="headingMd">
-            {carrierName}
-          </Text>
-          {state.isEnabled ? (
-            <Popover
-              active={popoverActive}
-              activator={activator}
-              autofocusTarget="first-node"
-              onClose={togglePopoverActive}
-            >
-              <ActionList
-                actionRole="menuitem"
-                items={[
-                  {
-                    content: 'Disable',
-                    onAction: handleDisable,
-                    destructive: true,
-                  },
-                ]}
-              />
-            </Popover>
-          ) : (
-            <Button
-              onClick={handleToggle}
-              pressed={state.isEnabled}
-              role="switch"
-              ariaChecked={state.isEnabled ? 'true' : 'false'}
-              size="slim"
-            >
-              Enable
-            </Button>
+        <BlockStack gap="200">
+          <InlineStack align="space-between">
+            <Text as="h3" variant="headingMd">
+              {carrierName}
+            </Text>
+            {state.isEnabled ? (
+              <Popover
+                active={popoverActive}
+                activator={activator}
+                autofocusTarget="first-node"
+                onClose={togglePopoverActive}
+              >
+                <ActionList
+                  actionRole="menuitem"
+                  items={[
+                    {
+                      content: 'API Key',
+                      onAction: () => handleManageAction('apiKey'),
+                    },
+                    {
+                      content: 'Disable',
+                      onAction: () => handleManageAction('disable'),
+                      destructive: true,
+                    },
+                  ]}
+                />
+              </Popover>
+            ) : (
+              <Button
+                onClick={handleToggle}
+                pressed={state.isEnabled}
+                role="switch"
+                ariaChecked={state.isEnabled ? 'true' : 'false'}
+                size="slim"
+              >
+                Enable
+              </Button>
+            )}
+          </InlineStack>
+          {showActivationBanner && (
+            <Banner tone="success" icon={CheckIcon} onDismiss={handleDismissBanner}>
+              <InlineStack align="space-between">
+                <BlockStack>
+                  <p>Australia Post activated</p>
+                  {(!state.apiKey || state.apiKey === defaultApiKey) && (
+                    <p>
+                      <Link url="https://www.australiapost.com.au" external>
+                        Connect your API Key
+                      </Link>
+                    </p>
+                  )}
+                </BlockStack>
+                <Button icon={XSmallIcon} onClick={handleDismissBanner} accessibilityLabel="Dismiss banner" />
+              </InlineStack>
+            </Banner>
           )}
-        </InlineStack>
+        </BlockStack>
         {state.isEnabled && (
           <FormLayout>
             {state.isLoading ? (
@@ -234,29 +275,34 @@ export function AustraliaPostCard({
                 {state.error && (
                   <Banner tone="critical">Error: {state.error}</Banner>
                 )}
-                <TextField
-                  label="API Key"
-                  value={state.apiKey}
-                  onChange={handleApiKeyChange}
-                  autoComplete="off"
-                  readOnly={!state.isEditing}
-                />
-                <InlineStack gap="200">
-                  {state.isEditing ? (
-                    <Button onClick={handleSaveApiKey} variant="primary">
-                      Save API Key
-                    </Button>
-                  ) : (
-                    <Button onClick={() => setState(prev => ({ ...prev, isEditing: true }))}>
-                      Edit API Key
-                    </Button>
-                  )}
-                </InlineStack>
+                {showApiKeyUI && (
+                  <BlockStack gap="400">
+                    <TextField
+                      label="API Key"
+                      value={state.apiKey}
+                      onChange={handleApiKeyChange}
+                      autoComplete="off"
+                    />
+                    <BlockStack gap="200">
+                      {apiKeySaver.data && 'success' in apiKeySaver.data && apiKeySaver.data.success && (
+                        <Banner tone="success" title="API Key Saved Successfully">
+                          <p>Your Australia Post API key has been saved.</p>
+                        </Banner>
+                      )}
+                      <InlineStack>
+                        <Button 
+                          onClick={handleSaveApiKey} 
+                          variant="primary"
+                          disabled={!hasApiKeyChanged}
+                        >
+                          Save API Key
+                        </Button>
+                      </InlineStack>
+                    </BlockStack>
+                  </BlockStack>
+                )}
               </>
             )}
-            <Text as="p" variant="bodyMd">
-              This carrier is {state.isEnabled ? 'enabled' : 'disabled'}
-            </Text>
             <Text as="p" variant="bodyMd">
               This test will attempt to calculate shipping for a standard parcel (10x10x10cm, 1kg) from Melbourne (3000) to Sydney (2000).
             </Text>
@@ -278,11 +324,6 @@ export function AustraliaPostCard({
               <Banner tone="critical">
                 <p>Error: {apiKeySaver.data.error || 'An unknown error occurred while saving the API key'}</p>
                 <p>Please try again. If the problem persists, contact support.</p>
-              </Banner>
-            )}
-            {apiKeySaver.data && 'success' in apiKeySaver.data && apiKeySaver.data.success && (
-              <Banner tone="success" title="API Key Saved Successfully">
-                <p>Your Australia Post API key has been saved.</p>
               </Banner>
             )}
           </FormLayout>
