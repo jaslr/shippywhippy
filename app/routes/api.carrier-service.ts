@@ -3,6 +3,7 @@ import { json, type ActionFunction, type LoaderFunction } from '@remix-run/node'
 import { updateCarrierStatuses, carrierList, CarrierStatus } from '~/libs/carriers/carrierlist';
 import { getApiKey } from '~/libs/carriers/utils/getApiKey';
 import { authenticate } from "~/shopify.server";
+import { prisma } from '~/prisma';
 
 interface CarrierServiceRequest {
     rate: {
@@ -11,30 +12,30 @@ interface CarrierServiceRequest {
             postal_code: string;
             province: string;
             city: string;
-            name: string;
+            name: string | null;
             address1: string;
             address2: string;
-            address3: string;
-            phone: string;
-            fax: string;
-            email: string;
-            address_type: string;
-            company_name: string;
+            address3: string | null;
+            phone: string | null;
+            fax: string | null;
+            email: string | null;
+            address_type: string | null;
+            company_name: string | null;
         };
         destination: {
             country: string;
             postal_code: string;
             province: string;
             city: string;
-            name: string;
+            name: string | null;
             address1: string;
             address2: string;
-            address3: string;
-            phone: string;
-            fax: string;
-            email: string;
-            address_type: string;
-            company_name: string;
+            address3: string | null;
+            phone: string | null;
+            fax: string | null;
+            email: string | null;
+            address_type: string | null;
+            company_name: string | null;
         };
         items: Array<{
             name: string;
@@ -46,7 +47,7 @@ interface CarrierServiceRequest {
             requires_shipping: boolean;
             taxable: boolean;
             fulfillment_service: string;
-            properties: null;
+            properties: null | Record<string, unknown>;
             product_id: number;
             variant_id: number;
         }>;
@@ -55,88 +56,102 @@ interface CarrierServiceRequest {
     };
 }
 
+interface ShippingRate {
+    service_name: string;
+    service_code: string;
+    total_price: string;
+    description: string;
+    currency: string;
+    min_delivery_date?: string;
+    max_delivery_date?: string;
+}
+
 export const action: ActionFunction = async ({ request }) => {
     if (request.method !== "POST") {
         return json({ error: "Method not allowed" }, { status: 405 });
     }
 
     try {
-        const { session } = await authenticate.admin(request);
+        // Remove the session authentication
+        // const { session } = await authenticate.admin(request);
         const body: CarrierServiceRequest = await request.json();
         console.log("Received rate request:", body);
 
-        const shop = session.shop;
-        const carriers = carrierList.filter((carrier: CarrierStatus) => carrier.shop === shop);
+        // Use a different method to get the shop URL
+        const shopUrl = request.headers.get('X-Shopify-Shop-Domain');
 
-        let rates = [];
+        if (!shopUrl) {
+            throw new Error('Shop URL not provided in headers');
+        }
 
-        const australiaPostCarrier = carriers.find((carrier: CarrierStatus) => carrier.name === "Australia Post");
+        const shopCarriers = await prisma.carrierConfig.findMany({
+            where: {
+                shop: {
+                    shopifyUrl: shopUrl,
+                },
+                isActive: true,
+            },
+            include: {
+                carrier: true,
+            },
+        });
 
-        if (australiaPostCarrier && australiaPostCarrier.isActive) {
-            const apiKey = await getApiKey(shop, "Australia Post");
-            if (apiKey) {
+        let rates: ShippingRate[] = [];
+
+        for (const shopCarrier of shopCarriers) {
+            if (shopCarrier.carrier.name === "Australia Post") {
                 try {
-                    const response = await fetch('http://localhost:3000/api/australia-post-lookup', {
+                    const australiaPostResponse = await fetch(`${process.env.APP_URL}/api/australia-post-lookup`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Authorization': request.headers.get('Authorization') || '',
                         },
-                        body: JSON.stringify({
-                            apiKey,
-                            checkType: 'shipping',
-                            origin: body.rate.origin,
-                            destination: body.rate.destination,
-                            items: body.rate.items
-                        })
+                        body: JSON.stringify(body)
                     });
 
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                    if (!australiaPostResponse.ok) {
+                        console.error(`Australia Post API error: ${australiaPostResponse.statusText}`);
+                        continue;
                     }
 
-                    const australiaPostRates = await response.json();
-                    if (australiaPostRates.success && australiaPostRates.data) {
-                        rates = australiaPostRates.data.rates;
+                    const australiaPostRates = await australiaPostResponse.json();
+                    console.log("Australia Post rates:", australiaPostRates);
+                    if (australiaPostRates.success && Array.isArray(australiaPostRates.rates)) {
+                        rates = rates.concat(australiaPostRates.rates);
+                    } else {
+                        console.error('Invalid response from Australia Post API');
                     }
                 } catch (error) {
                     console.error("Error fetching Australia Post rates:", error);
-                    // Fall back to local rates
-                    rates = getLocalRates();
                 }
-            } else {
-                console.error("API key not found for Australia Post");
-                rates = getLocalRates();
             }
-        } else {
-            console.log("Australia Post carrier not found or not active");
-            rates = getLocalRates();
         }
 
-        const response = {
-            rates
-        };
+        // Add local rates
+        rates = rates.concat(getLocalRates());
 
-        console.log("Sending rate response:", response);
-        return json(response);
+        console.log("Final rates:", rates);
+        return json({ rates });
     } catch (error) {
         console.error("Error processing rate request:", error);
         return json({ rates: getLocalRates() });
     }
 };
 
-function getLocalRates() {
+function getLocalRates(): ShippingRate[] {
     return [
         {
-            service_name: "Standard Shipping",
+            service_name: "Standards Shipping",
             service_code: "ST",
-            total_price: "1000", // in cents
+            total_price: "1000",
             description: "Estimated 3-7 business days",
             currency: "AUD",
         },
         {
             service_name: "Express Shipping",
             service_code: "EX",
-            total_price: "1500", // in cents
+            total_price: "1500",
             description: "Estimated 1-3 business days",
             currency: "AUD",
         }
