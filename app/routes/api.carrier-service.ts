@@ -85,24 +85,27 @@ export const action: ActionFunction = async ({ request }) => {
 
         const shop = await prisma.shop.findFirst({
             where: {
-                shopifyUrl: shopUrl,
+                username: shopUrl,
             },
         });
         console.log("Shop details:", JSON.stringify(shop, null, 2));
 
+        if (!shop) {
+            console.error("Shop not found");
+            return json({ rates: getLocalRates() });
+        }
+
         const activeCarriers = await prisma.carrierConfig.findMany({
             where: {
                 isActive: true,
-                shop: {
-                    shopifyUrl: shopUrl
-                }
+                shopId: shop.id
             },
             include: {
                 carrier: true,
                 shop: true,
             },
         });
-        console.log("All active carriers:", JSON.stringify(activeCarriers, null, 2));
+        console.log("Active carriers:", JSON.stringify(activeCarriers, null, 2));
 
         let rates: ShippingRate[] = [];
 
