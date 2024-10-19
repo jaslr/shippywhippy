@@ -195,11 +195,13 @@ export function AustraliaPostCard({
     setPopoverActive(false);
     if (action === 'disable') {
       handleDisable();
+    } else if (action === 'apiKey') {
+      setState(prev => ({ ...prev, isEditing: true }));
     }
   }, [handleDisable]);
 
   const activator = (
-    <Button onClick={togglePopoverActive} disclosure >
+    <Button variant="plain" onClick={togglePopoverActive} disclosure >
       Manage
     </Button>
   );
@@ -231,7 +233,7 @@ export function AustraliaPostCard({
                       onAction: () => handleManageAction('apiKey'),
                     },
                     {
-                      content: 'Disable',
+                      content: 'Disable Australia Post',
                       onAction: () => handleManageAction('disable'),
                       destructive: true,
                     },
@@ -276,19 +278,19 @@ export function AustraliaPostCard({
                 {state.error && (
                   <Banner tone="critical">Error: {state.error}</Banner>
                 )}
-                <BlockStack gap="400">
-                  <TextField
-                    label="API Key"
-                    value={state.apiKey}
-                    onChange={handleApiKeyChange}
-                    autoComplete="off"
-                  />
-                  <BlockStack gap="200">
-                    {apiKeySaver.data && 'success' in apiKeySaver.data && apiKeySaver.data.success && (
-                      <Banner tone="success" title="API Key Saved Successfully">
-                        <p>Your Australia Post API key has been saved.</p>
-                      </Banner>
-                    )}
+                {apiKeySaver.data && 'success' in apiKeySaver.data && apiKeySaver.data.success && (
+                  <Banner tone="success" title="API Key Saved Successfully">
+                    <p>Your Australia Post API key has been saved.</p>
+                  </Banner>
+                )}
+                {(state.isEditing || state.apiKey === defaultApiKey) && (
+                  <BlockStack gap="400">
+                    <TextField
+                      label="API Key"
+                      value={state.apiKey}
+                      onChange={handleApiKeyChange}
+                      autoComplete="off"
+                    />
                     <InlineStack>
                       <Button
                         onClick={handleSaveApiKey}
@@ -299,7 +301,7 @@ export function AustraliaPostCard({
                       </Button>
                     </InlineStack>
                   </BlockStack>
-                </BlockStack>
+                )}
                 {fetcher.data && 'success' in fetcher.data && !fetcher.data.success && (
                   <Banner tone="critical">
                     <p>Error: {fetcher.data.error || 'An unknown error occurred'}</p>

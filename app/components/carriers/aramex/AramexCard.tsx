@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner, Popover, ActionList } from '@shopify/polaris';
+import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner, Popover, ActionList, Icon } from '@shopify/polaris';
+import { CheckIcon, XSmallIcon } from '@shopify/polaris-icons';
 import { useFetcher } from '@remix-run/react';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
 import { CarrierCardProps, CarrierCardState } from '../../../libs/carriers/types/carrier';
@@ -42,11 +43,13 @@ export function AramexCard({
         apiKey: '',
         isLoading: true,
         error: null,
-        isEditing: false,
+        isEditing: true, // Set to true by default
     });
 
     const [isApiKeySaveInitiated, setIsApiKeySaveInitiated] = useState(false);
     const [popoverActive, setPopoverActive] = useState(false);
+    const [hasApiKeyChanged, setHasApiKeyChanged] = useState(false);
+    const [showActivationBanner, setShowActivationBanner] = useState(false);
 
     const fetcher = useFetcher<AramexLookupData>();
     const apiKeySaver = useFetcher<ApiKeySaverData>();
@@ -111,6 +114,11 @@ export function AramexCard({
                 throw new Error(data.error || 'Failed to update carrier status');
             }
             setState(prev => ({ ...prev, isEnabled: newStatus }));
+            if (newStatus) {
+                setShowActivationBanner(true);
+            } else {
+                setShowActivationBanner(false);
+            }
             console.log('Carrier status updated successfully:', data);
         } catch (error: unknown) {
             console.error(`Failed to update ${carrierName} status:`, error);
@@ -132,6 +140,7 @@ export function AramexCard({
 
     const handleApiKeyChange = useCallback((value: string) => {
         setState(prev => ({ ...prev, apiKey: value }));
+        setHasApiKeyChanged(true);
     }, []);
 
     const handleSaveApiKey = useCallback(() => {
@@ -142,7 +151,7 @@ export function AramexCard({
             { method: 'post', action: '/api/save-api-key' }
         );
         setIsApiKeySaveInitiated(true);
-        setState(prev => ({ ...prev, isEditing: false }));
+        setHasApiKeyChanged(false);
     }, [apiKeySaver, carrierName, state.apiKey]);
 
     useEffect(() => {
@@ -170,8 +179,6 @@ export function AramexCard({
         }
     }, [apiKeySaver.state, apiKeySaver.data, isApiKeySaveInitiated]);
 
-    const toggleButtonText = state.isEnabled ? 'Disable' : 'Enable';
-
     const togglePopoverActive = useCallback(
         () => setPopoverActive((popoverActive) => !popoverActive),
         [],
@@ -182,49 +189,78 @@ export function AramexCard({
         setPopoverActive(false);
     }, [handleToggle]);
 
+    const handleManageAction = useCallback((action: string) => {
+        setPopoverActive(false);
+        if (action === 'disable') {
+            handleDisable();
+        }
+    }, [handleDisable]);
+
     const activator = (
-        <Button onClick={togglePopoverActive} disclosure>
+        <Button variant="plain" onClick={togglePopoverActive} disclosure>
             Manage
         </Button>
     );
 
+    const handleDismissBanner = useCallback(() => {
+        setShowActivationBanner(false);
+    }, []);
+
     return (
         <Card>
             <BlockStack gap="400">
-                <InlineStack align="space-between">
-                    <Text as="h3" variant="headingMd">
-                        {carrierName}
-                    </Text>
-                    {state.isEnabled ? (
-                        <Popover
-                            active={popoverActive}
-                            activator={activator}
-                            autofocusTarget="first-node"
-                            onClose={togglePopoverActive}
-                        >
-                            <ActionList
-                                actionRole="menuitem"
-                                items={[
-                                    {
-                                        content: 'Disable',
-                                        onAction: handleDisable,
-                                        destructive: true,
-                                    },
-                                ]}
-                            />
-                        </Popover>
-                    ) : (
-                        <Button
-                            onClick={handleToggle}
-                            pressed={state.isEnabled}
-                            role="switch"
-                            ariaChecked={state.isEnabled ? 'true' : 'false'}
-                            size="slim"
-                        >
-                            Enable
-                        </Button>
+                <BlockStack gap="200">
+                    <InlineStack align="space-between">
+                        <Text as="h3" variant="headingMd">
+                            {carrierName}
+                        </Text>
+                        {state.isEnabled ? (
+                            <Popover
+                                active={popoverActive}
+                                activator={activator}
+                                autofocusTarget="first-node"
+                                onClose={togglePopoverActive}
+                            >
+                                <ActionList
+                                    actionRole="menuitem"
+                                    items={[
+                                        {
+                                            content: 'Disable Aramex',
+                                            onAction: () => handleManageAction('disable'),
+                                            destructive: true,
+                                        },
+                                    ]}
+                                />
+                            </Popover>
+                        ) : (
+                            <Button
+                                onClick={handleToggle}
+                                pressed={state.isEnabled}
+                                role="switch"
+                                ariaChecked={state.isEnabled ? 'true' : 'false'}
+                                size="slim"
+                            >
+                                Enable
+                            </Button>
+                        )}
+                    </InlineStack>
+                    {showActivationBanner && (
+                        <Banner tone="success" icon={CheckIcon} onDismiss={handleDismissBanner}>
+                            <InlineStack align="space-between">
+                                <BlockStack>
+                                    <p>Aramex activated</p>
+                                    {(!state.apiKey || state.apiKey === defaultApiKey) && (
+                                        <p>
+                                            <Link url="https://www.aramex.com/developers" external>
+                                                Connect your API Key
+                                            </Link>
+                                        </p>
+                                    )}
+                                </BlockStack>
+                            </InlineStack>
+                        </Banner>
                     )}
-                </InlineStack>
+                </BlockStack>
                 {state.isEnabled && (
                     <FormLayout>
                         {state.isLoading ? (
@@ -234,53 +270,51 @@ export function AramexCard({
                                 {state.error && (
                                     <Banner tone="critical">Error: {state.error}</Banner>
                                 )}
-                                <TextField
-                                    label="API Key"
-                                    value={state.apiKey}
-                                    onChange={handleApiKeyChange}
-                                    autoComplete="off"
-                                    readOnly={!state.isEditing}
-                                />
-                                <InlineStack gap="200">
-                                    {state.isEditing ? (
-                                        <Button onClick={handleSaveApiKey} variant="primary">
-                                            Save API Key
-                                        </Button>
-                                    ) : (
-                                        <Button onClick={() => setState(prev => ({ ...prev, isEditing: true }))}>
-                                            Edit API Key
-                                        </Button>
-                                    )}
-                                </InlineStack>
+                                <BlockStack gap="400">
+                                    <TextField
+                                        label="API Key"
+                                        value={state.apiKey}
+                                        onChange={handleApiKeyChange}
+                                        autoComplete="off"
+                                    />
+                                    <BlockStack gap="200">
+                                        {apiKeySaver.data && 'success' in apiKeySaver.data && apiKeySaver.data.success && (
+                                            <Banner tone="success" title="API Key Saved Successfully">
+                                                <p>Your Aramex API key has been saved.</p>
+                                            </Banner>
+                                        )}
+                                        <InlineStack>
+                                            <Button
+                                                onClick={handleSaveApiKey}
+                                                variant="primary"
+                                                disabled={!hasApiKeyChanged}
+                                            >
+                                                Save API Key
+                                            </Button>
+                                        </InlineStack>
+                                    </BlockStack>
+                                </BlockStack>
+                                {fetcher.data && 'success' in fetcher.data && !fetcher.data.success && (
+                                    <Banner tone="critical">
+                                        <p>Error: {fetcher.data.error || 'An unknown error occurred'}</p>
+                                        <p>API Key used: {state.apiKey}</p>
+                                        <p>Please check your API key and try again. If the problem persists, contact Aramex support.</p>
+                                    </Banner>
+                                )}
+                                {fetcher.data && 'success' in fetcher.data && fetcher.data.success && (
+                                    <Banner tone="success" title="API Connection Successful">
+                                        <p>API Key used: {state.apiKey}</p>
+                                        <p>API URL: {testUrl}</p>
+                                        <pre>{JSON.stringify(fetcher.data.data, null, 2)}</pre>
+                                    </Banner>
+                                )}
+                                {apiKeySaver.data && 'success' in apiKeySaver.data && !apiKeySaver.data.success && (
+                                    <Banner tone="critical">
+                                        <p>Error: {apiKeySaver.data.error || 'An unknown error occurred while saving the API key'}</p>
+                                        <p>Please try again. If the problem persists, contact support.</p>
+                                    </Banner>
+                                )}
                             </>
-                        )}
-                        <Text as="p" variant="bodyMd">
-                            This carrier is {state.isEnabled ? 'enabled' : 'disabled'}
-                        </Text>
-                        {fetcher.data && 'success' in fetcher.data && !fetcher.data.success && (
-                            <Banner tone="critical">
-                                <p>Error: {fetcher.data.error || 'An unknown error occurred'}</p>
-                                <p>API Key used: {state.apiKey}</p>
-                                <p>Please check your API key and try again. If the problem persists, contact Aramex support.</p>
-                            </Banner>
-                        )}
-                        {fetcher.data && 'success' in fetcher.data && fetcher.data.success && (
-                            <Banner tone="success" title="API Connection Successful">
-                                <p>API Key used: {state.apiKey}</p>
-                                <p>API URL: {testUrl}</p>
-                                <pre>{JSON.stringify(fetcher.data.data, null, 2)}</pre>
-                            </Banner>
-                        )}
-                        {apiKeySaver.data && 'success' in apiKeySaver.data && !apiKeySaver.data.success && (
-                            <Banner tone="critical">
-                                <p>Error: {apiKeySaver.data.error || 'An unknown error occurred while saving the API key'}</p>
-                                <p>Please try again. If the problem persists, contact support.</p>
-                            </Banner>
-                        )}
-                        {apiKeySaver.data && 'success' in apiKeySaver.data && apiKeySaver.data.success && (
-                            <Banner tone="success" title="API Key Saved Successfully">
-                                <p>Your Aramex API key has been saved.</p>
-                            </Banner>
                         )}
                     </FormLayout>
                 )}
