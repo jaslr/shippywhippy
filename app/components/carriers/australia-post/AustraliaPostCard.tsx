@@ -300,7 +300,6 @@ export function AustraliaPostCard({
                     </InlineStack>
                   </BlockStack>
                 </BlockStack>
-
                 {fetcher.data && 'success' in fetcher.data && !fetcher.data.success && (
                   <Banner tone="critical">
                     <p>Error: {fetcher.data.error || 'An unknown error occurred'}</p>
