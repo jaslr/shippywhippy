@@ -48,7 +48,6 @@ export function AustraliaPostCard({
 
   const [isApiKeySaveInitiated, setIsApiKeySaveInitiated] = useState(false);
   const [popoverActive, setPopoverActive] = useState(false);
-  const [showApiKeyUI, setShowApiKeyUI] = useState(false);
   const [hasApiKeyChanged, setHasApiKeyChanged] = useState(false);
   const [showActivationBanner, setShowActivationBanner] = useState(false);
 
@@ -115,6 +114,11 @@ export function AustraliaPostCard({
         throw new Error(data.error || 'Failed to update carrier status');
       }
       setState(prev => ({ ...prev, isEnabled: newStatus }));
+      if (newStatus) {
+        setShowActivationBanner(true);
+      } else {
+        setShowActivationBanner(false);
+      }
       console.log('Carrier status updated successfully:', data);
     } catch (error: unknown) {
       console.error(`Failed to update ${carrierName} status:`, error);
@@ -189,9 +193,7 @@ export function AustraliaPostCard({
 
   const handleManageAction = useCallback((action: string) => {
     setPopoverActive(false);
-    if (action === 'apiKey') {
-      setShowApiKeyUI(true);
-    } else if (action === 'disable') {
+    if (action === 'disable') {
       handleDisable();
     }
   }, [handleDisable]);
@@ -260,8 +262,7 @@ export function AustraliaPostCard({
                       </Link>
                     </p>
                   )}
-                </BlockStack>
-                <Button icon={XSmallIcon} onClick={handleDismissBanner} accessibilityLabel="Dismiss banner" />
+                </BlockStack>                
               </InlineStack>
             </Banner>
           )}
@@ -275,56 +276,54 @@ export function AustraliaPostCard({
                 {state.error && (
                   <Banner tone="critical">Error: {state.error}</Banner>
                 )}
-                {showApiKeyUI && (
-                  <BlockStack gap="400">
-                    <TextField
-                      label="API Key"
-                      value={state.apiKey}
-                      onChange={handleApiKeyChange}
-                      autoComplete="off"
-                    />
-                    <BlockStack gap="200">
-                      {apiKeySaver.data && 'success' in apiKeySaver.data && apiKeySaver.data.success && (
-                        <Banner tone="success" title="API Key Saved Successfully">
-                          <p>Your Australia Post API key has been saved.</p>
-                        </Banner>
-                      )}
-                      <InlineStack>
-                        <Button 
-                          onClick={handleSaveApiKey} 
-                          variant="primary"
-                          disabled={!hasApiKeyChanged}
-                        >
-                          Save API Key
-                        </Button>
-                      </InlineStack>
-                    </BlockStack>
+                <BlockStack gap="400">
+                  <TextField
+                    label="API Key"
+                    value={state.apiKey}
+                    onChange={handleApiKeyChange}
+                    autoComplete="off"
+                  />
+                  <BlockStack gap="200">
+                    {apiKeySaver.data && 'success' in apiKeySaver.data && apiKeySaver.data.success && (
+                      <Banner tone="success" title="API Key Saved Successfully">
+                        <p>Your Australia Post API key has been saved.</p>
+                      </Banner>
+                    )}
+                    <InlineStack>
+                      <Button 
+                        onClick={handleSaveApiKey} 
+                        variant="primary"
+                        disabled={!hasApiKeyChanged}
+                      >
+                        Save API Key
+                      </Button>
+                    </InlineStack>
                   </BlockStack>
+                </BlockStack>
+                <Text as="p" variant="bodyMd">
+                  This test will attempt to calculate shipping for a standard parcel (10x10x10cm, 1kg) from Melbourne (3000) to Sydney (2000).
+                </Text>
+                {fetcher.data && 'success' in fetcher.data && !fetcher.data.success && (
+                  <Banner tone="critical">
+                    <p>Error: {fetcher.data.error || 'An unknown error occurred'}</p>
+                    <p>API Key used: {state.apiKey}</p>
+                    <p>Please check your API key and try again. If the problem persists, contact Australia Post support or refer to the <Link url="https://developers.auspost.com.au/apis/pac/reference" external>API documentation</Link>.</p>
+                  </Banner>
+                )}
+                {fetcher.data && 'success' in fetcher.data && fetcher.data.success && (
+                  <Banner tone="success" title="API Connection Successful">
+                    <p>API Key used: {state.apiKey}</p>
+                    <p>API URL: {testUrl}</p>
+                    <pre>{JSON.stringify(fetcher.data.data, null, 2)}</pre>
+                  </Banner>
+                )}
+                {apiKeySaver.data && 'success' in apiKeySaver.data && !apiKeySaver.data.success && (
+                  <Banner tone="critical">
+                    <p>Error: {apiKeySaver.data.error || 'An unknown error occurred while saving the API key'}</p>
+                    <p>Please try again. If the problem persists, contact support.</p>
+                  </Banner>
                 )}
               </>
-            )}
-            <Text as="p" variant="bodyMd">
-              This test will attempt to calculate shipping for a standard parcel (10x10x10cm, 1kg) from Melbourne (3000) to Sydney (2000).
-            </Text>
-            {fetcher.data && 'success' in fetcher.data && !fetcher.data.success && (
-              <Banner tone="critical">
-                <p>Error: {fetcher.data.error || 'An unknown error occurred'}</p>
-                <p>API Key used: {state.apiKey}</p>
-                <p>Please check your API key and try again. If the problem persists, contact Australia Post support or refer to the <Link url="https://developers.auspost.com.au/apis/pac/reference" external>API documentation</Link>.</p>
-              </Banner>
-            )}
-            {fetcher.data && 'success' in fetcher.data && fetcher.data.success && (
-              <Banner tone="success" title="API Connection Successful">
-                <p>API Key used: {state.apiKey}</p>
-                <p>API URL: {testUrl}</p>
-                <pre>{JSON.stringify(fetcher.data.data, null, 2)}</pre>
-              </Banner>
-            )}
-            {apiKeySaver.data && 'success' in apiKeySaver.data && !apiKeySaver.data.success && (
-              <Banner tone="critical">
-                <p>Error: {apiKeySaver.data.error || 'An unknown error occurred while saving the API key'}</p>
-                <p>Please try again. If the problem persists, contact support.</p>
-              </Banner>
             )}
           </FormLayout>
         )}
