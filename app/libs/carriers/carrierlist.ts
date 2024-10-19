@@ -2,6 +2,8 @@ import axios from 'axios';
 
 export type CarrierStatus = {
     id: string;
+    shop: string;
+    isActive: boolean;
     name: string;
     isUp: boolean;
     statusURL?: string;
@@ -30,6 +32,8 @@ async function checkAramexStatus(): Promise<boolean> {
 export const carrierList: CarrierStatus[] = [
     { 
         id: '1', 
+        shop: 'shop1', 
+        isActive: true, 
         name: 'Australia Post', 
         isUp: true, 
         statusURL: 'https://status.developers.auspost.com.au/', 
@@ -38,6 +42,8 @@ export const carrierList: CarrierStatus[] = [
     },
     { 
         id: '2', 
+        shop: 'shop2', 
+        isActive: true, 
         name: 'Aramex', 
         isUp: true, 
         statusURL: 'https://www.aramex.com/us/en/service-updates', 

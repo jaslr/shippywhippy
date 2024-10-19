@@ -2,25 +2,25 @@ import { json } from "@remix-run/node";
 import type { ActionFunction } from "@remix-run/node";
 
 export const action: ActionFunction = async ({ request }) => {
-    const formData = await request.formData();
-    const API_KEY = formData.get("apiKey") as string;
-    const checkType = formData.get("checkType") as string;
+    const { apiKey, checkType, origin, destination, items } = await request.json();
 
-    if (!API_KEY) {
+    if (!apiKey) {
         return json({ success: false, error: "API key is missing" }, { status: 400 });
     }
 
-    if (checkType === "uptime") {
-        return await performUptimeCheck(API_KEY);
+    if (checkType === "shipping") {
+        return await performShippingCalculation(apiKey, origin, destination, items);
+    } else if (checkType === "uptime") {
+        return await performUptimeCheck(apiKey);
     } else {
-        return await performShippingCalculation(API_KEY);
+        return json({ success: false, error: "Invalid check type" }, { status: 400 });
     }
 };
 
 async function performUptimeCheck(API_KEY: string) {
     try {
         const response = await fetch(
-            'https://digitalapi.auspost.com.au/postage/parcel/domestic/service.json?from_postcode=2000&to_postcode=3000&length=10&width=10&height=10&weight=1',
+            'https://digitalapi.auspost.com.au/',
             {
                 headers: {
                     'AUTH-KEY': API_KEY
@@ -34,10 +34,13 @@ async function performUptimeCheck(API_KEY: string) {
     }
 }
 
-async function performShippingCalculation(API_KEY: string) {
+async function performShippingCalculation(API_KEY: string, origin: any, destination: any, items: Array<any>) {
     try {
+        const totalWeight = items.reduce((sum, item) => sum + item.grams * item.quantity, 0) / 1000; // in kg
+        const totalLength = items.reduce((sum, item) => sum + item.name.length * item.quantity, 0); // simplistic
+
         const response = await fetch(
-            'https://digitalapi.auspost.com.au/postage/parcel/domestic/calculate.json?from_postcode=3000&to_postcode=2000&length=10&width=10&height=10&weight=1',
+            `https://digitalapi.auspost.com.au/postage/parcel/domestic/calculate.json?from_postcode=${origin.postal_code}&to_postcode=${destination.postal_code}&length=${totalLength}&width=10&height=10&weight=${totalWeight}`,
             {
                 headers: {
                     'AUTH-KEY': API_KEY
@@ -50,8 +53,35 @@ async function performShippingCalculation(API_KEY: string) {
         }
 
         const data = await response.json();
-        return json({ success: true, data });
+
+        const rates = data.services.map((service: any) => ({
+            service_name: service.service_name,
+            service_code: service.service_code,
+            total_price: (service.base_price * 100).toString(),
+            description: service.description,
+            currency: "AUD",
+        }));
+
+        return json({ success: true, data: { rates } });
     } catch (error) {
-        return json({ success: false, error: 'Failed to calculate shipping' }, { status: 500 });
+        console.error("Error fetching Australia Post rates:", error);
+        // Fallback to local shipping rates
+        const localRates = [
+            {
+                service_name: "Local Standard Shipping",
+                service_code: "LST",
+                total_price: "1000", // in cents
+                description: "Estimated 3-7 business days",
+                currency: "AUD",
+            },
+            {
+                service_name: "Local Express Shipping",
+                service_code: "LEX",
+                total_price: "1500", // in cents
+                description: "Estimated 1-3 business days",
+                currency: "AUD",
+            }
+        ];
+        return json({ success: true, data: { rates: localRates } });
     }
 }

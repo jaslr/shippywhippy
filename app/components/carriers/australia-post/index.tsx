@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Card, BlockStack, Text, TextField, RadioButton, FormLayout } from '@shopify/polaris';
+import React from 'react';
+import { AustraliaPostCard } from './AustraliaPostCard';
 import { AUSTRALIA_POST_NAME } from './constants';
 
-export { AustraliaPostCard as AustraliaPost } from './AustraliaPostCard';
+export { AustraliaPostCard as AustraliaPost };

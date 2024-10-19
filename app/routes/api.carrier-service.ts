@@ -1,9 +1,9 @@
 import shopify from '~/shopify.server';
 import { json, type ActionFunction, type LoaderFunction } from '@remix-run/node';
-import { updateCarrierStatuses, carrierList } from '~/libs/carriers/carrierlist';
-import { CarrierStatus } from '~/libs/carriers/carrierlist';
+import { updateCarrierStatuses, carrierList, CarrierStatus } from '~/libs/carriers/carrierlist';
+import { getApiKey } from '~/libs/carriers/utils/getApiKey';
+import { authenticate } from "~/shopify.server";
 
-// Define the expected structure of Shopify's CarrierService request
 interface CarrierServiceRequest {
     rate: {
         origin: {
@@ -61,43 +61,88 @@ export const action: ActionFunction = async ({ request }) => {
     }
 
     try {
-        const body = await request.json();
+        const { session } = await authenticate.admin(request);
+        const body: CarrierServiceRequest = await request.json();
         console.log("Received rate request:", body);
-        // Simple rate calculation based on the number of items
-        const itemCount = body.rate.items.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0);
-        const baseRate = 10; // Base rate in dollars
-        const ratePerItem = 2; // Additional rate per item in dollars
 
-        const totalRate = baseRate + (itemCount * ratePerItem);
+        const shop = session.shop;
+        const carriers = carrierList.filter((carrier: CarrierStatus) => carrier.shop === shop);
+
+        let rates = [];
+
+        const australiaPostCarrier = carriers.find((carrier: CarrierStatus) => carrier.name === "Australia Post");
+
+        if (australiaPostCarrier && australiaPostCarrier.isActive) {
+            const apiKey = await getApiKey(shop, "Australia Post");
+            if (apiKey) {
+                try {
+                    const response = await fetch('http://localhost:3000/api/australia-post-lookup', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            apiKey,
+                            checkType: 'shipping',
+                            origin: body.rate.origin,
+                            destination: body.rate.destination,
+                            items: body.rate.items
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const australiaPostRates = await response.json();
+                    if (australiaPostRates.success && australiaPostRates.data) {
+                        rates = australiaPostRates.data.rates;
+                    }
+                } catch (error) {
+                    console.error("Error fetching Australia Post rates:", error);
+                    // Fall back to local rates
+                    rates = getLocalRates();
+                }
+            } else {
+                console.error("API key not found for Australia Post");
+                rates = getLocalRates();
+            }
+        } else {
+            console.log("Australia Post carrier not found or not active");
+            rates = getLocalRates();
+        }
 
         const response = {
-            rates: [
-                {
-                    service_name: "Whippy Standard Shipping",
-                    service_code: "ST",
-                    total_price: (totalRate * 100).toString(), // Convert to cents
-                    description: "Estimated 3-7 business days",
-                    currency: "USD",
-                },
-                {
-                    service_name: "Express Shipping",
-                    service_code: "EX",
-                    total_price: ((totalRate * 1.5) * 100).toString(), // 50% more than standard, convert to cents
-                    description: "Estimated 1-3 business days",
-                    currency: "USD",
-                }
-            ]
+            rates
         };
 
         console.log("Sending rate response:", response);
         return json(response);
     } catch (error) {
         console.error("Error processing rate request:", error);
-        return json({ error: "Internal server error" }, { status: 500 });
+        return json({ rates: getLocalRates() });
     }
 };
 
-// Optional: Loader function for GET requests (if needed)
+function getLocalRates() {
+    return [
+        {
+            service_name: "Standard Shipping",
+            service_code: "ST",
+            total_price: "1000", // in cents
+            description: "Estimated 3-7 business days",
+            currency: "AUD",
+        },
+        {
+            service_name: "Express Shipping",
+            service_code: "EX",
+            total_price: "1500", // in cents
+            description: "Estimated 1-3 business days",
+            currency: "AUD",
+        }
+    ];
+}
+
 export const loader: LoaderFunction = async () => {
     return json({ message: 'Carrier Service API is up.' });
 };

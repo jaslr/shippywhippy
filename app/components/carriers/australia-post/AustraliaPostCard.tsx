@@ -285,6 +285,9 @@ export function AustraliaPostCard({
                 )}
                 {(state.isEditing || state.apiKey === defaultApiKey) && (
                   <BlockStack gap="400">
+                    <Banner tone="success" title="API Key Saved Successfully">
+                      <p>Your Australia Post API key has been saved.</p>
+                    </Banner>
                     <TextField
                       label="API Key"
                       value={state.apiKey}
