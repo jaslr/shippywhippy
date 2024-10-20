@@ -16,6 +16,8 @@
 ,
     "shippywhippy.code-workspace": null
 ,
+    "shippywhippy_backup.sql": null
+,
     "shopify.app.toml": null
 ,
     "shopify.web.toml": null
@@ -118,6 +120,8 @@
   "api.australia-post-lookup.ts": null
 ,
   "api.carrier-service.ts": null
+,
+  "api.debug-carriers.ts": null
 ,
   "api.get-api-key.ts": null
 ,

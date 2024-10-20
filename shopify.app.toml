@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywhippy"
 handle = "shippywhippy"
-application_url = "https://brown-flame-notices-cambridge.trycloudflare.com"
+application_url = "https://latino-virginia-sales-gg.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_products,read_shipping,write_products,write_shipping"
 
 [auth]
 redirect_urls = [
-  "https://brown-flame-notices-cambridge.trycloudflare.com/auth/callback",
-  "https://brown-flame-notices-cambridge.trycloudflare.com/auth/shopify/callback",
-  "https://brown-flame-notices-cambridge.trycloudflare.com/api/auth/callback"
+  "https://latino-virginia-sales-gg.trycloudflare.com/auth/callback",
+  "https://latino-virginia-sales-gg.trycloudflare.com/auth/shopify/callback",
+  "https://latino-virginia-sales-gg.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
