@@ -66,6 +66,7 @@ model CarrierConfig {
   isActive       Boolean   @default(false)
   apiKey         String?
   memberNumber   String?
+  useDescription Boolean   @default(true)
   shippingMethodConfigs ShippingMethodConfig[] @relation("CarrierConfigShippingMethods")
 
   @@unique([shopId, carrierId])

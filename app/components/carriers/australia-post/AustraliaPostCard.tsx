@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner, Popover, ActionList, Icon } from '@shopify/polaris';
+import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner, Popover, ActionList, Icon, RadioButton } from '@shopify/polaris';
 import { CheckIcon, XSmallIcon } from '@shopify/polaris-icons';
 import { useFetcher } from '@remix-run/react';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
@@ -43,7 +43,8 @@ export function AustraliaPostCard({
     apiKey: '',
     isLoading: true,
     error: null,
-    isEditing: true, // Set to true by default
+    isEditing: true,
+    useDescription: true,
   });
 
   const [isApiKeySaveInitiated, setIsApiKeySaveInitiated] = useState(false);
@@ -210,6 +211,14 @@ export function AustraliaPostCard({
     setShowActivationBanner(false);
   }, []);
 
+  const handleUseDescriptionChange = useCallback((checked: boolean) => {
+    setState(prev => ({ ...prev, useDescription: checked }));
+    apiKeySaver.submit(
+      { carrierName, useDescription: checked },
+      { method: 'post', action: '/api/update-carrier-config' }
+    );
+  }, [apiKeySaver, carrierName]);
+
   return (
     <Card>
       <BlockStack gap="400">
@@ -325,6 +334,11 @@ export function AustraliaPostCard({
                     <p>Please try again. If the problem persists, contact support.</p>
                   </Banner>
                 )}
+                <RadioButton
+                  label="Use description in rates"
+                  checked={state.useDescription}
+                  onChange={handleUseDescriptionChange}
+                />
               </>
             )}
           </FormLayout>

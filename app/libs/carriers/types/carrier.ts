@@ -18,4 +18,5 @@ export interface CarrierCardState {
   isLoading: boolean;
   error: string | null;
   isEditing: boolean;
+  useDescription: boolean;
 }

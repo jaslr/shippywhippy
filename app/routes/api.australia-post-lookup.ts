@@ -1,6 +1,8 @@
 import { json, type ActionFunction } from '@remix-run/node';
 import { prisma } from '~/prisma';
-import fetch from 'node-fetch';
+import type { CarrierConfig } from '@prisma/client';
+
+
 
 interface ShippingRate {
     service_name: string;
@@ -18,6 +20,21 @@ interface AusPostApiResponse {
             price: number;
             delivery_time: string;
         }[];
+    };
+}
+
+interface ShopCarrierConfig {
+    id: number;
+    shopId: number;
+    carrierId: number;
+    isActive: boolean;
+    apiKey: string | null;
+    memberNumber: string | null;
+    useDescription: boolean;
+    carrier: {
+        id: number;
+        name: string;
+        defaultApiKey: string;
     };
 }
 
@@ -49,22 +66,23 @@ export const action: ActionFunction = async ({ request }) => {
                 }
             },
             include: {
-                carrier: true,
-                shop: true,
-            },
-        });
-
-        console.log("Shop carrier config:", JSON.stringify(shopCarrier, null, 2));
+                carrier: true
+            }
+        }) as (CarrierConfig & { carrier: { defaultApiKey: string } }) | null;
 
         if (!shopCarrier) {
             console.log("Australia Post carrier not configured for this shop");
             return json({ success: false, error: "Australia Post carrier not configured" }, { status: 400 });
         }
 
+        const useDescription = shopCarrier.useDescription;
         const apiKey = shopCarrier.apiKey || shopCarrier.carrier.defaultApiKey;
+
+        console.log("Shop carrier config:", JSON.stringify(shopCarrier, null, 2));
+
         const fromPostcode = '2000'; // Default from postcode
         const toPostcode = body.rate.destination.postal_code;
-        const weight = body.rate.items.reduce((total, item) => total + (item.grams * item.quantity), 0) / 1000; // Convert to kg
+        const weight = body.rate.items.reduce((total: number, item: { grams: number; quantity: number }) => total + (item.grams * item.quantity), 0) / 1000; // Convert to kg
 
         console.log("From Postcode:", fromPostcode);
         console.log("To Postcode:", toPostcode);
@@ -99,15 +117,15 @@ export const action: ActionFunction = async ({ request }) => {
             service_name: service.name,
             service_code: service.code,
             total_price: (service.price * 100).toString(), // Convert to cents
-            description: `Estimated ${service.delivery_time}`,
+            description: useDescription ? `Estimated ${service.delivery_time}` : '',
             currency: 'AUD',
         }));
 
         console.log("Returning Australia Post rates:", australiaPostRates);
         return json({ success: true, rates: australiaPostRates });
-    } catch (error) {
+    } catch (error: unknown) {
         console.error("Error processing Australia Post lookup:", error);
-        return json({ success: false, error: error.message || "Internal server error" }, { status: 500 });
+        return json({ success: false, error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
     }
 };
 

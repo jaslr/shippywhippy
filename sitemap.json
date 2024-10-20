@@ -179,6 +179,10 @@
   "migration.sql": null
 }
 ,
+  "20241020224502_add_use_description_to_carrier_config": {
+  "migration.sql": null
+}
+,
   "migration_lock.toml": null
 }
 ,
