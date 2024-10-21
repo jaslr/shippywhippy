@@ -81,7 +81,7 @@ export const action: ActionFunction = async ({ request }) => {
 
         console.log("Shop carrier config:", JSON.stringify(shopCarrier, null, 2));
         
-        const fromPostcode = body.rate.origin.postal_code || body.shopLocation?.zip || body.shopPostalCode || shopCarrier.shop.postalCode;
+        const fromPostcode = body.shopPostalCode || body.shopLocation?.zip || shopCarrier.shop.postalCode || body.rate.origin.postal_code;
         const toPostcode = body.rate.destination.postal_code;
         const weight = body.rate.items.reduce((total: number, item: { grams: number; quantity: number }) => total + (item.grams * item.quantity), 0) / 1000; // Convert to kg
 
@@ -94,14 +94,18 @@ export const action: ActionFunction = async ({ request }) => {
         console.log("Weight (kg):", weight);
 
         if (!fromPostcode) {
-            console.error("From postal code is missing");
-            return json({ success: false, error: "From postal code is required" }, { status: 400 });
+            throw new Error('Unable to determine origin postal code');
         }
 
-        const ausPostApiUrl = `https://digitalapi.auspost.com.au/postage/parcel/domestic/service.json?from_postcode=${fromPostcode}&to_postcode=${toPostcode}&length=22&width=16&height=7.7&weight=${weight}`;
-        console.log("Australia Post API URL:", ausPostApiUrl);
+        // Default dimensions if not provided
+        const length = body.length || 22; // cm
+        const width = body.width || 16; // cm
+        const height = body.height || 7.7; // cm
 
-        const ausPostResponse = await fetch(ausPostApiUrl, {
+        const apiUrl = `https://digitalapi.auspost.com.au/postage/parcel/domestic/service.json?from_postcode=${fromPostcode}&to_postcode=${toPostcode}&length=${length}&width=${width}&height=${height}&weight=${weight}`;
+        console.log("Australia Post API URL:", apiUrl);
+
+        const ausPostResponse = await fetch(apiUrl, {
             headers: {
                 'AUTH-KEY': shopCarrier.apiKey || shopCarrier.carrier.defaultApiKey,
             },
@@ -131,7 +135,6 @@ export const action: ActionFunction = async ({ request }) => {
         }
 
         if (EXCLUDE_HARDCODED_RATES) {
-            // Add the condition to exclude hardcoded rates
             australiaPostRates = australiaPostRates.filter(rate => !isHardcodedRate(rate.service_code));
         }
 
@@ -153,3 +156,5 @@ function isHardcodedRate(serviceCode: string): boolean {
 export const loader = () => {
     return json({ message: 'Australia Post Lookup API is up.' });
 };
+
+

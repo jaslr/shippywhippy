@@ -91,7 +91,8 @@ export const action: ActionFunction = async ({ request }) => {
             where: {
                 shopifyUrl: `https://${shopUrl}`,
             },
-        });
+        }) as (Shop & { postalCode?: string | null });
+
         console.log("Shop details:", JSON.stringify(shop, null, 2));
 
         if (!shop) {
@@ -125,12 +126,15 @@ export const action: ActionFunction = async ({ request }) => {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-Shopify-Shop-Domain': shop.shopifyUrl.replace('https://', ''),
+                            'X-Shopify-Shop-Domain': shopUrl,
                         },
                         body: JSON.stringify({
                             ...body,
                             shopLocation: shopLocation,
-                            shopPostalCode: shop.shopifyUrl.split('.')[0] // Use shopifyUrl as a fallback
+                            shopPostalCode: shop?.postalCode, // Use optional chaining here
+                            length: 22,
+                            width: 16,
+                            height: 7.7
                         })
                     });
 

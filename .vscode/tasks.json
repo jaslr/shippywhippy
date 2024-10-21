@@ -191,6 +191,28 @@
                 "panel": "new"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Backup PostgreSQL Database",
+            "type": "shell",
+            "command": "pg_dump",
+            "args": [
+                "-h", "localhost",
+                "-p", "5433",
+                "-U", "shippywhippy_admin",
+                "-d", "shippywhippy",
+                "-f", "shippywhippy_backup.sql"
+            ],
+            "options": {
+                "env": {
+                    "PGPASSWORD": "your_secure_password"
+                }
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
         }
     ]
 }

@@ -283,7 +283,8 @@ CREATE TABLE public."Shop" (
     "isActive" boolean DEFAULT false NOT NULL,
     "daysActive" integer DEFAULT 0 NOT NULL,
     "installedAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "uninstalledAt" timestamp(3) without time zone
+    "uninstalledAt" timestamp(3) without time zone,
+    "postalCode" text
 );
 
 
@@ -387,7 +388,7 @@ COPY public."Carrier" (id, name, "defaultApiKey") FROM stdin;
 
 COPY public."CarrierConfig" (id, "shopId", "carrierId", "isActive", "apiKey", "memberNumber", "useDescription") FROM stdin;
 28	1	2	f	fdf	\N	f
-5	1	1	t	2f34aa06-779c-4cb7-90ae-9311750a2607	\N	f
+5	1	1	t	2f34aa06-779c-4cb7-90ae-9311750a2607	\N	t
 \.
 
 
@@ -412,7 +413,7 @@ COPY public."Location" (id, "shopId", name, address1, address2, city, province, 
 --
 
 COPY public."Session" (id, shop, state, "isOnline", scope, expires, "accessToken", "accountOwner", collaborator, email, "emailVerified", "firstName", "lastName", locale, "shopId", "userId") FROM stdin;
-offline_froggya.myshopify.com	froggya.myshopify.com	897476534301082	f	write_products,write_shipping	\N	shpua_4668ae419e45ec8a9ae42452b91026c0	f	f	\N	f	\N	\N	\N	\N	\N
+offline_froggya.myshopify.com	froggya.myshopify.com	206735962780904	f	read_locations,write_products,write_shipping	\N	shpua_80e8e1398722717ec4e4a273e3d60a17	f	f	\N	f	\N	\N	\N	\N	\N
 \.
 
 
@@ -436,8 +437,8 @@ COPY public."ShippingMethodConfig" (id, "carrierConfigId", "shippingMethodId", "
 -- Data for Name: Shop; Type: TABLE DATA; Schema: public; Owner: shippywhippy_admin
 --
 
-COPY public."Shop" (id, username, "shopifyName", "shopifyUrl", "isActive", "daysActive", "installedAt", "uninstalledAt") FROM stdin;
-1	froggya.myshopify.com	froggya.myshopify.com	https://froggya.myshopify.com	t	0	2024-10-18 02:00:19.824	\N
+COPY public."Shop" (id, username, "shopifyName", "shopifyUrl", "isActive", "daysActive", "installedAt", "uninstalledAt", "postalCode") FROM stdin;
+1	froggya.myshopify.com	froggya.myshopify.com	https://froggya.myshopify.com	t	0	2024-10-18 02:00:19.824	\N	3000
 \.
 
 
@@ -451,6 +452,8 @@ a7402be2-1545-4029-871f-f2b7e7605e03	4230489444e20f03a3ae051be25a4640465010e0fac
 247437f2-5d24-4644-aa44-7f0214f46fd8	f76f89e0ef5ac7c8886301c373abf569adbbfb9966053093674a09cf2609ba8b	2024-10-17 12:58:59.987071+11	20241007071405_add_userid_to_session	\N	\N	2024-10-17 12:58:59.974992+11	1
 2da8b383-9e09-4ab8-87b9-6f8e1201fed7	43db9ba8676eac10dd87d2bd3747e4206b402b0cb3adeb387b1bce65a2024129	2024-10-17 12:59:00.024868+11	20241017015844_add_default_api_key_to_carrier	\N	\N	2024-10-17 12:58:59.99157+11	1
 e0039dba-2da9-4732-ab64-2281ec151918	9a9cddddd4a3da2022f6ed01278b43fe293b2147366b61acd43651e6e8b6617b	2024-10-21 09:45:02.368094+11	20241020224502_add_use_description_to_carrier_config	\N	\N	2024-10-21 09:45:02.348742+11	1
+6b85768a-aea9-4735-bd3e-aa64b87c55ae	5aef64421ed529ac97c46d6dc7cd0343ccb06ab074b491d3e502a19e8130c9f3	2024-10-21 17:26:52.292444+11	20241021062652_add_postal_code_to_shop	\N	\N	2024-10-21 17:26:52.277727+11	1
+97dbaad5-4168-4b54-a339-4a1155e7251e	90319fe44953004ec595f19e425f21ef603a90cee6b9d1f00ebc7ba4ab0f427b	2024-10-21 17:56:52.741604+11	20241021065652_	\N	\N	2024-10-21 17:56:52.714073+11	1
 \.
 
 
@@ -601,6 +604,13 @@ CREATE UNIQUE INDEX "Location_shopifyLocationId_key" ON public."Location" USING 
 --
 
 CREATE UNIQUE INDEX "ShippingMethodConfig_carrierConfigId_shippingMethodId_key" ON public."ShippingMethodConfig" USING btree ("carrierConfigId", "shippingMethodId");
+
+
+--
+-- Name: Shop_shopifyUrl_key; Type: INDEX; Schema: public; Owner: shippywhippy_admin
+--
+
+CREATE UNIQUE INDEX "Shop_shopifyUrl_key" ON public."Shop" USING btree ("shopifyUrl");
 
 
 --
