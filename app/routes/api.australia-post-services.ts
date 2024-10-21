@@ -3,7 +3,10 @@ import { json, type LoaderFunction } from '@remix-run/node';
 interface Service {
   code: string;
   name: string;
+  price: number;
 }
+
+const EXCLUDE_SMALL_SERVICE = process.env.EXCLUDE_SMALL_SERVICE === 'true';
 
 export const loader: LoaderFunction = async ({ request }) => {
   const url = new URL(request.url);
@@ -26,10 +29,15 @@ export const loader: LoaderFunction = async ({ request }) => {
     }
 
     const ausPostData = await ausPostResponse.json();
-    const services: Service[] = ausPostData.services.service.map((service: any) => ({
+    let services: Service[] = ausPostData.services.service.map((service: any) => ({
       code: service.code,
       name: service.name,
+      price: service.price,
     }));
+
+    if (EXCLUDE_SMALL_SERVICE) {
+      services = services.filter(service => service.name.toLowerCase() !== 'small');
+    }
 
     return json({ services });
   } catch (error) {

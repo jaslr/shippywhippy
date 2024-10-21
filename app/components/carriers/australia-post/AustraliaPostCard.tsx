@@ -35,6 +35,19 @@ type CarrierStatusData = {
 // Add this constant to control the filter
 const EXCLUDE_SMALL_SERVICE = true;
 
+interface Service {
+  code: string;
+  name: string;
+  disabled: boolean;
+}
+
+// Define a custom action item type
+interface CustomActionItem {
+  content: string;
+  onAction: () => void;
+  destructive?: boolean;
+}
+
 export function AustraliaPostCard({
   shop,
   carrierName = 'Australia Post',
@@ -104,30 +117,10 @@ export function AustraliaPostCard({
     }
   }, [apiKeyFetcher.state, apiKeyFetcher.data]);
 
-  const handleToggleCarrier = useCallback(async () => {
-    setState(prev => ({ ...prev, isLoading: true }));
-    try {
-      const response = await fetch('/api/toggle-carrier', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ carrierName, isEnabled: !state.isEnabled }),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to toggle carrier');
-      }
-      const data = await response.json();
-      setState(prev => ({ ...prev, isEnabled: data.isActive, isLoading: false }));
-      if (data.isActive) {
-        setShowActivationBanner(true);
-        setTimeout(() => setShowActivationBanner(false), 5000);
-      }
-    } catch (error) {
-      console.error('Error toggling carrier:', error);
-      setState(prev => ({ ...prev, isLoading: false, error: 'Failed to toggle carrier' }));
-    }
-  }, [carrierName, state.isEnabled]);
+  const handleToggleCarrier = useCallback(() => {
+    setState(prev => ({ ...prev, isEnabled: !prev.isEnabled }));
+    setPopoverActive(false);
+  }, []);
 
   const handleApiKeyChange = useCallback((value: string) => {
     setState(prev => ({ ...prev, apiKey: value }));
@@ -209,7 +202,7 @@ export function AustraliaPostCard({
   }, [carrierName, shop.shopifyUrl]);
 
   const activator = (
-    <Button onClick={togglePopoverActive} variant="plain" disclosure>
+    <Button onClick={togglePopoverActive} disclosure>
       Manage
     </Button>
   );
@@ -223,7 +216,7 @@ export function AustraliaPostCard({
     );
   }, [carrierConfig?.apiKey]);
 
-  const [services, setServices] = useState<{ code: string; name: string; disabled: boolean }[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [isLoadingServices, setIsLoadingServices] = useState(true);
 
   useEffect(() => {
@@ -235,14 +228,7 @@ export function AustraliaPostCard({
         const response = await fetch(`/api/australia-post-services?apiKey=${encodeURIComponent(state.apiKey)}`);
         if (response.ok) {
           const data = await response.json();
-          let fetchedServices = (data.services || []).map((service: { code: string; name: string }) => ({ ...service, disabled: false }));
-          
-          // Apply the filter if EXCLUDE_SMALL_SERVICE is true
-          if (EXCLUDE_SMALL_SERVICE) {
-            fetchedServices = fetchedServices.filter((service: { name: string }) => service.name.toLowerCase() !== 'small');
-          }
-          
-          setServices(fetchedServices);
+          setServices((data.services || []).map((service: Service) => ({ ...service, disabled: false })));
         } else {
           console.error('Failed to fetch services');
         }
@@ -266,6 +252,7 @@ export function AustraliaPostCard({
 
   const handleShowApiKey = useCallback(() => {
     setShowApiKeySection(true);
+    setPopoverActive(false);
   }, []);
 
   const handleHideApiKey = useCallback(() => {
@@ -291,6 +278,27 @@ export function AustraliaPostCard({
     fetchCarrierConfig();
   }, [shop.id, carrierName]);
 
+  const actionItems: CustomActionItem[] = [
+    {
+      content: 'API Key',
+      onAction: handleShowApiKey,
+    },
+    // ... other action items ...
+  ];
+
+  if (state.isEnabled) {
+    actionItems.push({
+      content: 'Disable',
+      onAction: handleToggleCarrier,
+      destructive: true,
+    });
+  } else {
+    actionItems.unshift({
+      content: 'Enable',
+      onAction: handleToggleCarrier,
+    });
+  }
+
   return (
     <Card>
       <BlockStack gap="400">
@@ -310,20 +318,7 @@ export function AustraliaPostCard({
               >
                 <ActionList
                   actionRole="menuitem"
-                  items={[
-                    {
-                      content: state.isEnabled ? 'Disable' : 'Enable',
-                      onAction: handleToggleCarrier,
-                    },
-                    {
-                      content: 'API Key',
-                      onAction: handleShowApiKey,
-                    },
-                    ...(carrierConfig?.apiKey ? [{
-                      content: 'Test API Key',
-                      onAction: handleTestApiKey,
-                    }] : []),
-                  ]}
+                  items={actionItems}
                 />
               </Popover>
             )}
@@ -425,7 +420,7 @@ export function AustraliaPostCard({
               <Spinner accessibilityLabel="Loading services" size="small" />
             ) : services.length > 0 ? (
               <DataTable
-                columnContentTypes={['text', 'text']}
+                columnContentTypes={['text', 'text', 'text']}
                 headings={['Name', 'Disable']}
                 rows={services.map((service, index) => [
                   <Tooltip content={`Code: ${service.code}`}>
