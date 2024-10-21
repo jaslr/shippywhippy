@@ -23,3 +23,18 @@ export interface CarrierCardState {
   isEditing: boolean;
   useDescription: boolean;
 }
+
+export type CarrierConfig = {
+  id: number;
+  shopId: number;
+  carrierId: number;
+  isActive: boolean;
+  apiKey: string | null;
+  memberNumber: string | null;
+  useDescription: boolean;
+  carrier: {
+    id: number;
+    name: string;
+    defaultApiKey: string;
+  };
+};

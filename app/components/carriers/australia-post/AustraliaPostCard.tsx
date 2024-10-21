@@ -3,7 +3,8 @@ import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, In
 import { CheckIcon, XSmallIcon } from '@shopify/polaris-icons';
 import { useFetcher } from '@remix-run/react';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
-import { CarrierCardProps, CarrierCardState } from '../../../libs/carriers/types/carrier';
+import { CarrierCardProps, CarrierCardState, CarrierConfig } from '../../../libs/carriers/types/carrier';
+import { getCarrierConfigByShopAndCarrier } from '../../../libs/carriers/carrierConfigUtils';
 
 const AUSTRALIA_POST_NAME = 'Australia Post';
 const australiaPostConfig = getCarrierByName(AUSTRALIA_POST_NAME);
@@ -51,6 +52,9 @@ export function AustraliaPostCard({
   const [popoverActive, setPopoverActive] = useState(false);
   const [hasApiKeyChanged, setHasApiKeyChanged] = useState(false);
   const [showActivationBanner, setShowActivationBanner] = useState(false);
+  const [showApiKeySavedBanner, setShowApiKeySavedBanner] = useState(false);
+  const [showApiKeySection, setShowApiKeySection] = useState(false);
+  const [carrierConfig, setCarrierConfig] = useState<CarrierConfig | null>(null);
 
   const fetcher = useFetcher<AustraliaPostLookupData>();
   const apiKeySaver = useFetcher<ApiKeySaverData>();
@@ -80,9 +84,8 @@ export function AustraliaPostCard({
     if (carrierStatusFetcher.state === 'idle' && carrierStatusFetcher.data) {
       setState(prev => ({
         ...prev,
-        isLoading: false,
-        isEnabled: carrierStatusFetcher.data?.success ? carrierStatusFetcher.data.isActive : prev.isEnabled,
-        error: carrierStatusFetcher.data?.success ? null : (carrierStatusFetcher.data?.error || 'Failed to fetch carrier status'),
+        isEnabled: carrierStatusFetcher.data?.isActive ?? false,
+        isLoading: false
       }));
     }
   }, [carrierStatusFetcher.state, carrierStatusFetcher.data]);
@@ -92,124 +95,79 @@ export function AustraliaPostCard({
     if (apiKeyFetcher.state === 'idle' && apiKeyFetcher.data) {
       setState(prev => ({
         ...prev,
-        isLoading: false,
-        apiKey: apiKeyFetcher.data?.success ? (apiKeyFetcher.data.apiKey || '') : prev.apiKey,
-        error: apiKeyFetcher.data?.success ? null : (apiKeyFetcher.data?.error || 'Failed to fetch API key'),
+        apiKey: apiKeyFetcher.data?.apiKey || '',
+        isEditing: !apiKeyFetcher.data?.apiKey
       }));
     }
   }, [apiKeyFetcher.state, apiKeyFetcher.data]);
 
-  const handleToggle = useCallback(async () => {
-    const newStatus = !state.isEnabled;
+  const handleToggleCarrier = useCallback(async () => {
+    setState(prev => ({ ...prev, isLoading: true }));
     try {
-      const formData = new FormData();
-      formData.append('carrierName', carrierName);
-      formData.append('isActive', newStatus.toString());
-
-      const response = await fetch('/api/update-carrier-status', {
+      const response = await fetch('/api/toggle-carrier', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ carrierName, isEnabled: !state.isEnabled }),
       });
-      const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to update carrier status');
+        throw new Error('Failed to toggle carrier');
       }
-      setState(prev => ({ ...prev, isEnabled: newStatus }));
-      if (newStatus) {
+      const data = await response.json();
+      setState(prev => ({ ...prev, isEnabled: data.isActive, isLoading: false }));
+      if (data.isActive) {
         setShowActivationBanner(true);
-      } else {
-        setShowActivationBanner(false);
+        setTimeout(() => setShowActivationBanner(false), 5000);
       }
-      console.log('Carrier status updated successfully:', data);
-    } catch (error: unknown) {
-      console.error(`Failed to update ${carrierName} status:`, error);
-      if (error instanceof Error) {
-        console.error('Error details:', error.message);
-      }
-      setState(prev => ({ ...prev, error: 'Failed to update carrier status' }));
+    } catch (error) {
+      console.error('Error toggling carrier:', error);
+      setState(prev => ({ ...prev, isLoading: false, error: 'Failed to toggle carrier' }));
     }
-  }, [state.isEnabled, carrierName]);
-
-  const performLookup = useCallback(() => {
-    if (state.apiKey) {
-      fetcher.submit(
-        { apiKey: state.apiKey, checkType: 'uptime' },
-        { method: 'post', action: testUrl }
-      );
-    }
-  }, [state.apiKey, fetcher, testUrl]);
+  }, [carrierName, state.isEnabled]);
 
   const handleApiKeyChange = useCallback((value: string) => {
     setState(prev => ({ ...prev, apiKey: value }));
     setHasApiKeyChanged(true);
   }, []);
 
-  const handleSaveApiKey = useCallback(() => {
-    console.log('Saving API key for:', carrierName);
-    console.log('API Key:', state.apiKey);
+  const handleSaveApiKey = useCallback(async () => {
+    setIsApiKeySaveInitiated(true);
     apiKeySaver.submit(
       { carrierName, apiKey: state.apiKey },
       { method: 'post', action: '/api/save-api-key' }
     );
-    setIsApiKeySaveInitiated(true);
-    setHasApiKeyChanged(false);
-  }, [apiKeySaver, carrierName, state.apiKey]);
+  }, [carrierName, state.apiKey]);
 
   useEffect(() => {
-    if (!isApiKeySaveInitiated) return;
-
-    console.log('apiKeySaver state:', apiKeySaver.state);
-    console.log('apiKeySaver data:', apiKeySaver.data);
-
-    if (apiKeySaver.state === 'idle') {
-      if (apiKeySaver.data) {
-        const data = apiKeySaver.data as ApiKeySaverData;
-        if ('error' in data && data.error) {
-          console.error('Error saving API key:', data.error);
-          setState(prev => ({ ...prev, error: data.error || 'Unknown error occurred' }));
-        } else if ('success' in data && data.success) {
-          console.log('API key saved successfully', data);
-          setState(prev => ({ ...prev, error: null }));
-        } else {
-          console.warn('Unexpected data structure from apiKeySaver:', data);
-          setState(prev => ({ ...prev, error: 'Unexpected response when saving API key' }));
-        }
-      } else {
-        console.log('apiKeySaver is idle but no data is present');
+    if (isApiKeySaveInitiated && apiKeySaver.state === 'idle') {
+      setIsApiKeySaveInitiated(false);
+      if (apiKeySaver.data?.success) {
+        setState(prev => ({ ...prev, isEditing: false }));
+        setHasApiKeyChanged(false);
+        setShowApiKeySavedBanner(true);
+        setTimeout(() => setShowApiKeySavedBanner(false), 5000);
       }
     }
   }, [apiKeySaver.state, apiKeySaver.data, isApiKeySaveInitiated]);
 
-  const toggleButtonText = state.isEnabled ? 'Disable' : 'Enable';
+  const handleEditApiKey = useCallback(() => {
+    setState(prev => ({ ...prev, isEditing: true }));
+  }, []);
+
+  const handleCancelEdit = useCallback(() => {
+    apiKeyFetcher.submit(
+      { carrierName },
+      { method: 'post', action: '/api/get-api-key' }
+    );
+    setState(prev => ({ ...prev, isEditing: false }));
+    setHasApiKeyChanged(false);
+  }, [carrierName]);
 
   const togglePopoverActive = useCallback(
     () => setPopoverActive((popoverActive) => !popoverActive),
     [],
   );
-
-  const handleDisable = useCallback(() => {
-    handleToggle();
-    setPopoverActive(false);
-  }, [handleToggle]);
-
-  const handleManageAction = useCallback((action: string) => {
-    setPopoverActive(false);
-    if (action === 'disable') {
-      handleDisable();
-    } else if (action === 'apiKey') {
-      setState(prev => ({ ...prev, isEditing: true }));
-    }
-  }, [handleDisable]);
-
-  const activator = (
-    <Button variant="plain" onClick={togglePopoverActive} disclosure >
-      Manage
-    </Button>
-  );
-
-  const handleDismissBanner = useCallback(() => {
-    setShowActivationBanner(false);
-  }, []);
 
   const handleUseDescriptionChange = useCallback(async (checked: boolean) => {
     setState(prev => ({ ...prev, useDescription: checked }));
@@ -247,6 +205,21 @@ export function AustraliaPostCard({
     }
   }, [carrierName, shop.shopifyUrl]);
 
+  const activator = (
+    <Button onClick={togglePopoverActive} disclosure>
+      Actions
+    </Button>
+  );
+
+  const handleTestApiKey = useCallback(() => {
+    if (!carrierConfig?.apiKey) return;
+
+    fetcher.submit(
+      { apiKey: carrierConfig.apiKey },
+      { method: 'post', action: '/api/australia-post-test' }
+    );
+  }, [carrierConfig?.apiKey]);
+
   const [services, setServices] = useState<{ code: string; name: string; disabled: boolean }[]>([]);
   const [isLoadingServices, setIsLoadingServices] = useState(true);
 
@@ -281,26 +254,38 @@ export function AustraliaPostCard({
     });
   }, []);
 
+  const handleShowApiKey = useCallback(() => {
+    setShowApiKeySection(true);
+  }, []);
+
+  const handleHideApiKey = useCallback(() => {
+    setShowApiKeySection(false);
+  }, []);
+
+  // Fetch carrier config on component mount
   useEffect(() => {
-    if (apiKeySaver.state === 'idle' && apiKeySaver.data) {
-      if (apiKeySaver.data.success) {
-        console.log('Carrier configuration updated successfully');
-      } else {
-        console.error('Failed to update carrier configuration:', apiKeySaver.data?.error);
-        setState(prev => ({ ...prev, error: apiKeySaver.data?.error || 'Failed to update carrier configuration' }));
+    const fetchCarrierConfig = async () => {
+      const config = await getCarrierConfigByShopAndCarrier(Number(shop.id), carrierName);
+      setCarrierConfig(config);
+      if (config) {
+        setState(prev => ({ ...prev, apiKey: config.apiKey || '' }));
       }
-    }
-  }, [apiKeySaver.state, apiKeySaver.data]);
+    };
+
+    fetchCarrierConfig();
+  }, [shop.id, carrierName]);
 
   return (
     <Card>
       <BlockStack gap="400">
-        <BlockStack gap="200">
-          <InlineStack align="space-between">
-            <Text as="h3" variant="headingMd">
-              {carrierName}
-            </Text>
-            {state.isEnabled ? (
+        <InlineStack align="space-between">
+          <Text as="h2" variant="headingMd">
+            {carrierName}
+          </Text>
+          <InlineStack gap="300">
+            {state.isLoading ? (
+              <Spinner accessibilityLabel="Loading" size="small" />
+            ) : (
               <Popover
                 active={popoverActive}
                 activator={activator}
@@ -311,151 +296,134 @@ export function AustraliaPostCard({
                   actionRole="menuitem"
                   items={[
                     {
-                      content: 'API Key',
-                      onAction: () => handleManageAction('apiKey'),
+                      content: state.isEnabled ? 'Disable' : 'Enable',
+                      onAction: handleToggleCarrier,
                     },
                     {
-                      content: 'Disable Australia Post',
-                      onAction: () => handleManageAction('disable'),
-                      destructive: true,
+                      content: 'API Key',
+                      onAction: handleShowApiKey,
                     },
+                    ...(carrierConfig?.apiKey ? [{
+                      content: 'Test API Key',
+                      onAction: handleTestApiKey,
+                    }] : []),
                   ]}
                 />
               </Popover>
-            ) : (
-              <Button
-                onClick={handleToggle}
-                pressed={state.isEnabled}
-                role="switch"
-                ariaChecked={state.isEnabled ? 'true' : 'false'}
-                size="slim"
-              >
-                Enable
-              </Button>
             )}
           </InlineStack>
-          {showActivationBanner && (
-            <Banner tone="success" icon={CheckIcon} onDismiss={handleDismissBanner}>
-              <InlineStack align="space-between">
-                <BlockStack>
-                  <p>Australia Post activated</p>
-                  {(!state.apiKey || state.apiKey === defaultApiKey) && (
-                    <p>
-                      <Link url="https://developers.auspost.com.au/apis/st-registration" external>
-                        Connect your API Key
-                      </Link>
-                    </p>
-                  )}
-                </BlockStack>
-              </InlineStack>
-            </Banner>
-          )}
-        </BlockStack>
+        </InlineStack>
+        {showActivationBanner && (
+          <Banner tone="success" onDismiss={() => setShowActivationBanner(false)}>
+            <p>Australia Post has been activated successfully.</p>
+          </Banner>
+        )}
+        {showApiKeySavedBanner && (
+          <Banner tone="success" onDismiss={() => setShowApiKeySavedBanner(false)}>
+            <p>API Key saved successfully.</p>
+          </Banner>
+        )}
+        {state.error && (
+          <Banner tone="critical" onDismiss={() => setState(prev => ({ ...prev, error: null }))}>
+            <p>{state.error}</p>
+          </Banner>
+        )}
         {state.isEnabled && (
           <BlockStack gap="400">
-            {state.isLoading ? (
-              <Spinner accessibilityLabel="Loading carrier data" size="small" />
-            ) : (
+            <Text as="h3" variant="headingMd">
+              API Key
+            </Text>
+            {(!carrierConfig?.apiKey || showApiKeySection) && (
               <>
-                {state.error && (
-                  <Banner tone="critical">Error: {state.error}</Banner>
-                )}
-                {apiKeySaver.data && 'success' in apiKeySaver.data && apiKeySaver.data.success && (
-                  <Banner tone="success" title="API Key Saved Successfully">
-                    <p>Your Australia Post API key has been saved.</p>
-                  </Banner>
-                )}
-                {(state.isEditing || state.apiKey === defaultApiKey) && (
-                  <BlockStack gap="400">
-                    <Banner tone="success" title="API Key Saved Successfully">
-                      <p>Your Australia Post API key has been saved.</p>
-                    </Banner>
-                    <TextField
-                      label="API Key"
-                      value={state.apiKey}
-                      onChange={handleApiKeyChange}
-                      autoComplete="off"
-                    />
-                    <InlineStack>
-                      <Button
-                        onClick={handleSaveApiKey}
-                        variant="primary"
-                        disabled={!hasApiKeyChanged}
-                      >
-                        Save API Key
-                      </Button>
-                    </InlineStack>
-                  </BlockStack>
-                )}
-                {fetcher.data && 'success' in fetcher.data && !fetcher.data.success && (
-                  <Banner tone="critical">
-                    <p>Error: {fetcher.data.error || 'An unknown error occurred'}</p>
-                    <p>API Key used: {state.apiKey}</p>
-                    <p>Please check your API key and try again. If the problem persists, contact Australia Post support or refer to the <Link url="https://developers.auspost.com.au/apis/pac/reference" external>API documentation</Link>.</p>
-                  </Banner>
-                )}
-                {fetcher.data && 'success' in fetcher.data && fetcher.data.success && (
-                  <Banner tone="success" title="API Connection Successful">
-                    <p>API Key used: {state.apiKey}</p>
-                    <p>API URL: {testUrl}</p>
-                    <pre>{JSON.stringify(fetcher.data.data, null, 2)}</pre>
-                  </Banner>
-                )}
-                {apiKeySaver.data && 'success' in apiKeySaver.data && !apiKeySaver.data.success && (
-                  <Banner tone="critical">
-                    <p>Error: {apiKeySaver.data.error || 'An unknown error occurred while saving the API key'}</p>
-                    <p>Please try again. If the problem persists, contact support.</p>
-                  </Banner>
-                )}
-
-                  <Text as="h3" variant="headingMd">
-                    Use description in rates
-                  </Text>
-                  
-                    <RadioButton
-                      label="Yes"
-                      checked={state.useDescription}
-                      id="use-description-yes"
-                      name="use-description"
-                      onChange={() => handleUseDescriptionChange(true)}
-                    />
-                    <RadioButton
-                      label="No"
-                      checked={!state.useDescription}
-                      id="use-description-no"
-                      name="use-description"
-                      onChange={() => handleUseDescriptionChange(false)}
-                    />
-                  
-                {apiKeySaver.data && !apiKeySaver.data.success && (
-                  <Banner tone="critical">
-                    <p>Error: {apiKeySaver.data.error || 'Failed to update carrier configuration'}</p>
-                  </Banner>
-                )}
-                <Text as="h3" variant="headingMd">
-                  Australia Post Domestic Services
-                </Text>
-                {isLoadingServices ? (
-                  <Spinner accessibilityLabel="Loading services" size="small" />
-                ) : services.length > 0 ? (
-                  <DataTable
-                    columnContentTypes={['text', 'text', 'text']}
-                    headings={['Code', 'Name', 'Disable']}
-                    rows={services.map((service, index) => [
-                      service.code,
-                      service.name,
-                      <Checkbox
-                        label="Disable"
-                        checked={service.disabled}
-                        onChange={() => handleServiceDisableToggle(index)}
-                        labelHidden
-                      />
-                    ])}
+                <FormLayout>
+                  <TextField
+                    label="API Key"
+                    value={state.apiKey}
+                    onChange={handleApiKeyChange}
+                    autoComplete="off"
                   />
-                ) : (
-                  <Text as="p">No services available.</Text>
-                )}
+                  <InlineStack gap="300">
+                    <Button onClick={handleSaveApiKey} disabled={!hasApiKeyChanged}>
+                      Save
+                    </Button>
+                    <Button onClick={handleHideApiKey}>Cancel</Button>
+                  </InlineStack>
+                </FormLayout>
               </>
+            )}
+            {fetcher.state === 'submitting' && (
+              <InlineStack align="center">
+                <Spinner accessibilityLabel="Loading" size="small" />
+                <Text as="span" variant="bodyMd">Testing API Key...</Text>
+              </InlineStack>
+            )}
+            {fetcher.data && 'success' in fetcher.data && !fetcher.data.success && (
+              <Banner tone="critical">
+                <p>Error: {fetcher.data.error || 'An unknown error occurred'}</p>
+                <p>API Key used: {state.apiKey}</p>
+                <p>Please check your API key and try again. If the problem persists, contact Australia Post support or refer to the <Link url="https://developers.auspost.com.au/apis/pac/reference" external>API documentation</Link>.</p>
+              </Banner>
+            )}
+            {fetcher.data && 'success' in fetcher.data && fetcher.data.success && (
+              <Banner tone="success" title="API Connection Successful">
+                <p>API Key used: {state.apiKey}</p>
+                <p>API URL: {testUrl}</p>
+                <pre>{JSON.stringify(fetcher.data.data, null, 2)}</pre>
+              </Banner>
+            )}
+            {apiKeySaver.data && 'success' in apiKeySaver.data && !apiKeySaver.data.success && (
+              <Banner tone="critical">
+                <p>Error: {apiKeySaver.data.error || 'An unknown error occurred while saving the API key'}</p>
+                <p>Please try again. If the problem persists, contact support.</p>
+              </Banner>
+            )}
+
+            <Text as="h3" variant="headingMd">
+              Use description in rates
+            </Text>
+            
+            <RadioButton
+              label="Yes"
+              checked={state.useDescription}
+              id="use-description-yes"
+              name="use-description"
+              onChange={() => handleUseDescriptionChange(true)}
+            />
+            <RadioButton
+              label="No"
+              checked={!state.useDescription}
+              id="use-description-no"
+              name="use-description"
+              onChange={() => handleUseDescriptionChange(false)}
+            />
+            
+            {apiKeySaver.data && !apiKeySaver.data.success && (
+              <Banner tone="critical">
+                <p>Error: {apiKeySaver.data.error || 'Failed to update carrier configuration'}</p>
+              </Banner>
+            )}
+            <Text as="h3" variant="headingMd">
+              Australia Post Domestic Services
+            </Text>
+            {isLoadingServices ? (
+              <Spinner accessibilityLabel="Loading services" size="small" />
+            ) : services.length > 0 ? (
+              <DataTable
+                columnContentTypes={['text', 'text', 'text']}
+                headings={['Code', 'Name', 'Disable']}
+                rows={services.map((service, index) => [
+                  service.code,
+                  service.name,
+                  <Checkbox
+                    label="Disable"
+                    checked={service.disabled}
+                    onChange={() => handleServiceDisableToggle(index)}
+                    labelHidden
+                  />
+                ])}
+              />
+            ) : (
+              <Text as="p">No services available.</Text>
             )}
           </BlockStack>
         )}
