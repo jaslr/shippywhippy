@@ -233,8 +233,8 @@ export default function Index() {
                 <Text as="h2" variant="headingMd">
                   Carrier-Calculated Shipping Configuration
                 </Text>
-                <AustraliaPostCard shop={shop} carrierName="Australia Post" statusURL="/api/carrier-status" />
-                <AramexCard shop={shop} carrierName="Aramex" statusURL="/api/carrier-status" />
+                <AustraliaPostCard shop={shop} carrierName="Australia Post" statusURL="/api/carrier-status" apiKeyEnvVar="SHIPPING_API_KEY_AUSTRALIA_POST" defaultApiKey="SHIPPING_API_KEY_AUSTRALIA_POST" />
+                <AramexCard shop={shop} carrierName="Aramex" statusURL="/api/carrier-status" apiKeyEnvVar="SHIPPING_API_KEY_ARAMEX" defaultApiKey="SHIPPING_API_KEY_ARAMEX" />
               </BlockStack>
             </Card>
           </Layout.Section>

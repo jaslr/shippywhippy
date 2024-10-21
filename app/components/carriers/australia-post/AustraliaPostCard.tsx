@@ -214,6 +214,8 @@ export function AustraliaPostCard({
   const handleUseDescriptionChange = useCallback(async (checked: boolean) => {
     setState(prev => ({ ...prev, useDescription: checked }));
     
+    console.log('Updating use description:', { checked, carrierName, shopUrl: shop.shopifyUrl });
+
     try {
         const response = await fetch('/api/update-carrier-config', {
             method: 'POST',
@@ -223,26 +225,27 @@ export function AustraliaPostCard({
             body: JSON.stringify({ 
                 carrierName, 
                 useDescription: checked,
-                shopId: shop.id
+                shopUrl: shop.shopifyUrl
             }),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to update carrier configuration');
-        }
-
         const data = await response.json();
         console.log('Carrier configuration update response:', data);
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to update carrier configuration');
+        }
+
         if (data.success) {
             console.log('Carrier configuration updated successfully');
         } else {
-            throw new Error(data.error || 'Unknown error occurred');
+            throw new Error(data.error || 'Failed to update carrier configuration');
         }
-    } catch (error) {
+    } catch (error: unknown) {
         console.error('Error updating carrier configuration:', error);
-        // Handle the error appropriately
+        setState(prev => ({ ...prev, error: error instanceof Error ? error.message : 'An unknown error occurred' }));
     }
-  }, [carrierName, shop.id]);
+  }, [carrierName, shop.shopifyUrl]);
 
   const [services, setServices] = useState<{ code: string; name: string; disabled: boolean }[]>([]);
   const [isLoadingServices, setIsLoadingServices] = useState(true);

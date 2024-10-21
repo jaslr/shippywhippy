@@ -6,13 +6,13 @@ export interface Carrier {
 
 export interface CarrierCardProps {
   shop: {
-    id: string;
+    id: string; // This is now a string (Shopify ID)
     shopifyUrl: string;
   };
-  carrierName?: string;
-  statusURL?: string;
-  apiKeyEnvVar?: string;
-  defaultApiKey?: string;
+  carrierName: string;
+  statusURL: string;
+  apiKeyEnvVar: string;
+  defaultApiKey: string;
 }
 
 export interface CarrierCardState {
