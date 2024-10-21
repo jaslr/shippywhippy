@@ -45,6 +45,7 @@ model Shop {
   carriers       CarrierConfig[] @relation("ShopCarriers")
   sessions       Session[]
   locations      Location[] @relation("ShopLocations")
+  postalCode     String?
   // Remove these fields from Shop as they're now in Session
   // accessToken, scope, firstName, lastName, email, accountOwner, locale, collaborator, emailVerified
 }

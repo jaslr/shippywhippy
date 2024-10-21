@@ -4,6 +4,8 @@ import { updateCarrierStatuses, carrierList, CarrierStatus } from '~/libs/carrie
 import { getApiKey } from '~/libs/carriers/utils/getApiKey';
 import { authenticate } from "~/shopify.server";
 import { prisma } from '~/prisma';
+import shopifyApp from '~/shopify.server';
+import { GraphqlClient } from '@shopify/shopify-api';
 
 interface CarrierServiceRequest {
     rate: {
@@ -97,6 +99,10 @@ export const action: ActionFunction = async ({ request }) => {
             return json({ rates: getLocalRates() });
         }
 
+        // Fetch shop location from Shopify
+        const shopLocation = await getShopLocation(shop);
+        console.log("Shop location:", JSON.stringify(shopLocation, null, 2));
+
         const activeCarriers = await prisma.carrierConfig.findMany({
             where: {
                 isActive: true,
@@ -121,7 +127,11 @@ export const action: ActionFunction = async ({ request }) => {
                             'Content-Type': 'application/json',
                             'X-Shopify-Shop-Domain': shop.shopifyUrl.replace('https://', ''),
                         },
-                        body: JSON.stringify(body)
+                        body: JSON.stringify({
+                            ...body,
+                            shopLocation: shopLocation,
+                            shopPostalCode: shop.shopifyUrl.split('.')[0] // Use shopifyUrl as a fallback
+                        })
                     });
 
                     console.log("Australia Post API response status:", australiaPostResponse.status);
@@ -160,6 +170,81 @@ export const action: ActionFunction = async ({ request }) => {
         return json({ rates: EXCLUDE_LOCAL_RATES ? [] : getLocalRates() });
     }
 };
+
+async function getShopLocation(shop: any) {
+    console.log("Attempting to get shop location for:", shop.shopifyUrl);
+
+    try {
+        const sessions = await shopifyApp.sessionStorage.findSessionsByShop(shop.shopifyUrl);
+        console.log("Found sessions:", sessions);
+
+        if (!sessions || sessions.length === 0) {
+            console.log("No session found for shop:", shop.shopifyUrl);
+            return null; // Return null instead of throwing an error
+        }
+
+        const client = new GraphqlClient({
+            session: sessions[0]
+        });
+
+        const query = `
+        query {
+          locations(first: 1, sortKey: CREATED_AT) {
+            edges {
+              node {
+                id
+                name
+                address {
+                  address1
+                  address2
+                  city
+                  provinceCode
+                  zip
+                  countryCode
+                }
+                isActive
+                fulfillsOnlineOrders
+              }
+            }
+          }
+        }
+        `;
+
+        const response = await client.query({ data: query });
+        console.log("Shopify API response:", JSON.stringify(response, null, 2));
+
+        if (!response.body) {
+            console.log('No response body received from Shopify GraphQL API');
+            return null;
+        }
+
+        const responseBody = response.body as any;
+
+        if (!responseBody.data || !responseBody.data.locations || !responseBody.data.locations.edges || responseBody.data.locations.edges.length === 0) {
+            console.log('Invalid or empty response from Shopify GraphQL API');
+            return null;
+        }
+
+        const location = responseBody.data.locations.edges[0]?.node;
+
+        if (!location || !location.address) {
+            console.log('No valid location data found in Shopify response');
+            return null;
+        }
+
+        return {
+            address1: location.address.address1 || '',
+            address2: location.address.address2 || '',
+            city: location.address.city || '',
+            provinceCode: location.address.provinceCode || '',
+            zip: location.address.zip || '',
+            countryCode: location.address.countryCode || '',
+        };
+    } catch (error) {
+        console.error("Error in getShopLocation:", error);
+        return null;
+    }
+}
 
 function getLocalRates(): ShippingRate[] {
     return [

@@ -69,30 +69,33 @@ export const action: ActionFunction = async ({ request }) => {
                 }
             },
             include: {
-                carrier: true
+                carrier: true,
+                shop: true
             }
-        }) as (CarrierConfig & { carrier: { defaultApiKey: string } }) | null;
+        }) as (CarrierConfig & { carrier: { defaultApiKey: string }, shop: { postalCode: string | null } }) | null;
 
         if (!shopCarrier) {
             console.log("Australia Post carrier not configured for this shop");
             return json({ success: false, error: "Australia Post carrier not configured" }, { status: 400 });
         }
 
-        const useDescription = shopCarrier.useDescription;
-        const apiKey = shopCarrier.apiKey || shopCarrier.carrier.defaultApiKey;
-
         console.log("Shop carrier config:", JSON.stringify(shopCarrier, null, 2));
-        const fromPostcode = body.rate.origin.postal_code; // Use the shop's location
+        
+        const fromPostcode = body.rate.origin.postal_code || body.shopLocation?.zip || body.shopPostalCode || shopCarrier.shop.postalCode;
         const toPostcode = body.rate.destination.postal_code;
         const weight = body.rate.items.reduce((total: number, item: { grams: number; quantity: number }) => total + (item.grams * item.quantity), 0) / 1000; // Convert to kg
 
-        console.log("From Postcode:", fromPostcode);
+        console.log("From Postcode (body):", body.rate.origin.postal_code);
+        console.log("From Postcode (shop location):", body.shopLocation?.zip);
+        console.log("From Postcode (shop postal code):", body.shopPostalCode);
+        console.log("From Postcode (shop):", shopCarrier.shop.postalCode);
+        console.log("From Postcode (used):", fromPostcode);
         console.log("To Postcode:", toPostcode);
         console.log("Weight (kg):", weight);
 
-        if (!toPostcode) {
-            console.error("Destination postal code is missing");
-            return json({ success: false, error: "Destination postal code is required" }, { status: 400 });
+        if (!fromPostcode) {
+            console.error("From postal code is missing");
+            return json({ success: false, error: "From postal code is required" }, { status: 400 });
         }
 
         const ausPostApiUrl = `https://digitalapi.auspost.com.au/postage/parcel/domestic/service.json?from_postcode=${fromPostcode}&to_postcode=${toPostcode}&length=22&width=16&height=7.7&weight=${weight}`;
@@ -100,7 +103,7 @@ export const action: ActionFunction = async ({ request }) => {
 
         const ausPostResponse = await fetch(ausPostApiUrl, {
             headers: {
-                'AUTH-KEY': apiKey,
+                'AUTH-KEY': shopCarrier.apiKey || shopCarrier.carrier.defaultApiKey,
             },
         });
 
@@ -119,7 +122,7 @@ export const action: ActionFunction = async ({ request }) => {
             service_name: service.name,
             service_code: service.code,
             total_price: (service.price * 100).toString(), // Convert to cents
-            description: useDescription ? `Estimated ${service.delivery_time}` : '',
+            description: shopCarrier.useDescription ? `Estimated ${service.delivery_time}` : '',
             currency: 'AUD',
         }));
 
