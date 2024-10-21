@@ -265,10 +265,16 @@ export function AustraliaPostCard({
   // Fetch carrier config on component mount
   useEffect(() => {
     const fetchCarrierConfig = async () => {
-      const config = await getCarrierConfigByShopAndCarrier(Number(shop.id), carrierName);
-      setCarrierConfig(config);
-      if (config) {
-        setState(prev => ({ ...prev, apiKey: config.apiKey || '' }));
+      if (typeof window === 'undefined') {
+        const config = await getCarrierConfigByShopAndCarrier(Number(shop.id), carrierName);
+        if (config) {
+          setCarrierConfig(config);
+          setState(prev => ({ ...prev, apiKey: config.apiKey || '' }));
+        }
+      } else {
+        // Handle client-side rendering
+        // You might want to fetch this data from an API endpoint instead
+        console.log('Carrier config fetching is not available on the client side');
       }
     };
 
