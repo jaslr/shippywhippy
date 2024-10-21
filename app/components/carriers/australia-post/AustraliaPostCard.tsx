@@ -206,7 +206,7 @@ export function AustraliaPostCard({
   }, [carrierName, shop.shopifyUrl]);
 
   const activator = (
-    <Button onClick={togglePopoverActive} disclosure>
+    <Button onClick={togglePopoverActive} variant="plain" disclosure>
       Manage
     </Button>
   );
@@ -379,18 +379,18 @@ export function AustraliaPostCard({
             )}
 
             <Text as="h3" variant="headingSm" fontWeight="medium">
-              Use description in rates
+              Descrition in shipping rates
             </Text>
 
             <RadioButton
-              label="Yes"
+              label="Show"
               checked={state.useDescription}
               id="use-description-yes"
               name="use-description"
               onChange={() => handleUseDescriptionChange(true)}
             />
             <RadioButton
-              label="No"
+              label="Hide"
               checked={!state.useDescription}
               id="use-description-no"
               name="use-description"
