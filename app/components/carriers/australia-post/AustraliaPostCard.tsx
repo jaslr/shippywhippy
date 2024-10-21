@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner, Popover, ActionList, Icon, RadioButton } from '@shopify/polaris';
+import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner, Popover, ActionList, Icon, RadioButton, DataTable } from '@shopify/polaris';
 import { CheckIcon, XSmallIcon } from '@shopify/polaris-icons';
 import { useFetcher } from '@remix-run/react';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
@@ -219,6 +219,32 @@ export function AustraliaPostCard({
     );
   }, [apiKeySaver, carrierName]);
 
+  const [parcelTypes, setParcelTypes] = useState<{ code: string; name: string }[]>([]);
+  const [isLoadingParcelTypes, setIsLoadingParcelTypes] = useState(true);
+
+  useEffect(() => {
+    const fetchParcelTypes = async () => {
+      if (!state.apiKey) return;
+
+      setIsLoadingParcelTypes(true);
+      try {
+        const response = await fetch(`/api/australia-post-parcel-types?apiKey=${encodeURIComponent(state.apiKey)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setParcelTypes(data.parcelTypes || []);
+        } else {
+          console.error('Failed to fetch parcel types');
+        }
+      } catch (error) {
+        console.error('Error fetching parcel types:', error);
+      } finally {
+        setIsLoadingParcelTypes(false);
+      }
+    };
+
+    fetchParcelTypes();
+  }, [state.apiKey]);
+
   return (
     <Card>
       <BlockStack gap="400">
@@ -279,7 +305,7 @@ export function AustraliaPostCard({
           )}
         </BlockStack>
         {state.isEnabled && (
-          <FormLayout>
+          <BlockStack gap="400">
             {state.isLoading ? (
               <Spinner accessibilityLabel="Loading carrier data" size="small" />
             ) : (
@@ -339,9 +365,21 @@ export function AustraliaPostCard({
                   checked={state.useDescription}
                   onChange={handleUseDescriptionChange}
                 />
+                <Text as="h4" variant="headingMd">Available Domestic Parcel Types</Text>
+                {isLoadingParcelTypes ? (
+                  <Spinner accessibilityLabel="Loading parcel types" size="small" />
+                ) : parcelTypes.length > 0 ? (
+                  <DataTable
+                    columnContentTypes={['text', 'text']}
+                    headings={['Code', 'Name']}
+                    rows={parcelTypes.map(type => [type.code, type.name])}
+                  />
+                ) : (
+                  <Text as="p">No parcel types available.</Text>
+                )}
               </>
             )}
-          </FormLayout>
+          </BlockStack>
         )}
       </BlockStack>
     </Card>
