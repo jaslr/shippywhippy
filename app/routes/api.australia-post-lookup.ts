@@ -82,8 +82,7 @@ export const action: ActionFunction = async ({ request }) => {
         const apiKey = shopCarrier.apiKey || shopCarrier.carrier.defaultApiKey;
 
         console.log("Shop carrier config:", JSON.stringify(shopCarrier, null, 2));
-
-        const fromPostcode = '2000'; // Default from postcode
+        const fromPostcode = body.rate.origin.postal_code; // Use the shop's location
         const toPostcode = body.rate.destination.postal_code;
         const weight = body.rate.items.reduce((total: number, item: { grams: number; quantity: number }) => total + (item.grams * item.quantity), 0) / 1000; // Convert to kg
 
