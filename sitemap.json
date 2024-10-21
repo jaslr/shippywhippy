@@ -192,6 +192,14 @@
   "migration.sql": null
 }
 ,
+  "20241021062652_add_postal_code_to_shop": {
+  "migration.sql": null
+}
+,
+  "20241021065652_": {
+  "migration.sql": null
+}
+,
   "migration_lock.toml": null
 }
 ,

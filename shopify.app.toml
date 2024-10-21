@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywhippy"
 handle = "shippywhippy"
-application_url = "https://publicly-fragrance-incl-tells.trycloudflare.com"
+application_url = "https://roughly-biggest-reporting-bulk.trycloudflare.com"
 embedded = true
 
 [build]
@@ -13,13 +13,13 @@ include_config_on_deploy = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_products,read_shipping,write_products,write_shipping"
+scopes = "read_locations,read_products,read_shipping,write_products,write_shipping"
 
 [auth]
 redirect_urls = [
-  "https://publicly-fragrance-incl-tells.trycloudflare.com/auth/callback",
-  "https://publicly-fragrance-incl-tells.trycloudflare.com/auth/shopify/callback",
-  "https://publicly-fragrance-incl-tells.trycloudflare.com/api/auth/callback"
+  "https://roughly-biggest-reporting-bulk.trycloudflare.com/auth/callback",
+  "https://roughly-biggest-reporting-bulk.trycloudflare.com/auth/shopify/callback",
+  "https://roughly-biggest-reporting-bulk.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
