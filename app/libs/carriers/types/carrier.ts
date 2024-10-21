@@ -5,7 +5,10 @@ export interface Carrier {
 }
 
 export interface CarrierCardProps {
-  shop: string;
+  shop: {
+    id: string;
+    shopifyUrl: string;
+  };
   carrierName?: string;
   statusURL?: string;
   apiKeyEnvVar?: string;

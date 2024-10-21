@@ -1,4 +1,4 @@
-import { json } from "@remix-run/node";
+import { json, LoaderFunction } from "@remix-run/node";
 import {
   Page,
   Layout,
@@ -11,7 +11,7 @@ import {
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
-import { useLoaderData, useRouteError, useOutletContext } from "@remix-run/react";
+import { useLoaderData, useRouteError } from "@remix-run/react";
 import { getSessionToken } from "../libs/carriers/utils/sessionToken";
 import { boundary } from "@shopify/shopify-app-remix/server";
 import { HeadersFunction } from "@remix-run/node";
@@ -23,6 +23,8 @@ import { AramexCard } from "../components/carriers/aramex/AramexCard";
 const SHOP_QUERY = `#graphql
   query {
     shop {
+      id
+      url
       plan {
         displayName
         partnerDevelopment
@@ -139,7 +141,7 @@ async function updateCarrierService(admin: AdminApiContext, id: string) {
   }
 }
 
-export const loader = async ({ request }: { request: Request }) => {
+export const loader: LoaderFunction = async ({ request }) => {
   const { admin, session } = await authenticate.admin(request);
   
   const shopResponse = await admin.graphql(SHOP_QUERY);
@@ -164,12 +166,31 @@ export const loader = async ({ request }: { request: Request }) => {
 
   await fetch(`${process.env.APP_URL}/api/shop-info`);
 
-  return json({ isDevelopmentStore, hasCarrierCalculatedShipping, sessionToken, carrierService: existingCarrierService });
+  return json({ 
+    isDevelopmentStore, 
+    hasCarrierCalculatedShipping, 
+    sessionToken, 
+    carrierService: existingCarrierService,
+    shop: {
+      id: shop.id,
+      shopifyUrl: shop.url
+    }
+  });
+};
+
+type LoaderData = {
+  isDevelopmentStore: boolean;
+  hasCarrierCalculatedShipping: boolean;
+  sessionToken: string;
+  carrierService: any;
+  shop: {
+    id: string;
+    shopifyUrl: string;
+  };
 };
 
 export default function Index() {
-  const { isDevelopmentStore, hasCarrierCalculatedShipping, sessionToken, carrierService } = useLoaderData<typeof loader>();
-  const { shop } = useOutletContext<{ shop: string }>();
+  const { isDevelopmentStore, hasCarrierCalculatedShipping, sessionToken, carrierService, shop } = useLoaderData<LoaderData>();
 
   return (
     <Page>
@@ -186,7 +207,7 @@ export default function Index() {
               Session Token: {sessionToken ? 'Retrieved' : 'Not available'}
             </List.Item>
             <List.Item>
-              Shop: {shop}
+              Shop: {JSON.stringify(shop)}
             </List.Item>
             <List.Item>
               Shippy Whippy Carrier Service: {carrierService ? 'Installed' : 'Not installed'}
@@ -212,8 +233,8 @@ export default function Index() {
                 <Text as="h2" variant="headingMd">
                   Carrier-Calculated Shipping Configuration
                 </Text>
-                <AustraliaPostCard shop={shop} />
-                <AramexCard shop={shop} />
+                <AustraliaPostCard shop={shop} carrierName="Australia Post" statusURL="/api/carrier-status" />
+                <AramexCard shop={shop} carrierName="Aramex" statusURL="/api/carrier-status" />
               </BlockStack>
             </Card>
           </Layout.Section>
@@ -231,5 +252,3 @@ export function ErrorBoundary() {
 export const headers: HeadersFunction = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
-
-

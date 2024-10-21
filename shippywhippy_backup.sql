@@ -59,7 +59,8 @@ CREATE TABLE public."CarrierConfig" (
     "carrierId" integer NOT NULL,
     "isActive" boolean DEFAULT false NOT NULL,
     "apiKey" text,
-    "memberNumber" text
+    "memberNumber" text,
+    "useDescription" boolean DEFAULT true NOT NULL
 );
 
 
@@ -384,9 +385,9 @@ COPY public."Carrier" (id, name, "defaultApiKey") FROM stdin;
 -- Data for Name: CarrierConfig; Type: TABLE DATA; Schema: public; Owner: shippywhippy_admin
 --
 
-COPY public."CarrierConfig" (id, "shopId", "carrierId", "isActive", "apiKey", "memberNumber") FROM stdin;
-5	1	1	t	2f34aa06-779c-4cb7-90ae-9311750a2607	\N
-28	1	2	t	fdf	\N
+COPY public."CarrierConfig" (id, "shopId", "carrierId", "isActive", "apiKey", "memberNumber", "useDescription") FROM stdin;
+28	1	2	f	fdf	\N	f
+5	1	1	t	2f34aa06-779c-4cb7-90ae-9311750a2607	\N	f
 \.
 
 
@@ -411,7 +412,7 @@ COPY public."Location" (id, "shopId", name, address1, address2, city, province, 
 --
 
 COPY public."Session" (id, shop, state, "isOnline", scope, expires, "accessToken", "accountOwner", collaborator, email, "emailVerified", "firstName", "lastName", locale, "shopId", "userId") FROM stdin;
-offline_froggya.myshopify.com	froggya.myshopify.com	152562128929108	f	write_products,write_shipping	\N	shpua_0f19b1fc993f55c6db96be8f084350d3	f	f	\N	f	\N	\N	\N	\N	\N
+offline_froggya.myshopify.com	froggya.myshopify.com	897476534301082	f	write_products,write_shipping	\N	shpua_4668ae419e45ec8a9ae42452b91026c0	f	f	\N	f	\N	\N	\N	\N	\N
 \.
 
 
@@ -449,6 +450,7 @@ COPY public._prisma_migrations (id, checksum, finished_at, migration_name, logs,
 a7402be2-1545-4029-871f-f2b7e7605e03	4230489444e20f03a3ae051be25a4640465010e0fac1f7cdf7dd2852d3aa5fb1	2024-10-17 12:58:59.970933+11	20241007070937_update_session_model	\N	\N	2024-10-17 12:58:59.95686+11	1
 247437f2-5d24-4644-aa44-7f0214f46fd8	f76f89e0ef5ac7c8886301c373abf569adbbfb9966053093674a09cf2609ba8b	2024-10-17 12:58:59.987071+11	20241007071405_add_userid_to_session	\N	\N	2024-10-17 12:58:59.974992+11	1
 2da8b383-9e09-4ab8-87b9-6f8e1201fed7	43db9ba8676eac10dd87d2bd3747e4206b402b0cb3adeb387b1bce65a2024129	2024-10-17 12:59:00.024868+11	20241017015844_add_default_api_key_to_carrier	\N	\N	2024-10-17 12:58:59.99157+11	1
+e0039dba-2da9-4732-ab64-2281ec151918	9a9cddddd4a3da2022f6ed01278b43fe293b2147366b61acd43651e6e8b6617b	2024-10-21 09:45:02.368094+11	20241020224502_add_use_description_to_carrier_config	\N	\N	2024-10-21 09:45:02.348742+11	1
 \.
 
 
@@ -456,7 +458,7 @@ a7402be2-1545-4029-871f-f2b7e7605e03	4230489444e20f03a3ae051be25a4640465010e0fac
 -- Name: CarrierConfig_id_seq; Type: SEQUENCE SET; Schema: public; Owner: shippywhippy_admin
 --
 
-SELECT pg_catalog.setval('public."CarrierConfig_id_seq"', 60, true);
+SELECT pg_catalog.setval('public."CarrierConfig_id_seq"', 73, true);
 
 
 --

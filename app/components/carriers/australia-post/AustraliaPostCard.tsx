@@ -211,13 +211,38 @@ export function AustraliaPostCard({
     setShowActivationBanner(false);
   }, []);
 
-  const handleUseDescriptionChange = useCallback((checked: boolean) => {
+  const handleUseDescriptionChange = useCallback(async (checked: boolean) => {
     setState(prev => ({ ...prev, useDescription: checked }));
-    apiKeySaver.submit(
-      { carrierName, useDescription: checked },
-      { method: 'post', action: '/api/update-carrier-config' }
-    );
-  }, [apiKeySaver, carrierName]);
+    
+    try {
+        const response = await fetch('/api/update-carrier-config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                carrierName, 
+                useDescription: checked,
+                shopId: shop.id
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update carrier configuration');
+        }
+
+        const data = await response.json();
+        console.log('Carrier configuration update response:', data);
+        if (data.success) {
+            console.log('Carrier configuration updated successfully');
+        } else {
+            throw new Error(data.error || 'Unknown error occurred');
+        }
+    } catch (error) {
+        console.error('Error updating carrier configuration:', error);
+        // Handle the error appropriately
+    }
+  }, [carrierName, shop.id]);
 
   const [services, setServices] = useState<{ code: string; name: string; disabled: boolean }[]>([]);
   const [isLoadingServices, setIsLoadingServices] = useState(true);
@@ -252,6 +277,17 @@ export function AustraliaPostCard({
       return newServices;
     });
   }, []);
+
+  useEffect(() => {
+    if (apiKeySaver.state === 'idle' && apiKeySaver.data) {
+      if (apiKeySaver.data.success) {
+        console.log('Carrier configuration updated successfully');
+      } else {
+        console.error('Failed to update carrier configuration:', apiKeySaver.data?.error);
+        setState(prev => ({ ...prev, error: apiKeySaver.data?.error || 'Failed to update carrier configuration' }));
+      }
+    }
+  }, [apiKeySaver.state, apiKeySaver.data]);
 
   return (
     <Card>
@@ -368,11 +404,31 @@ export function AustraliaPostCard({
                     <p>Please try again. If the problem persists, contact support.</p>
                   </Banner>
                 )}
-                <RadioButton
-                  label="Use description in rates"
-                  checked={state.useDescription}
-                  onChange={handleUseDescriptionChange}
-                />
+
+                  <Text as="h3" variant="headingMd">
+                    Use description in rates
+                  </Text>
+                  
+                    <RadioButton
+                      label="Yes"
+                      checked={state.useDescription}
+                      id="use-description-yes"
+                      name="use-description"
+                      onChange={() => handleUseDescriptionChange(true)}
+                    />
+                    <RadioButton
+                      label="No"
+                      checked={!state.useDescription}
+                      id="use-description-no"
+                      name="use-description"
+                      onChange={() => handleUseDescriptionChange(false)}
+                    />
+                  
+                {apiKeySaver.data && !apiKeySaver.data.success && (
+                  <Banner tone="critical">
+                    <p>Error: {apiKeySaver.data.error || 'Failed to update carrier configuration'}</p>
+                  </Banner>
+                )}
                 <Text as="h3" variant="headingMd">
                   Australia Post Domestic Services
                 </Text>
