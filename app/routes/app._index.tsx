@@ -212,15 +212,10 @@ export default function Index() {
                 <Text as="h2" variant="headingMd">
                   Carrier-Calculated Shipping Configuration
                 </Text>
-                <FormLayout>
-                  <AustraliaPostCard shop={shop} />
-                  <AramexCard shop={shop} />
-                </FormLayout>
+                <AustraliaPostCard shop={shop} />
+                <AramexCard shop={shop} />
               </BlockStack>
             </Card>
-          </Layout.Section>
-          <Layout.Section variant="oneThird">
-            {/* Keep existing app template specs and next steps cards */}
           </Layout.Section>
         </Layout>
       </BlockStack>
