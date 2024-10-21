@@ -171,43 +171,43 @@ export function AustraliaPostCard({
 
   const handleUseDescriptionChange = useCallback(async (checked: boolean) => {
     setState(prev => ({ ...prev, useDescription: checked }));
-    
+
     console.log('Updating use description:', { checked, carrierName, shopUrl: shop.shopifyUrl });
 
     try {
-        const response = await fetch('/api/update-carrier-config', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-                carrierName, 
-                useDescription: checked,
-                shopUrl: shop.shopifyUrl
-            }),
-        });
+      const response = await fetch('/api/update-carrier-config', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          carrierName,
+          useDescription: checked,
+          shopUrl: shop.shopifyUrl
+        }),
+      });
 
-        const data = await response.json();
-        console.log('Carrier configuration update response:', data);
+      const data = await response.json();
+      console.log('Carrier configuration update response:', data);
 
-        if (!response.ok) {
-            throw new Error(data.error || 'Failed to update carrier configuration');
-        }
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update carrier configuration');
+      }
 
-        if (data.success) {
-            console.log('Carrier configuration updated successfully');
-        } else {
-            throw new Error(data.error || 'Failed to update carrier configuration');
-        }
+      if (data.success) {
+        console.log('Carrier configuration updated successfully');
+      } else {
+        throw new Error(data.error || 'Failed to update carrier configuration');
+      }
     } catch (error: unknown) {
-        console.error('Error updating carrier configuration:', error);
-        setState(prev => ({ ...prev, error: error instanceof Error ? error.message : 'An unknown error occurred' }));
+      console.error('Error updating carrier configuration:', error);
+      setState(prev => ({ ...prev, error: error instanceof Error ? error.message : 'An unknown error occurred' }));
     }
   }, [carrierName, shop.shopifyUrl]);
 
   const activator = (
     <Button onClick={togglePopoverActive} disclosure>
-      Actions
+      Manage
     </Button>
   );
 
@@ -279,8 +279,8 @@ export function AustraliaPostCard({
     <Card>
       <BlockStack gap="400">
         <InlineStack align="space-between">
-          <Text as="h2" variant="headingMd">
-            {carrierName}
+        <Text as="h2" variant="headingSm">
+        {carrierName}
           </Text>
           <InlineStack gap="300">
             {state.isLoading ? (
@@ -330,11 +330,11 @@ export function AustraliaPostCard({
         )}
         {state.isEnabled && (
           <BlockStack gap="400">
-            <Text as="h3" variant="headingMd">
-              API Key
-            </Text>
-            {(!carrierConfig?.apiKey || showApiKeySection) && (
+            {showApiKeySection && (
               <>
+                <Text as="h3" variant="headingMd">
+                  API Key
+                </Text>
                 <FormLayout>
                   <TextField
                     label="API Key"
@@ -378,10 +378,10 @@ export function AustraliaPostCard({
               </Banner>
             )}
 
-            <Text as="h3" variant="headingMd">
+            <Text as="h3" variant="headingSm" fontWeight="medium">
               Use description in rates
             </Text>
-            
+
             <RadioButton
               label="Yes"
               checked={state.useDescription}
@@ -396,7 +396,7 @@ export function AustraliaPostCard({
               name="use-description"
               onChange={() => handleUseDescriptionChange(false)}
             />
-            
+
             {apiKeySaver.data && !apiKeySaver.data.success && (
               <Banner tone="critical">
                 <p>Error: {apiKeySaver.data.error || 'Failed to update carrier configuration'}</p>
