@@ -219,30 +219,30 @@ export function AustraliaPostCard({
     );
   }, [apiKeySaver, carrierName]);
 
-  const [parcelTypes, setParcelTypes] = useState<{ code: string; name: string }[]>([]);
-  const [isLoadingParcelTypes, setIsLoadingParcelTypes] = useState(true);
+  const [services, setServices] = useState<{ code: string; name: string }[]>([]);
+  const [isLoadingServices, setIsLoadingServices] = useState(true);
 
   useEffect(() => {
-    const fetchParcelTypes = async () => {
+    const fetchServices = async () => {
       if (!state.apiKey) return;
 
-      setIsLoadingParcelTypes(true);
+      setIsLoadingServices(true);
       try {
-        const response = await fetch(`/api/australia-post-parcel-types?apiKey=${encodeURIComponent(state.apiKey)}`);
+        const response = await fetch(`/api/australia-post-services?apiKey=${encodeURIComponent(state.apiKey)}`);
         if (response.ok) {
           const data = await response.json();
-          setParcelTypes(data.parcelTypes || []);
+          setServices(data.services || []);
         } else {
-          console.error('Failed to fetch parcel types');
+          console.error('Failed to fetch services');
         }
       } catch (error) {
-        console.error('Error fetching parcel types:', error);
+        console.error('Error fetching services:', error);
       } finally {
-        setIsLoadingParcelTypes(false);
+        setIsLoadingServices(false);
       }
     };
 
-    fetchParcelTypes();
+    fetchServices();
   }, [state.apiKey]);
 
   return (
@@ -365,17 +365,19 @@ export function AustraliaPostCard({
                   checked={state.useDescription}
                   onChange={handleUseDescriptionChange}
                 />
-                <Text as="h4" variant="headingMd">Available Domestic Parcel Types</Text>
-                {isLoadingParcelTypes ? (
-                  <Spinner accessibilityLabel="Loading parcel types" size="small" />
-                ) : parcelTypes.length > 0 ? (
+                <Text as="h3" variant="headingMd">
+                  Australia Post Domestic Services
+                </Text>
+                {isLoadingServices ? (
+                  <Spinner accessibilityLabel="Loading services" size="small" />
+                ) : services.length > 0 ? (
                   <DataTable
                     columnContentTypes={['text', 'text']}
                     headings={['Code', 'Name']}
-                    rows={parcelTypes.map(type => [type.code, type.name])}
+                    rows={services.map(service => [service.code, service.name])}
                   />
                 ) : (
-                  <Text as="p">No parcel types available.</Text>
+                  <Text as="p">No services available.</Text>
                 )}
               </>
             )}
