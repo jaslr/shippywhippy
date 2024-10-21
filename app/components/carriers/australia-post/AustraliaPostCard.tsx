@@ -202,7 +202,7 @@ export function AustraliaPostCard({
   }, [carrierName, shop.shopifyUrl]);
 
   const activator = (
-    <Button onClick={togglePopoverActive} disclosure>
+    <Button onClick={togglePopoverActive} disclosure variant="plain">
       Manage
     </Button>
   );
