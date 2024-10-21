@@ -117,7 +117,7 @@ export const action: ActionFunction = async ({ request }) => {
             service_name: service.name,
             service_code: service.code,
             total_price: (service.price * 100).toString(), // Convert to cents
-            description: useDescription ? `Estimated ${service.delivery_time}` : '',
+            description: useDescription ? `Estimated ${service.delivery_time}` : '', // Change this line
             currency: 'AUD',
         }));
 

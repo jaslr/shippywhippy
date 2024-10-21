@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner, Popover, ActionList, Icon, RadioButton, DataTable } from '@shopify/polaris';
+import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner, Popover, ActionList, Icon, RadioButton, DataTable, Checkbox } from '@shopify/polaris';
 import { CheckIcon, XSmallIcon } from '@shopify/polaris-icons';
 import { useFetcher } from '@remix-run/react';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
@@ -219,7 +219,7 @@ export function AustraliaPostCard({
     );
   }, [apiKeySaver, carrierName]);
 
-  const [services, setServices] = useState<{ code: string; name: string }[]>([]);
+  const [services, setServices] = useState<{ code: string; name: string; disabled: boolean }[]>([]);
   const [isLoadingServices, setIsLoadingServices] = useState(true);
 
   useEffect(() => {
@@ -231,7 +231,7 @@ export function AustraliaPostCard({
         const response = await fetch(`/api/australia-post-services?apiKey=${encodeURIComponent(state.apiKey)}`);
         if (response.ok) {
           const data = await response.json();
-          setServices(data.services || []);
+          setServices((data.services || []).map((service: { code: string; name: string }) => ({ ...service, disabled: false })));
         } else {
           console.error('Failed to fetch services');
         }
@@ -244,6 +244,14 @@ export function AustraliaPostCard({
 
     fetchServices();
   }, [state.apiKey]);
+
+  const handleServiceDisableToggle = useCallback((index: number) => {
+    setServices(prevServices => {
+      const newServices = [...prevServices];
+      newServices[index].disabled = !newServices[index].disabled;
+      return newServices;
+    });
+  }, []);
 
   return (
     <Card>
@@ -372,9 +380,18 @@ export function AustraliaPostCard({
                   <Spinner accessibilityLabel="Loading services" size="small" />
                 ) : services.length > 0 ? (
                   <DataTable
-                    columnContentTypes={['text', 'text']}
-                    headings={['Code', 'Name']}
-                    rows={services.map(service => [service.code, service.name])}
+                    columnContentTypes={['text', 'text', 'text']}
+                    headings={['Code', 'Name', 'Disable']}
+                    rows={services.map((service, index) => [
+                      service.code,
+                      service.name,
+                      <Checkbox
+                        label="Disable"
+                        checked={service.disabled}
+                        onChange={() => handleServiceDisableToggle(index)}
+                        labelHidden
+                      />
+                    ])}
                   />
                 ) : (
                   <Text as="p">No services available.</Text>
