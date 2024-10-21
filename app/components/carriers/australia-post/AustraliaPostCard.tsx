@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner, Popover, ActionList, Icon, RadioButton, DataTable, Checkbox } from '@shopify/polaris';
+import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner, Popover, ActionList, Icon, RadioButton, DataTable, Checkbox, Tooltip } from '@shopify/polaris';
 import { CheckIcon, XSmallIcon } from '@shopify/polaris-icons';
 import { useFetcher } from '@remix-run/react';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
@@ -220,7 +220,7 @@ export function AustraliaPostCard({
     );
   }, [carrierConfig?.apiKey]);
 
-  const [services, setServices] = useState<{ code: string; name: string; disabled: boolean }[]>([]);
+  const [services, setServices] = useState<{ code: string; name: string; price: string; disabled: boolean }[]>([]);
   const [isLoadingServices, setIsLoadingServices] = useState(true);
 
   useEffect(() => {
@@ -232,7 +232,7 @@ export function AustraliaPostCard({
         const response = await fetch(`/api/australia-post-services?apiKey=${encodeURIComponent(state.apiKey)}`);
         if (response.ok) {
           const data = await response.json();
-          setServices((data.services || []).map((service: { code: string; name: string }) => ({ ...service, disabled: false })));
+          setServices((data.services || []).map((service: { code: string; name: string; price: string }) => ({ ...service, disabled: false })));
         } else {
           console.error('Failed to fetch services');
         }
@@ -410,10 +410,12 @@ export function AustraliaPostCard({
             ) : services.length > 0 ? (
               <DataTable
                 columnContentTypes={['text', 'text', 'text']}
-                headings={['Code', 'Name', 'Disable']}
+                headings={['Name', 'Price', 'Disable']}
                 rows={services.map((service, index) => [
-                  service.code,
-                  service.name,
+                  <Tooltip content={`Code: ${service.code}`}>
+                    <Text variant="bodyMd" fontWeight="medium"  as="span">{service.name}</Text>
+                  </Tooltip>,
+                  service.price,
                   <Checkbox
                     label="Disable"
                     checked={service.disabled}
