@@ -6,7 +6,7 @@ interface Service {
   price: number;
 }
 
-const EXCLUDE_SMALL_SERVICE = process.env.EXCLUDE_SMALL_SERVICE === 'true';
+const EXCLUDE_SMALL_SERVICE = process.env.EXCLUDE_SMALL_SERVICE !== 'false';
 
 export const loader: LoaderFunction = async ({ request }) => {
   const url = new URL(request.url);

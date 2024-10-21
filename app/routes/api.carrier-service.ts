@@ -66,6 +66,8 @@ interface ShippingRate {
     max_delivery_date?: string;
 }
 
+const EXCLUDE_LOCAL_RATES = true; // New constant to control local rates
+
 export const action: ActionFunction = async ({ request }) => {
     if (request.method !== "POST") {
         return json({ error: "Method not allowed" }, { status: 405 });
@@ -145,21 +147,24 @@ export const action: ActionFunction = async ({ request }) => {
             }
         }
 
-        // Add local rates
-        rates = rates.concat(getLocalRates());
+        // Add local rates only if EXCLUDE_LOCAL_RATES is false
+        if (!EXCLUDE_LOCAL_RATES) {
+            rates = rates.concat(getLocalRates());
+        }
 
         console.log("Final rates:", rates);
         return json({ rates });
     } catch (error) {
         console.error("Error processing rate request:", error);
-        return json({ rates: getLocalRates() });
+        // Return local rates only if EXCLUDE_LOCAL_RATES is false
+        return json({ rates: EXCLUDE_LOCAL_RATES ? [] : getLocalRates() });
     }
 };
 
 function getLocalRates(): ShippingRate[] {
     return [
         {
-            service_name: "Standards Shipping",
+            service_name: "Standard Shipping",
             service_code: "ST",
             total_price: "1000",
             description: "Estimated 3-7 business days",

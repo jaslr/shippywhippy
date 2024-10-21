@@ -38,6 +38,9 @@ interface ShopCarrierConfig {
     };
 }
 
+const EXCLUDE_SMALL_SERVICE = process.env.EXCLUDE_SMALL_SERVICE !== 'false';
+const EXCLUDE_HARDCODED_RATES = true; // New constant to control hardcoded rates
+
 export const action: ActionFunction = async ({ request }) => {
     console.log("Australia Post lookup action called - Initial log");
     if (request.method !== "POST") {
@@ -113,13 +116,22 @@ export const action: ActionFunction = async ({ request }) => {
         const ausPostData: AusPostApiResponse = await ausPostResponse.json();
         console.log("Australia Post API response data:", JSON.stringify(ausPostData, null, 2));
 
-        const australiaPostRates: ShippingRate[] = ausPostData.services.service.map(service => ({
+        let australiaPostRates: ShippingRate[] = ausPostData.services.service.map(service => ({
             service_name: service.name,
             service_code: service.code,
             total_price: (service.price * 100).toString(), // Convert to cents
-            description: useDescription ? `Estimated ${service.delivery_time}` : '', // Change this line
+            description: useDescription ? `Estimated ${service.delivery_time}` : '',
             currency: 'AUD',
         }));
+
+        if (EXCLUDE_SMALL_SERVICE) {
+            australiaPostRates = australiaPostRates.filter(rate => rate.service_name.toLowerCase() !== 'small');
+        }
+
+        if (EXCLUDE_HARDCODED_RATES) {
+            // Add the condition to exclude hardcoded rates
+            australiaPostRates = australiaPostRates.filter(rate => !isHardcodedRate(rate.service_code));
+        }
 
         console.log("Returning Australia Post rates:", australiaPostRates);
         return json({ success: true, rates: australiaPostRates });
@@ -128,6 +140,13 @@ export const action: ActionFunction = async ({ request }) => {
         return json({ success: false, error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
     }
 };
+
+// Helper function to identify hardcoded rates
+function isHardcodedRate(serviceCode: string): boolean {
+    // Add the service codes of your hardcoded rates here
+    const hardcodedServiceCodes = ['HARDCODED_RATE_1', 'HARDCODED_RATE_2'];
+    return hardcodedServiceCodes.includes(serviceCode);
+}
 
 export const loader = () => {
     return json({ message: 'Australia Post Lookup API is up.' });
