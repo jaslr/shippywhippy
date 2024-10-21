@@ -379,7 +379,7 @@ export function AustraliaPostCard({
             )}
 
             <Text as="h3" variant="headingSm" fontWeight="medium">
-              Descrition in shipping rates
+              Display description in shipping rates
             </Text>
 
             <RadioButton
