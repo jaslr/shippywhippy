@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, LegacyCard, InlineStack, Spinner, Popover, ActionList, Icon, RadioButton, DataTable, Checkbox, Tooltip, Tabs } from '@shopify/polaris';
+import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, LegacyCard, InlineStack, Spinner, Popover, ActionList, Icon, RadioButton, DataTable, Checkbox, Tooltip, Tabs, Select } from '@shopify/polaris';
 import { CheckIcon, XSmallIcon } from '@shopify/polaris-icons';
 import { useFetcher } from '@remix-run/react';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
@@ -48,6 +48,14 @@ interface CustomActionItem {
   destructive?: boolean;
 }
 
+// Add this interface near the top of the file
+interface InternationalService {
+  name: string;
+  price: string;
+  use: boolean;
+  hide: boolean;
+}
+
 export function AustraliaPostCard({
   shop,
   carrierName = 'Australia Post',
@@ -74,6 +82,8 @@ export function AustraliaPostCard({
   const [isLoadingServices, setIsLoadingServices] = useState(false);
   const [services, setServices] = useState<Array<Service & { location: string; postalCode: string }>>([]);
   const [selectedTab, setSelected] = useState(0);
+  const [selectedCountry, setSelectedCountry] = useState('NZ');
+  const [internationalServices, setInternationalServices] = useState<InternationalService[]>([]);
 
   const fetcher = useFetcher<AustraliaPostLookupData>();
   const apiKeySaver = useFetcher<ApiKeySaverData>();
@@ -81,6 +91,76 @@ export function AustraliaPostCard({
   const carrierStatusFetcher = useFetcher<CarrierStatusData>();
 
   const testUrl = '/api/australia-post-lookup';
+
+  const countryOptions = [
+    { label: 'New Zealand', value: 'NZ' },
+    { label: 'United States', value: 'US' },
+  ];
+
+  const handleCountryChange = useCallback((value: string) => {
+    setSelectedCountry(value);
+    fetchInternationalServices(value);
+  }, []);
+
+  const fetchInternationalServices = useCallback(async (countryCode: string) => {
+    if (!carrierConfig?.apiKey) return;
+
+    try {
+      const response = await fetch(`/api/australia-post-international?country_code=${countryCode}&weight=1`, {
+        headers: {
+          'AUTH-KEY': carrierConfig.apiKey,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setInternationalServices(data.services.service.map((service: any) => ({
+          name: service.name,
+          price: service.price,
+          use: false,
+          hide: false
+        })));
+      } else {
+        console.error('Failed to fetch international services');
+      }
+    } catch (error) {
+      console.error('Error fetching international services:', error);
+    }
+  }, [carrierConfig?.apiKey]);
+
+  useEffect(() => {
+    if (selectedTab === 1) {
+      fetchInternationalServices(selectedCountry);
+    }
+  }, [selectedTab, selectedCountry, fetchInternationalServices]);
+  const handleServiceToggle = useCallback((index: number, action: 'use' | 'hide') => {
+    setInternationalServices((prevServices) => 
+      prevServices.map((service, i) => 
+        i === index ? { ...service, [action]: !service[action] } : service
+      )
+    );
+  }, []);
+
+  const renderInternationalServiceTable = () => (
+    <DataTable
+      columnContentTypes={['text', 'numeric', 'text', 'text']}
+      headings={['Name', 'Price', 'Use', 'Hide']}
+      rows={internationalServices.map((service, index) => [
+        service.name,
+        `$${parseFloat(service.price).toFixed(2)}`,
+        <RadioButton
+          label="Use"
+          checked={service.use}
+          onChange={() => handleServiceToggle(index, 'use')}
+        />,
+        <RadioButton
+          label="Hide"
+          checked={service.hide}
+          onChange={() => handleServiceToggle(index, 'hide')}
+        />
+      ])}
+    />
+  );
 
   // Fetch carrier status and API key on component mount
   useEffect(() => {
@@ -552,7 +632,15 @@ export function AustraliaPostCard({
                 {selectedTab === 0 ? (
                   renderServiceTable(services.filter(service => !service.code.startsWith('INT')))
                 ) : (
-                  renderServiceTable(services.filter(service => service.code.startsWith('INT')))
+                  <BlockStack gap="400">
+                    <Select
+                      label="Select Country"
+                      options={countryOptions}
+                      onChange={handleCountryChange}
+                      value={selectedCountry}
+                    />
+                    {renderInternationalServiceTable()}
+                  </BlockStack>
                 )}
               </LegacyCard.Section>
             </Tabs>
