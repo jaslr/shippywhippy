@@ -414,7 +414,11 @@ export function AustraliaPostCard({
   
 
   const fetchInternationalServices = useCallback(async () => {
-    if (!carrierConfig?.apiKey) return;
+    console.log('Attempting to fetch international services'); // Added log
+    if (!state.apiKey) {
+      console.log('No API key found');
+      return;
+    }
 
     setIsLoadingInternationalServices(true);
     try {
@@ -424,11 +428,13 @@ export function AustraliaPostCard({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          apiKey: carrierConfig.apiKey,
+          apiKey: state.apiKey,
           countryCode: selectedCountry,
           weight: '1',
         }),
       });
+
+      console.log('Response from API:', response); // Added log
 
       if (response.ok) {
         const data = await response.json();
@@ -443,11 +449,12 @@ export function AustraliaPostCard({
     } finally {
       setIsLoadingInternationalServices(false);
     }
-  }, [carrierConfig?.apiKey, selectedCountry]);
+  }, [state.apiKey, selectedCountry]);
 
   const handleTabChange = useCallback(
     (selectedTabIndex: number) => {
       setSelectedTab(selectedTabIndex);
+      console.log('Tab changed to:', selectedTabIndex); // Added log
       if (selectedTabIndex === 1) { // INTERNATIONAL tab
         fetchInternationalServices();
       }
@@ -654,7 +661,15 @@ export function AustraliaPostCard({
                 {selectedTab === 0 ? (
                   renderServiceTable(services.filter(service => !service.code.startsWith('INT')))
                 ) : (
-                  renderInternationalServiceTable()
+                  <>
+                    <Select
+                      label="Select Country"
+                      options={countryOptions}
+                      onChange={handleCountryChange}
+                      value={selectedCountry}
+                    />
+                    {renderInternationalServiceTable()}
+                  </>
                 )}
               </LegacyCard.Section>
             </Tabs>
