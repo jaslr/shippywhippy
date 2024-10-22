@@ -143,7 +143,7 @@ async function updateCarrierService(admin: AdminApiContext, id: string) {
 
 export const loader: LoaderFunction = async ({ request }) => {
   const { admin, session } = await authenticate.admin(request);
-  
+
   const shopResponse = await admin.graphql(SHOP_QUERY);
   const {
     data: { shop },
@@ -166,10 +166,10 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   await fetch(`${process.env.APP_URL}/api/shop-info`);
 
-  return json({ 
-    isDevelopmentStore, 
-    hasCarrierCalculatedShipping, 
-    sessionToken, 
+  return json({
+    isDevelopmentStore,
+    hasCarrierCalculatedShipping,
+    sessionToken,
     carrierService: existingCarrierService,
     shop: {
       id: shop.id,
@@ -214,7 +214,7 @@ export default function Index() {
             </List.Item>
             {carrierService && (
               <List.Item>
-                Carrier Service Details: 
+                Carrier Service Details:
                 <ul>
                   <li>Name: {carrierService.name}</li>
                   <li>Active: {carrierService.active ? 'Yes' : 'No'}</li>
@@ -228,15 +228,10 @@ export default function Index() {
         <TitleBar title="Shippy Whippy" />
         <Layout>
           <Layout.Section>
-            <Card>
-              <BlockStack gap="500">
-                <Text as="h2" variant="headingMd">
-                  Carrier-Calculated Shipping Configuration
-                </Text>
-                <AustraliaPostCard shop={shop} carrierName="Australia Post" statusURL="/api/carrier-status" apiKeyEnvVar="SHIPPING_API_KEY_AUSTRALIA_POST" defaultApiKey="SHIPPING_API_KEY_AUSTRALIA_POST" />
-                <AramexCard shop={shop} carrierName="Aramex" statusURL="/api/carrier-status" apiKeyEnvVar="SHIPPING_API_KEY_ARAMEX" defaultApiKey="SHIPPING_API_KEY_ARAMEX" />
-              </BlockStack>
-            </Card>
+            <BlockStack gap="500">              
+              <AustraliaPostCard shop={shop} carrierName="Australia Post" statusURL="/api/carrier-status" apiKeyEnvVar="SHIPPING_API_KEY_AUSTRALIA_POST" defaultApiKey="SHIPPING_API_KEY_AUSTRALIA_POST" />
+              <AramexCard shop={shop} carrierName="Aramex" statusURL="/api/carrier-status" apiKeyEnvVar="SHIPPING_API_KEY_ARAMEX" defaultApiKey="SHIPPING_API_KEY_ARAMEX" />
+            </BlockStack>
           </Layout.Section>
         </Layout>
       </BlockStack>
