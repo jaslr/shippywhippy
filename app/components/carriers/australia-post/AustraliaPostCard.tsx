@@ -218,7 +218,7 @@ export function AustraliaPostCard({
       try {
         const response = await fetch('/api/shopify-locations');
         console.log('Response status:', response.status);
-        
+
         if (response.ok) {
           const data = await response.json();
           console.log('Fetched locations data:', data);
@@ -247,7 +247,7 @@ export function AustraliaPostCard({
     if (!carrierConfig?.apiKey) return;
 
     fetcher.submit(
-      { 
+      {
         apiKey: carrierConfig.apiKey,
         locations: JSON.stringify(locations)
       },
@@ -265,7 +265,7 @@ export function AustraliaPostCard({
         const response = await fetch(`/api/australia-post-services?apiKey=${encodeURIComponent(state.apiKey)}`);
         if (response.ok) {
           const data = await response.json();
-          const servicesWithLocations = locations.flatMap(location => 
+          const servicesWithLocations = locations.flatMap(location =>
             (data.services || []).map((service: Service) => ({
               ...service,
               disabled: false,
@@ -361,7 +361,7 @@ export function AustraliaPostCard({
         headings={['Location', 'Location Details', 'Name', 'Disable']}
         rows={services.map((service, index) => {
           const locationData = locations.find(loc => loc.name === service.location);
-          const zipCode = service.location === 'Shop location' 
+          const zipCode = service.location === 'Shop location'
             ? (locationData?.zipCode || '4305')
             : (locationData?.zipCode || service.postalCode || 'N/A');
 
@@ -410,8 +410,8 @@ export function AustraliaPostCard({
     <Card>
       <BlockStack gap="400">
         <InlineStack align="space-between">
-        <Text as="h2" variant="headingSm">
-        {carrierName}
+          <Text as="h2" variant="headingSm">
+            {carrierName}
           </Text>
           <InlineStack gap="300">
             {state.isLoading ? (
@@ -543,9 +543,10 @@ export function AustraliaPostCard({
                 <p>Error: {apiKeySaver.data.error || 'Failed to update carrier configuration'}</p>
               </Banner>
             )}
-            <Text as="h3" variant="headingMd">
+            <Text as="h3" variant="headingSm" fontWeight="medium">
               Australia Post Services
             </Text>
+
             <Tabs tabs={tabs} selected={selectedTab} onSelect={handleTabChange}>
               <LegacyCard.Section title={tabs[selectedTab].content}>
                 {selectedTab === 0 ? (
