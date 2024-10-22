@@ -484,16 +484,20 @@ export function AustraliaPostCard({
             ) : services.length > 0 ? (
               <DataTable
                 columnContentTypes={['text', 'text', 'text', 'text']}
-                headings={['Location', 'Postal Code', 'Name', 'Disable']}
+                headings={['Location', 'Location Details', 'Name', 'Disable']}
                 rows={services.map((service, index) => [
                   service.location,
-                  service.postalCode,
+                  <Tooltip content={
+                    service.location === 'Shop Location' 
+                      ? `Shop URL: ${shop.shopifyUrl}`
+                      : service.postalCode
+                  }>
+                    <Text variant="bodyMd" as="span">
+                      {service.location === 'Shop Location' ? 'Shop Location' : service.postalCode}
+                    </Text>
+                  </Tooltip>,
                   <Tooltip content={`Code: ${service.code}`}>
-                    <Text
-                      variant="bodyMd"
-                      fontWeight="medium"
-                      as="span"
-                    >
+                    <Text variant="bodyMd" fontWeight="medium" as="span">
                       {service.name}
                     </Text>
                   </Tooltip>,
