@@ -37,6 +37,9 @@ type CarrierStatusData = {
 // Add this constant to control the filter
 const EXCLUDE_SMALL_SERVICE = true;
 
+// Add this constant at the top of the file, after imports
+const DEFAULT_INTERNATIONAL_COUNTRY = 'US'; // United States
+
 interface Service {
   code: string;
   name: string;
@@ -50,18 +53,15 @@ interface CustomActionItem {
   destructive?: boolean;
 }
 
-// Add this interface near the top of the file
+// Update the InternationalService interface
 interface InternationalService {
   code: string;
   name: string;
   price: string;
   max_extra_cover: number;
-  options: {
-    option: Array<{
-      code: string;
-      name: string;
-    }>;
-  };
+  location: string;
+  postalCode: string;
+  disabled: boolean;
 }
 
 export function AustraliaPostCard({
@@ -90,11 +90,12 @@ export function AustraliaPostCard({
   const [isLoadingServices, setIsLoadingServices] = useState(false);
   const [services, setServices] = useState<Array<Service & { location: string; postalCode: string }>>([]);
   const [selectedTab, setSelectedTab] = useState(0);
-  const [selectedCountry, setSelectedCountry] = useState(countries[0].code);
+  const [selectedCountry, setSelectedCountry] = useState(DEFAULT_INTERNATIONAL_COUNTRY);
   const [internationalServices, setInternationalServices] = useState<InternationalService[]>([]);
   const [isLoadingInternationalServices, setIsLoadingInternationalServices] = useState(false);
   const [requestUrl, setRequestUrl] = useState('');
   const [requestHeaders, setRequestHeaders] = useState('{}'); // Initialize with empty object string
+  const [locations, setLocations] = useState<Array<{ id: string; name: string; address: string; zipCode: string | null }>>([]);
 
   const fetcher = useFetcher<AustraliaPostLookupData>();
   const apiKeySaver = useFetcher<ApiKeySaverData>();
@@ -108,9 +109,90 @@ export function AustraliaPostCard({
     value: country.code
   }));
 
+  // Fetch locations on component mount
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await fetch('/api/shopify-locations');
+        console.log('Response status:', response.status);
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Fetched locations data:', data);
+          if (data.locations && Array.isArray(data.locations)) {
+            setLocations(data.locations);
+          } else {
+            console.error('Invalid locations data structure:', data);
+          }
+        } else {
+          const errorText = await response.text();
+          console.error('Failed to fetch locations:', response.status, errorText);
+        }
+      } catch (error) {
+        console.error('Error fetching locations:', error);
+      }
+    };
+
+    fetchLocations();
+  }, []);
+
+  const fetchInternationalServices = useCallback(async (countryCode: string) => {
+    console.log('Attempting to fetch international services for country:', countryCode);
+    if (!state.apiKey) {
+      console.log('No API key found');
+      return;
+    }
+
+    setIsLoadingInternationalServices(true);
+    try {
+      const response = await fetch('/api/australia-post-international', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          apiKey: state.apiKey,
+          countryCode: countryCode,
+          weight: '1',
+        }),
+      });
+
+      console.log('Response from API:', response);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Fetched international services:', JSON.stringify(data, null, 2));
+        if (data.services && Array.isArray(data.services.service)) {
+          const servicesWithLocations = locations.flatMap(location =>
+            data.services.service.map((service: any) => ({
+              ...service,
+              location: location.name,
+              postalCode: location.zipCode || 'N/A',
+              disabled: false,
+            }))
+          );
+          setInternationalServices(servicesWithLocations);
+        } else {
+          console.error('Invalid data structure received:', data);
+          setInternationalServices([]);
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('Failed to fetch international services:', response.status, errorText);
+        setInternationalServices([]);
+      }
+    } catch (error) {
+      console.error('Error fetching international services:', error);
+      setInternationalServices([]);
+    } finally {
+      setIsLoadingInternationalServices(false);
+    }
+  }, [state.apiKey, locations]);
+
   const handleCountryChange = useCallback((value: string) => {
     setSelectedCountry(value);
-  }, []);
+    fetchInternationalServices(value);
+  }, [fetchInternationalServices]);
 
   const handleServiceToggle = useCallback((index: number, action: 'use' | 'hide') => {
     setInternationalServices((prevServices) =>
@@ -120,18 +202,39 @@ export function AustraliaPostCard({
     );
   }, []);
 
+  const handleInternationalServiceDisableToggle = useCallback((index: number) => {
+    setInternationalServices(prevServices => {
+      const newServices = [...prevServices];
+      newServices[index].disabled = !newServices[index].disabled;
+      return newServices;
+    });
+  }, []);
+
   const renderInternationalServiceTable = () => (
     isLoadingInternationalServices ? (
       <Spinner accessibilityLabel="Loading international services" size="small" />
     ) : internationalServices.length > 0 ? (
       <DataTable
-        columnContentTypes={['text', 'text', 'numeric', 'numeric']}
-        headings={['Name', 'Code', 'Price', 'Max Extra Cover']}
-        rows={internationalServices.map(service => [
-          service.name,
-          service.code,
-          `$${parseFloat(service.price).toFixed(2)}`,
-          `$${service.max_extra_cover.toFixed(2)}`,
+        columnContentTypes={['text', 'text', 'text', 'text']}
+        headings={['Location', 'Location Details', 'Name', 'Disable']}
+        rows={internationalServices.map((service, index) => [
+          service.location,
+          <Tooltip content={`Address not available for international services`}>
+            <Text variant="bodyMd" as="span">
+              {service.postalCode}
+            </Text>
+          </Tooltip>,
+          <Tooltip content={`Code: ${service.code}`}>
+            <Text variant="bodyMd" fontWeight="medium" as="span">
+              {service.name}
+            </Text>
+          </Tooltip>,
+          <Checkbox
+            label="Disable"
+            checked={service.disabled}
+            onChange={() => handleInternationalServiceDisableToggle(index)}
+            labelHidden
+          />
         ])}
       />
     ) : (
@@ -267,38 +370,6 @@ export function AustraliaPostCard({
     </Button>
   );
 
-  const [locations, setLocations] = useState<Array<{ id: string; name: string; address: string; zipCode: string | null }>>([]);
-
-  // Fetch locations on component mount
-  useEffect(() => {
-    const fetchLocations = async () => {
-      try {
-        const response = await fetch('/api/shopify-locations');
-        console.log('Response status:', response.status);
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Fetched locations data:', data);
-          if (data.locations && Array.isArray(data.locations)) {
-            setLocations(data.locations);
-          } else {
-            console.error('Invalid locations data structure:', data);
-          }
-        } else {
-          const errorText = await response.text();
-          console.error('Failed to fetch locations:', response.status, errorText);
-        }
-      } catch (error) {
-        console.error('Error fetching locations:', error);
-      }
-    };
-
-    fetchLocations();
-  }, []);
-
-  // Add this console.log to check the locations
-  
-
   // Update handleTestApiKey to use multiple locations
   const handleTestApiKey = useCallback(() => {
     if (!carrierConfig?.apiKey) return;
@@ -414,53 +485,17 @@ export function AustraliaPostCard({
   // Add this console.log to check the shop object
   
 
-  const fetchInternationalServices = useCallback(async (countryCode: string) => {
-    console.log('Attempting to fetch international services for country:', countryCode);
-    if (!state.apiKey) {
-      console.log('No API key found');
-      return;
-    }
-
-    setIsLoadingInternationalServices(true);
-    try {
-      const response = await fetch('/api/australia-post-international', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          apiKey: state.apiKey,
-          countryCode: countryCode,
-          weight: '1',
-        }),
-      });
-
-      console.log('Response from API:', response);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Fetched international services:', data);
-        setInternationalServices(data.services.service);
-      } else {
-        const errorText = await response.text();
-        console.error('Failed to fetch international services:', response.status, errorText);
-      }
-    } catch (error) {
-      console.error('Error fetching international services:', error);
-    } finally {
-      setIsLoadingInternationalServices(false);
-    }
-  }, [state.apiKey]);
-
   const handleTabChange = useCallback(
     (selectedTabIndex: number) => {
       setSelectedTab(selectedTabIndex);
-      console.log('Tab changed to:', selectedTabIndex); // Added log
+      console.log('Tab changed to:', selectedTabIndex);
       if (selectedTabIndex === 1) { // INTERNATIONAL tab
-        fetchInternationalServices(selectedCountry);
+        // Set the country to United States and fetch services
+        setSelectedCountry(DEFAULT_INTERNATIONAL_COUNTRY);
+        fetchInternationalServices(DEFAULT_INTERNATIONAL_COUNTRY);
       }
     },
-    [fetchInternationalServices, selectedCountry],
+    [fetchInternationalServices],
   );
 
   const renderServiceTable = (services: Array<Service & { location: string; postalCode: string }>) => (
