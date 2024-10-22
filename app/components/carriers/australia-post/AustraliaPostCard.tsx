@@ -50,10 +50,16 @@ interface CustomActionItem {
 
 // Add this interface near the top of the file
 interface InternationalService {
+  code: string;
   name: string;
   price: string;
-  use: boolean;
-  hide: boolean;
+  max_extra_cover: number;
+  options: {
+    option: Array<{
+      code: string;
+      name: string;
+    }>;
+  };
 }
 
 export function AustraliaPostCard({
@@ -81,7 +87,7 @@ export function AustraliaPostCard({
   const [carrierConfig, setCarrierConfig] = useState<CarrierConfig | null>(null);
   const [isLoadingServices, setIsLoadingServices] = useState(false);
   const [services, setServices] = useState<Array<Service & { location: string; postalCode: string }>>([]);
-  const [selectedTab, setSelected] = useState(0);
+  const [selectedTab, setSelectedTab] = useState(0);
   const [selectedCountry, setSelectedCountry] = useState('NZ');
   const [internationalServices, setInternationalServices] = useState<InternationalService[]>([]);
   const [isLoadingInternationalServices, setIsLoadingInternationalServices] = useState(false);
@@ -102,85 +108,33 @@ export function AustraliaPostCard({
 
   const handleCountryChange = useCallback((value: string) => {
     setSelectedCountry(value);
-    fetchInternationalServices(value);
   }, []);
 
-  const fetchInternationalServices = useCallback(async (countryCode: string) => {
-    if (!carrierConfig?.apiKey) return;
-
-    setIsLoadingInternationalServices(true);
-    try {
-      const headers: HeadersInit = {
-        'AUTH-KEY': carrierConfig.apiKey || process.env.VITE_DEFAULT_AUSTRALIA_POST_API_KEY || '',
-      };
-
-      const response = await fetch(`/api/australia-post-international?country_code=${countryCode}&weight=1`, {
-        headers: headers,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setInternationalServices(data.services.service.map((service: any) => ({
-          name: service.name,
-          price: service.price,
-          use: false,
-          hide: false
-        })));
-      } else {
-        console.error('Failed to fetch international services');
-      }
-    } catch (error) {
-      console.error('Error fetching international services:', error);
-    } finally {
-      setIsLoadingInternationalServices(false);
-    }
-  }, [carrierConfig?.apiKey]);
-
-  useEffect(() => {
-    if (selectedTab === 1) {
-      fetchInternationalServices(selectedCountry);
-    }
-  }, [selectedTab, selectedCountry, fetchInternationalServices]);
-
   const handleServiceToggle = useCallback((index: number, action: 'use' | 'hide') => {
-    setInternationalServices((prevServices) => 
+    setInternationalServices((prevServices) =>
       prevServices.map((service, i) => 
-        i === index ? { ...service, [action]: !service[action] } : service
+        i === index ? { ...service, [action]: !service[action as keyof InternationalService] } : service
       )
     );
   }, []);
 
   const renderInternationalServiceTable = () => (
-    <BlockStack gap="400">
-      <Select
-        label="Select Country"
-        options={countryOptions}
-        onChange={handleCountryChange}
-        value={selectedCountry}
+    isLoadingInternationalServices ? (
+      <Spinner accessibilityLabel="Loading international services" size="small" />
+    ) : internationalServices.length > 0 ? (
+      <DataTable
+        columnContentTypes={['text', 'text', 'numeric', 'numeric']}
+        headings={['Name', 'Code', 'Price', 'Max Extra Cover']}
+        rows={internationalServices.map(service => [
+          service.name,
+          service.code,
+          `$${parseFloat(service.price).toFixed(2)}`,
+          `$${service.max_extra_cover.toFixed(2)}`,
+        ])}
       />
-      {isLoadingInternationalServices ? (
-        <Spinner accessibilityLabel="Loading international services" size="small" />
-      ) : (
-        <DataTable
-          columnContentTypes={['text', 'numeric', 'text', 'text']}
-          headings={['Name', 'Price', 'Use', 'Hide']}
-          rows={internationalServices.map((service, index) => [
-            service.name,
-            `$${parseFloat(service.price).toFixed(2)}`,
-            <RadioButton
-              label="Use"
-              checked={service.use}
-              onChange={() => handleServiceToggle(index, 'use')}
-            />,
-            <RadioButton
-              label="Hide"
-              checked={service.hide}
-              onChange={() => handleServiceToggle(index, 'hide')}
-            />
-          ])}
-        />
-      )}
-    </BlockStack>
+    ) : (
+      <Text as="p">No international services available.</Text>
+    )
   );
 
   // Fetch carrier status and API key on component mount
@@ -341,7 +295,7 @@ export function AustraliaPostCard({
   }, []);
 
   // Add this console.log to check the locations
-  console.log('Locations:', locations);
+  
 
   // Update handleTestApiKey to use multiple locations
   const handleTestApiKey = useCallback(() => {
@@ -350,9 +304,19 @@ export function AustraliaPostCard({
     fetcher.submit(
       {
         apiKey: carrierConfig.apiKey,
-        locations: JSON.stringify(locations)
+        locations: JSON.stringify(locations),
+        rate: {
+          destination: {
+            postal_code: '2000', // Example postcode
+            country: 'AU'
+          },
+          items: [{ grams: 1000 }] // Example weight
+        },
+        length: 22,
+        width: 16,
+        height: 7.7
       },
-      { method: 'post', action: '/api/australia-post-test' }
+      { method: 'post', action: '/api/australia-post-lookup' }
     );
   }, [carrierConfig?.apiKey, locations]);
 
@@ -446,11 +410,46 @@ export function AustraliaPostCard({
   }
 
   // Add this console.log to check the shop object
-  console.log('Shop object:', shop);
+  
+
+  const fetchInternationalServices = useCallback(async () => {
+    if (!carrierConfig?.apiKey) return;
+
+    setIsLoadingInternationalServices(true);
+    try {
+      const response = await fetch('/api/australia-post-international', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          apiKey: carrierConfig.apiKey,
+          countryCode: 'NZ',
+          weight: '1',
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setInternationalServices(data.services.service);
+      } else {
+        console.error('Failed to fetch international services');
+      }
+    } catch (error) {
+      console.error('Error fetching international services:', error);
+    } finally {
+      setIsLoadingInternationalServices(false);
+    }
+  }, [carrierConfig?.apiKey]);
 
   const handleTabChange = useCallback(
-    (selectedTabIndex: number) => setSelected(selectedTabIndex),
-    [],
+    (selectedTabIndex: number) => {
+      setSelectedTab(selectedTabIndex);
+      if (selectedTabIndex === 1) { // INTERNATIONAL tab
+        fetchInternationalServices();
+      }
+    },
+    [fetchInternationalServices],
   );
 
   const renderServiceTable = (services: Array<Service & { location: string; postalCode: string }>) => (

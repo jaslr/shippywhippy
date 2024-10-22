@@ -111,39 +111,22 @@ export const action: ActionFunction = async ({ request }) => {
 
         const toPostcode = body.rate.destination.postal_code;
         const weight = body.rate.items.reduce((total: number, item: any) => total + (item.grams / 1000), 0);
-
-        // Default dimensions if not provided
-        const length = body.length || 22; // cm
-        const width = body.width || 16; // cm
-        const height = body.height || 7.7; // cm
+        const length = body.length || 22;
+        const width = body.width || 16;
+        const height = body.height || 7.7;
 
         const allRates: ShippingRate[] = [];
 
+        // Domestic rates
         for (const location of locations) {
             const apiUrl = `https://digitalapi.auspost.com.au/postage/parcel/domestic/service.json?from_postcode=${location.postalCode}&to_postcode=${toPostcode}&length=${length}&width=${width}&height=${height}&weight=${weight}`;
-            console.log("Australia Post API URL:", apiUrl);
-
-            const ausPostResponse = await fetch(apiUrl, {
-                headers: {
-                    'AUTH-KEY': shopCarrier.apiKey || shopCarrier.carrier.defaultApiKey,
-                },
-            });
-
-            console.log("Australia Post API response status:", ausPostResponse.status);
-
-            if (!ausPostResponse.ok) {
-                const errorText = await ausPostResponse.text();
-                console.error("Australia Post API error response:", errorText);
-                throw new Error(`Australia Post API error: ${ausPostResponse.statusText}. Response: ${errorText}`);
-            }
-
+            const ausPostResponse = await fetchAusPostApi(apiUrl, shopCarrier.apiKey || shopCarrier.carrier.defaultApiKey);
             const ausPostData: AusPostApiResponse = await ausPostResponse.json();
-            console.log("Australia Post API response data:", JSON.stringify(ausPostData, null, 2));
 
             let australiaPostRates: ShippingRate[] = ausPostData.services.service.map(service => ({
                 service_name: `${location.name} - ${service.name}`,
                 service_code: `${location.id}_${service.code}`,
-                total_price: (service.price * 100).toString(), // Convert to cents
+                total_price: (service.price * 100).toString(),
                 description: shopCarrier.useDescription ? `Estimated ${service.delivery_time}` : '',
                 currency: 'AUD',
             }));
@@ -153,9 +136,25 @@ export const action: ActionFunction = async ({ request }) => {
             }
 
             allRates.push(...australiaPostRates);
-
-            // Implement rate limiting
             await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
+        }
+
+        // International rates
+        const countryCode = body.rate.destination.country;
+        if (countryCode && countryCode !== 'AU') {
+            const intApiUrl = `https://digitalapi.auspost.com.au/postage/parcel/international/service.json?country_code=${countryCode}&weight=${weight}`;
+            const intAusPostResponse = await fetchAusPostApi(intApiUrl, shopCarrier.apiKey || shopCarrier.carrier.defaultApiKey);
+            const intAusPostData = await intAusPostResponse.json();
+
+            const internationalRates: ShippingRate[] = intAusPostData.services.service.map((service: any) => ({
+                service_name: `International - ${service.name}`,
+                service_code: `INT_${service.code}`,
+                total_price: (service.price * 100).toString(),
+                description: shopCarrier.useDescription ? service.delivery_time : '',
+                currency: 'AUD',
+            }));
+
+            allRates.push(...internationalRates);
         }
 
         console.log("Returning Australia Post rates:", allRates);
@@ -165,6 +164,22 @@ export const action: ActionFunction = async ({ request }) => {
         return json({ success: false, error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
     }
 };
+
+async function fetchAusPostApi(url: string, apiKey: string) {
+    const response = await fetch(url, {
+        headers: {
+            'AUTH-KEY': apiKey,
+        },
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Australia Post API error response:", errorText);
+        throw new Error(`Australia Post API error: ${response.statusText}. Response: ${errorText}`);
+    }
+
+    return response;
+}
 
 // Helper function to identify hardcoded rates
 function isHardcodedRate(serviceCode: string): boolean {
@@ -176,5 +191,3 @@ function isHardcodedRate(serviceCode: string): boolean {
 export const loader = () => {
     return json({ message: 'Australia Post Lookup API is up.' });
 };
-
-
