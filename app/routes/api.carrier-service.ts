@@ -184,7 +184,7 @@ async function getShopLocation(shop: any) {
 
         if (!sessions || sessions.length === 0) {
             console.log("No session found for shop:", shop.shopifyUrl);
-            return null; // Return null instead of throwing an error
+            return null;
         }
 
         const client = new GraphqlClient({

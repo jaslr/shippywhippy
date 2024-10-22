@@ -16,6 +16,8 @@ export const loader: LoaderFunction = async ({ request }) => {
                                 zip
                                 formatted
                             }
+                            isActive
+                            fulfillsOnlineOrders
                         }
                     }
                 }
@@ -31,8 +33,10 @@ export const loader: LoaderFunction = async ({ request }) => {
         const locations = edges.map(({ node }: any) => ({
             id: node.id,
             name: node.name,
-            postalCode: node.address.zip,
-            address: node.address.formatted,
+            zipCode: node.address.zip,
+            address: node.address.formatted.join(', '),
+            isActive: node.isActive,
+            fulfillsOnlineOrders: node.fulfillsOnlineOrders
         }));
 
         return json({ locations });

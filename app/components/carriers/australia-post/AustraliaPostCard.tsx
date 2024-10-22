@@ -209,7 +209,7 @@ export function AustraliaPostCard({
     </Button>
   );
 
-  const [locations, setLocations] = useState<Array<{ id: string; name: string; address: string; postalCode: string }>>([]);
+  const [locations, setLocations] = useState<Array<{ id: string; name: string; address: string; zipCode: string | null }>>([]);
 
   // Fetch locations on component mount
   useEffect(() => {
@@ -220,6 +220,7 @@ export function AustraliaPostCard({
         
         if (response.ok) {
           const data = await response.json();
+          console.log('Fetched locations data:', data);
           if (data.locations && Array.isArray(data.locations)) {
             setLocations(data.locations);
           } else {
@@ -236,6 +237,9 @@ export function AustraliaPostCard({
 
     fetchLocations();
   }, []);
+
+  // Add this console.log to check the locations
+  console.log('Locations:', locations);
 
   // Update handleTestApiKey to use multiple locations
   const handleTestApiKey = useCallback(() => {
@@ -265,7 +269,7 @@ export function AustraliaPostCard({
               ...service,
               disabled: false,
               location: location.name,
-              postalCode: location.postalCode
+              postalCode: location.zipCode
             }))
           );
           setServices(servicesWithLocations);
@@ -338,6 +342,9 @@ export function AustraliaPostCard({
       onAction: handleToggleCarrier,
     });
   }
+
+  // Add this console.log to check the shop object
+  console.log('Shop object:', shop);
 
   return (
     <Card>
@@ -431,7 +438,7 @@ export function AustraliaPostCard({
                           ?.filter((rate: { service_code: string }) => rate.service_code.startsWith(location.id))
                           ?.map((rate: { service_name: string; total_price: string; description: string }) => [
                             location.name,
-                            location.postalCode,
+                            location.zipCode,
                             rate.service_name,
                             `$${(parseFloat(rate.total_price) / 100).toFixed(2)}`,
                             rate.description || 'N/A'
@@ -485,29 +492,35 @@ export function AustraliaPostCard({
               <DataTable
                 columnContentTypes={['text', 'text', 'text', 'text']}
                 headings={['Location', 'Location Details', 'Name', 'Disable']}
-                rows={services.map((service, index) => [
-                  service.location,
-                  <Tooltip content={
-                    service.location === 'Shop Location' 
-                      ? `Shop URL: ${shop.shopifyUrl}`
-                      : service.postalCode
-                  }>
-                    <Text variant="bodyMd" as="span">
-                      {service.location === 'Shop Location' ? 'Shop Location' : service.postalCode}
-                    </Text>
-                  </Tooltip>,
-                  <Tooltip content={`Code: ${service.code}`}>
-                    <Text variant="bodyMd" fontWeight="medium" as="span">
-                      {service.name}
-                    </Text>
-                  </Tooltip>,
-                  <Checkbox
-                    label="Disable"
-                    checked={service.disabled}
-                    onChange={() => handleServiceDisableToggle(index)}
-                    labelHidden
-                  />
-                ])}
+                rows={services.map((service, index) => {
+                  console.log('Service:', service);
+                  const locationData = locations.find(loc => loc.name === service.location);
+                  console.log('Location data for service:', locationData);
+
+                  const zipCode = service.location === 'Shop location' 
+                    ? (locationData?.zipCode || '4305')  // Use '4305' as fallback for shop location
+                    : (locationData?.zipCode || service.postalCode || 'N/A');
+
+                  return [
+                    service.location,
+                    <Tooltip content={locationData?.address || 'Address not available'}>
+                      <Text variant="bodyMd" as="span">
+                        {zipCode}
+                      </Text>
+                    </Tooltip>,
+                    <Tooltip content={`Code: ${service.code}`}>
+                      <Text variant="bodyMd" fontWeight="medium" as="span">
+                        {service.name}
+                      </Text>
+                    </Tooltip>,
+                    <Checkbox
+                      label="Disable"
+                      checked={service.disabled}
+                      onChange={() => handleServiceDisableToggle(index)}
+                      labelHidden
+                    />
+                  ];
+                })}
               />
             ) : (
               <Text as="p">No services available.</Text>
