@@ -28,7 +28,21 @@ export const action: ActionFunction = async ({ request }) => {
 
         const data = await response.json();
         console.log('Successfully fetched international services:', data);
-        return json(data);
+
+        // Ensure the response is correctly formatted and returned
+        const formattedData = {
+            services: {
+                service: data.services.service.map((service: any) => ({
+                    code: service.code,
+                    name: service.name,
+                    price: service.price,
+                    max_extra_cover: service.max_extra_cover,
+                    options: service.options,
+                })),
+            },
+        };
+
+        return json(formattedData);
     } catch (error: unknown) {
         console.error("Error fetching international services:", error);
         return json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
