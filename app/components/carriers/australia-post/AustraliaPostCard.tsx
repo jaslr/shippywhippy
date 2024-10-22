@@ -483,14 +483,19 @@ export function AustraliaPostCard({
               <Spinner accessibilityLabel="Loading services" size="small" />
             ) : services.length > 0 ? (
               <DataTable
-                columnContentTypes={['text', 'text', 'text', 'text', 'text']}
-                headings={['Name', 'Location', 'Postal Code', 'Code', 'Disable']}
+                columnContentTypes={['text', 'text', 'text', 'text']}
+                headings={['Location', 'Postal Code', 'Name', 'Disable']}
                 rows={services.map((service, index) => [
-                  <Text variant="bodyMd" fontWeight="medium" as="span">{service.name}</Text>,
                   service.location,
                   service.postalCode,
                   <Tooltip content={`Code: ${service.code}`}>
-                    <Text variant="bodyMd" as="span">{service.code}</Text>
+                    <Text
+                      variant="bodyMd"
+                      fontWeight="medium"
+                      as="span"
+                    >
+                      {service.name}
+                    </Text>
                   </Tooltip>,
                   <Checkbox
                     label="Disable"
