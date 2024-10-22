@@ -7,6 +7,7 @@ import { CarrierCardProps, CarrierCardState, CarrierConfig } from '../../../libs
 import { getCarrierConfigByShopAndCarrier } from '../../../libs/carriers/carrierConfigUtils';
 import { json } from '@remix-run/node';
 import { countries } from './countryTypes';
+import styles from './AustraliaPostCard.module.css'; // Add this import
 
 const AUSTRALIA_POST_NAME = 'Australia Post';
 const australiaPostConfig = getCarrierByName(AUSTRALIA_POST_NAME);
@@ -215,8 +216,8 @@ export function AustraliaPostCard({
       <Spinner accessibilityLabel="Loading international services" size="small" />
     ) : internationalServices.length > 0 ? (
       <DataTable
-        columnContentTypes={['text', 'text', 'text', 'text']}
-        headings={['Location', 'Location Details', 'Name', 'Disable']}
+        columnContentTypes={['text', 'text', 'text', 'numeric', 'text']}
+        headings={['Location', 'Location Details', 'Name', 'Price', 'Disable']}
         rows={internationalServices.map((service, index) => [
           service.location,
           <Tooltip content={`Address not available for international services`}>
@@ -224,11 +225,14 @@ export function AustraliaPostCard({
               {service.postalCode}
             </Text>
           </Tooltip>,
-          <Tooltip content={`Code: ${service.code}`}>
-            <Text variant="bodyMd" fontWeight="medium" as="span">
-              {service.name}
-            </Text>
-          </Tooltip>,
+          <div className={styles.nameColumn}>
+            <Tooltip content={`Code: ${service.code}`}>
+              <Text variant="bodyMd" fontWeight="medium" as="span">
+                {service.name}
+              </Text>
+            </Tooltip>
+          </div>,
+          `$${parseFloat(service.price).toFixed(2)}`,
           <Checkbox
             label="Disable"
             checked={service.disabled}
