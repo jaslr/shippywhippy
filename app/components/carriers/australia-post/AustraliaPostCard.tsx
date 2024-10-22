@@ -5,6 +5,7 @@ import { useFetcher } from '@remix-run/react';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
 import { CarrierCardProps, CarrierCardState, CarrierConfig } from '../../../libs/carriers/types/carrier';
 import { getCarrierConfigByShopAndCarrier } from '../../../libs/carriers/carrierConfigUtils';
+import { json } from '@remix-run/node';
 
 const AUSTRALIA_POST_NAME = 'Australia Post';
 const australiaPostConfig = getCarrierByName(AUSTRALIA_POST_NAME);
@@ -424,23 +425,25 @@ export function AustraliaPostCard({
         },
         body: JSON.stringify({
           apiKey: carrierConfig.apiKey,
-          countryCode: 'NZ',
+          countryCode: selectedCountry,
           weight: '1',
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Fetched international services:', data);
         setInternationalServices(data.services.service);
       } else {
-        console.error('Failed to fetch international services');
+        const errorText = await response.text();
+        console.error('Failed to fetch international services:', response.status, errorText);
       }
     } catch (error) {
       console.error('Error fetching international services:', error);
     } finally {
       setIsLoadingInternationalServices(false);
     }
-  }, [carrierConfig?.apiKey]);
+  }, [carrierConfig?.apiKey, selectedCountry]);
 
   const handleTabChange = useCallback(
     (selectedTabIndex: number) => {
