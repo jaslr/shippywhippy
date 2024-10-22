@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, InlineStack, Spinner, Popover, ActionList, Icon, RadioButton, DataTable, Checkbox, Tooltip } from '@shopify/polaris';
+import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, LegacyCard, InlineStack, Spinner, Popover, ActionList, Icon, RadioButton, DataTable, Checkbox, Tooltip, Tabs } from '@shopify/polaris';
 import { CheckIcon, XSmallIcon } from '@shopify/polaris-icons';
 import { useFetcher } from '@remix-run/react';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
@@ -73,6 +73,7 @@ export function AustraliaPostCard({
   const [carrierConfig, setCarrierConfig] = useState<CarrierConfig | null>(null);
   const [isLoadingServices, setIsLoadingServices] = useState(false);
   const [services, setServices] = useState<Array<Service & { location: string; postalCode: string }>>([]);
+  const [selectedTab, setSelected] = useState(0);
 
   const fetcher = useFetcher<AustraliaPostLookupData>();
   const apiKeySaver = useFetcher<ApiKeySaverData>();
@@ -346,6 +347,65 @@ export function AustraliaPostCard({
   // Add this console.log to check the shop object
   console.log('Shop object:', shop);
 
+  const handleTabChange = useCallback(
+    (selectedTabIndex: number) => setSelected(selectedTabIndex),
+    [],
+  );
+
+  const renderServiceTable = (services: Array<Service & { location: string; postalCode: string }>) => (
+    isLoadingServices ? (
+      <Spinner accessibilityLabel="Loading services" size="small" />
+    ) : services.length > 0 ? (
+      <DataTable
+        columnContentTypes={['text', 'text', 'text', 'text']}
+        headings={['Location', 'Location Details', 'Name', 'Disable']}
+        rows={services.map((service, index) => {
+          const locationData = locations.find(loc => loc.name === service.location);
+          const zipCode = service.location === 'Shop location' 
+            ? (locationData?.zipCode || '4305')
+            : (locationData?.zipCode || service.postalCode || 'N/A');
+
+          return [
+            service.location,
+            <Tooltip content={locationData?.address || 'Address not available'}>
+              <Text variant="bodyMd" as="span">
+                {zipCode}
+              </Text>
+            </Tooltip>,
+            <Tooltip content={`Code: ${service.code}`}>
+              <Text variant="bodyMd" fontWeight="medium" as="span">
+                {service.name}
+              </Text>
+            </Tooltip>,
+            <Checkbox
+              label="Disable"
+              checked={service.disabled}
+              onChange={() => handleServiceDisableToggle(index)}
+              labelHidden
+            />
+          ];
+        })}
+      />
+    ) : (
+      <Text as="p">No services available.</Text>
+    )
+  );
+
+  const tabs = [
+    {
+      id: 'domestic-services',
+      content: 'Domestic',
+      accessibilityLabel: 'Domestic services',
+      panelID: 'domestic-services-content',
+    },
+    {
+      id: 'international-services',
+      content: 'International',
+      accessibilityLabel: 'International services',
+      panelID: 'international-services-content',
+    },
+  ];
+
   return (
     <Card>
       <BlockStack gap="400">
@@ -484,47 +544,17 @@ export function AustraliaPostCard({
               </Banner>
             )}
             <Text as="h3" variant="headingMd">
-              Australia Post Domestic Services
+              Australia Post Services
             </Text>
-            {isLoadingServices ? (
-              <Spinner accessibilityLabel="Loading services" size="small" />
-            ) : services.length > 0 ? (
-              <DataTable
-                columnContentTypes={['text', 'text', 'text', 'text']}
-                headings={['Location', 'Location Details', 'Name', 'Disable']}
-                rows={services.map((service, index) => {
-                  console.log('Service:', service);
-                  const locationData = locations.find(loc => loc.name === service.location);
-                  console.log('Location data for service:', locationData);
-
-                  const zipCode = service.location === 'Shop location' 
-                    ? (locationData?.zipCode || '4305')  // Use '4305' as fallback for shop location
-                    : (locationData?.zipCode || service.postalCode || 'N/A');
-
-                  return [
-                    service.location,
-                    <Tooltip content={locationData?.address || 'Address not available'}>
-                      <Text variant="bodyMd" as="span">
-                        {zipCode}
-                      </Text>
-                    </Tooltip>,
-                    <Tooltip content={`Code: ${service.code}`}>
-                      <Text variant="bodyMd" fontWeight="medium" as="span">
-                        {service.name}
-                      </Text>
-                    </Tooltip>,
-                    <Checkbox
-                      label="Disable"
-                      checked={service.disabled}
-                      onChange={() => handleServiceDisableToggle(index)}
-                      labelHidden
-                    />
-                  ];
-                })}
-              />
-            ) : (
-              <Text as="p">No services available.</Text>
-            )}
+            <Tabs tabs={tabs} selected={selectedTab} onSelect={handleTabChange}>
+              <LegacyCard.Section title={tabs[selectedTab].content}>
+                {selectedTab === 0 ? (
+                  renderServiceTable(services.filter(service => !service.code.startsWith('INT')))
+                ) : (
+                  renderServiceTable(services.filter(service => service.code.startsWith('INT')))
+                )}
+              </LegacyCard.Section>
+            </Tabs>
           </BlockStack>
         )}
       </BlockStack>
