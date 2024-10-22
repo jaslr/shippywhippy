@@ -71,6 +71,8 @@ export function AustraliaPostCard({
   const [showApiKeySavedBanner, setShowApiKeySavedBanner] = useState(false);
   const [showApiKeySection, setShowApiKeySection] = useState(false);
   const [carrierConfig, setCarrierConfig] = useState<CarrierConfig | null>(null);
+  const [isLoadingServices, setIsLoadingServices] = useState(false);
+  const [services, setServices] = useState<Array<Service & { location: string; postalCode: string }>>([]);
 
   const fetcher = useFetcher<AustraliaPostLookupData>();
   const apiKeySaver = useFetcher<ApiKeySaverData>();
@@ -207,18 +209,48 @@ export function AustraliaPostCard({
     </Button>
   );
 
+  const [locations, setLocations] = useState<Array<{ id: string; name: string; address: string; postalCode: string }>>([]);
+
+  // Fetch locations on component mount
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await fetch('/api/shopify-locations');
+        console.log('Response status:', response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.locations && Array.isArray(data.locations)) {
+            setLocations(data.locations);
+          } else {
+            console.error('Invalid locations data structure:', data);
+          }
+        } else {
+          const errorText = await response.text();
+          console.error('Failed to fetch locations:', response.status, errorText);
+        }
+      } catch (error) {
+        console.error('Error fetching locations:', error);
+      }
+    };
+
+    fetchLocations();
+  }, []);
+
+  // Update handleTestApiKey to use multiple locations
   const handleTestApiKey = useCallback(() => {
     if (!carrierConfig?.apiKey) return;
 
     fetcher.submit(
-      { apiKey: carrierConfig.apiKey },
+      { 
+        apiKey: carrierConfig.apiKey,
+        locations: JSON.stringify(locations)
+      },
       { method: 'post', action: '/api/australia-post-test' }
     );
-  }, [carrierConfig?.apiKey]);
+  }, [carrierConfig?.apiKey, locations]);
 
-  const [services, setServices] = useState<Service[]>([]);
-  const [isLoadingServices, setIsLoadingServices] = useState(true);
-
+  // Update the fetchServices function to include location data
   useEffect(() => {
     const fetchServices = async () => {
       if (!state.apiKey) return;
@@ -228,7 +260,15 @@ export function AustraliaPostCard({
         const response = await fetch(`/api/australia-post-services?apiKey=${encodeURIComponent(state.apiKey)}`);
         if (response.ok) {
           const data = await response.json();
-          setServices((data.services || []).map((service: Service) => ({ ...service, disabled: false })));
+          const servicesWithLocations = locations.flatMap(location => 
+            (data.services || []).map((service: Service) => ({
+              ...service,
+              disabled: false,
+              location: location.name,
+              postalCode: location.postalCode
+            }))
+          );
+          setServices(servicesWithLocations);
         } else {
           console.error('Failed to fetch services');
         }
@@ -240,7 +280,7 @@ export function AustraliaPostCard({
     };
 
     fetchServices();
-  }, [state.apiKey]);
+  }, [state.apiKey, locations]);
 
   const handleServiceDisableToggle = useCallback((index: number) => {
     setServices(prevServices => {
@@ -379,7 +419,30 @@ export function AustraliaPostCard({
               <Banner tone="success" title="API Connection Successful">
                 <p>API Key used: {state.apiKey}</p>
                 <p>API URL: {testUrl}</p>
-                <pre>{JSON.stringify(fetcher.data.data, null, 2)}</pre>
+                <Text as="h3" variant="headingMd">Rates by Location</Text>
+                {locations.length > 0 ? (
+                  locations.map(location => (
+                    <div key={location.id}>
+                      <Text as="h4" variant="headingSm">{location.name}</Text>
+                      <DataTable
+                        columnContentTypes={['text', 'text', 'text', 'numeric', 'text']}
+                        headings={['Location', 'Postal Code', 'Service', 'Price', 'Estimated Delivery']}
+                        rows={fetcher.data?.data?.rates
+                          ?.filter((rate: { service_code: string }) => rate.service_code.startsWith(location.id))
+                          ?.map((rate: { service_name: string; total_price: string; description: string }) => [
+                            location.name,
+                            location.postalCode,
+                            rate.service_name,
+                            `$${(parseFloat(rate.total_price) / 100).toFixed(2)}`,
+                            rate.description || 'N/A'
+                          ]) || []
+                        }
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <Text as="p">No locations available</Text>
+                )}
               </Banner>
             )}
             {apiKeySaver.data && 'success' in apiKeySaver.data && !apiKeySaver.data.success && (
@@ -420,11 +483,14 @@ export function AustraliaPostCard({
               <Spinner accessibilityLabel="Loading services" size="small" />
             ) : services.length > 0 ? (
               <DataTable
-                columnContentTypes={['text', 'text', 'text']}
-                headings={['Name', 'Disable']}
+                columnContentTypes={['text', 'text', 'text', 'text', 'text']}
+                headings={['Name', 'Location', 'Postal Code', 'Code', 'Disable']}
                 rows={services.map((service, index) => [
+                  <Text variant="bodyMd" fontWeight="medium" as="span">{service.name}</Text>,
+                  service.location,
+                  service.postalCode,
                   <Tooltip content={`Code: ${service.code}`}>
-                    <Text variant="bodyMd" fontWeight="medium" as="span">{service.name}</Text>
+                    <Text variant="bodyMd" as="span">{service.code}</Text>
                   </Tooltip>,
                   <Checkbox
                     label="Disable"

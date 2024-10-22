@@ -1,5 +1,6 @@
 import { json, type ActionFunction } from '@remix-run/node';
 import { prisma } from '~/prisma';
+import { authenticate } from '../shopify.server';
 import type { CarrierConfig } from '@prisma/client';
 
 
@@ -41,6 +42,8 @@ interface ShopCarrierConfig {
 const EXCLUDE_SMALL_SERVICE = process.env.EXCLUDE_SMALL_SERVICE !== 'false';
 const EXCLUDE_HARDCODED_RATES = true; // New constant to control hardcoded rates
 
+const RATE_LIMIT_DELAY = 2000; // 2 seconds
+
 export const action: ActionFunction = async ({ request }) => {
     console.log("Australia Post lookup action called - Initial log");
     if (request.method !== "POST") {
@@ -48,12 +51,11 @@ export const action: ActionFunction = async ({ request }) => {
     }
 
     try {
+        const { admin } = await authenticate.admin(request);
         const body = await request.json();
         console.log("Received Australia Post lookup request:", JSON.stringify(body, null, 2));
 
         const shopUrl = request.headers.get('X-Shopify-Shop-Domain');
-        console.log("Shop URL:", shopUrl);
-
         if (!shopUrl) {
             throw new Error('Shop URL not provided in headers');
         }
@@ -65,81 +67,99 @@ export const action: ActionFunction = async ({ request }) => {
                 },
                 isActive: true,
                 carrier: {
-                    name: "Australia Post"
-                }
+                    name: 'Australia Post',
+                },
             },
             include: {
                 carrier: true,
-                shop: true
-            }
-        }) as (CarrierConfig & { carrier: { defaultApiKey: string }, shop: { postalCode: string | null } }) | null;
+                shop: true,
+            },
+        });
 
         if (!shopCarrier) {
-            console.log("Australia Post carrier not configured for this shop");
-            return json({ success: false, error: "Australia Post carrier not configured" }, { status: 400 });
+            throw new Error('Australia Post carrier configuration not found');
         }
 
-        console.log("Shop carrier config:", JSON.stringify(shopCarrier, null, 2));
-        
-        const fromPostcode = body.shopPostalCode || body.shopLocation?.zip || shopCarrier.shop.postalCode || body.rate.origin.postal_code;
+        // Fetch locations
+        const locationsResponse = await admin.graphql(
+            `query {
+                locations(first: 50) {
+                    edges {
+                        node {
+                            id
+                            name
+                            address {
+                                zip
+                            }
+                        }
+                    }
+                }
+            }`
+        );
+
+        const {
+            data: {
+                locations: { edges },
+            },
+        } = await locationsResponse.json();
+
+        const locations = edges.map(({ node }: any) => ({
+            id: node.id,
+            name: node.name,
+            postalCode: node.address.zip,
+        }));
+
         const toPostcode = body.rate.destination.postal_code;
-        const weight = body.rate.items.reduce((total: number, item: { grams: number; quantity: number }) => total + (item.grams * item.quantity), 0) / 1000; // Convert to kg
-
-        console.log("From Postcode (body):", body.rate.origin.postal_code);
-        console.log("From Postcode (shop location):", body.shopLocation?.zip);
-        console.log("From Postcode (shop postal code):", body.shopPostalCode);
-        console.log("From Postcode (shop):", shopCarrier.shop.postalCode);
-        console.log("From Postcode (used):", fromPostcode);
-        console.log("To Postcode:", toPostcode);
-        console.log("Weight (kg):", weight);
-
-        if (!fromPostcode) {
-            throw new Error('Unable to determine origin postal code');
-        }
+        const weight = body.rate.items.reduce((total: number, item: any) => total + (item.grams / 1000), 0);
 
         // Default dimensions if not provided
         const length = body.length || 22; // cm
         const width = body.width || 16; // cm
         const height = body.height || 7.7; // cm
 
-        const apiUrl = `https://digitalapi.auspost.com.au/postage/parcel/domestic/service.json?from_postcode=${fromPostcode}&to_postcode=${toPostcode}&length=${length}&width=${width}&height=${height}&weight=${weight}`;
-        console.log("Australia Post API URL:", apiUrl);
+        const allRates: ShippingRate[] = [];
 
-        const ausPostResponse = await fetch(apiUrl, {
-            headers: {
-                'AUTH-KEY': shopCarrier.apiKey || shopCarrier.carrier.defaultApiKey,
-            },
-        });
+        for (const location of locations) {
+            const apiUrl = `https://digitalapi.auspost.com.au/postage/parcel/domestic/service.json?from_postcode=${location.postalCode}&to_postcode=${toPostcode}&length=${length}&width=${width}&height=${height}&weight=${weight}`;
+            console.log("Australia Post API URL:", apiUrl);
 
-        console.log("Australia Post API response status:", ausPostResponse.status);
+            const ausPostResponse = await fetch(apiUrl, {
+                headers: {
+                    'AUTH-KEY': shopCarrier.apiKey || shopCarrier.carrier.defaultApiKey,
+                },
+            });
 
-        if (!ausPostResponse.ok) {
-            const errorText = await ausPostResponse.text();
-            console.error("Australia Post API error response:", errorText);
-            throw new Error(`Australia Post API error: ${ausPostResponse.statusText}. Response: ${errorText}`);
+            console.log("Australia Post API response status:", ausPostResponse.status);
+
+            if (!ausPostResponse.ok) {
+                const errorText = await ausPostResponse.text();
+                console.error("Australia Post API error response:", errorText);
+                throw new Error(`Australia Post API error: ${ausPostResponse.statusText}. Response: ${errorText}`);
+            }
+
+            const ausPostData: AusPostApiResponse = await ausPostResponse.json();
+            console.log("Australia Post API response data:", JSON.stringify(ausPostData, null, 2));
+
+            let australiaPostRates: ShippingRate[] = ausPostData.services.service.map(service => ({
+                service_name: `${location.name} - ${service.name}`,
+                service_code: `${location.id}_${service.code}`,
+                total_price: (service.price * 100).toString(), // Convert to cents
+                description: shopCarrier.useDescription ? `Estimated ${service.delivery_time}` : '',
+                currency: 'AUD',
+            }));
+
+            if (EXCLUDE_SMALL_SERVICE) {
+                australiaPostRates = australiaPostRates.filter(rate => !rate.service_name.toLowerCase().includes('small'));
+            }
+
+            allRates.push(...australiaPostRates);
+
+            // Implement rate limiting
+            await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
         }
 
-        const ausPostData: AusPostApiResponse = await ausPostResponse.json();
-        console.log("Australia Post API response data:", JSON.stringify(ausPostData, null, 2));
-
-        let australiaPostRates: ShippingRate[] = ausPostData.services.service.map(service => ({
-            service_name: service.name,
-            service_code: service.code,
-            total_price: (service.price * 100).toString(), // Convert to cents
-            description: shopCarrier.useDescription ? `Estimated ${service.delivery_time}` : '',
-            currency: 'AUD',
-        }));
-
-        if (EXCLUDE_SMALL_SERVICE) {
-            australiaPostRates = australiaPostRates.filter(rate => rate.service_name.toLowerCase() !== 'small');
-        }
-
-        if (EXCLUDE_HARDCODED_RATES) {
-            australiaPostRates = australiaPostRates.filter(rate => !isHardcodedRate(rate.service_code));
-        }
-
-        console.log("Returning Australia Post rates:", australiaPostRates);
-        return json({ success: true, rates: australiaPostRates });
+        console.log("Returning Australia Post rates:", allRates);
+        return json({ success: true, rates: allRates });
     } catch (error: unknown) {
         console.error("Error processing Australia Post lookup:", error);
         return json({ success: false, error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
