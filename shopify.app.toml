@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywhippy"
 handle = "shippywhippy"
-application_url = "https://sword-lol-fiscal-spice.trycloudflare.com"
+application_url = "https://racks-theaters-rugby-armstrong.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_locations,read_products,read_shipping,write_products,write_shippi
 
 [auth]
 redirect_urls = [
-  "https://sword-lol-fiscal-spice.trycloudflare.com/auth/callback",
-  "https://sword-lol-fiscal-spice.trycloudflare.com/auth/shopify/callback",
-  "https://sword-lol-fiscal-spice.trycloudflare.com/api/auth/callback"
+  "https://racks-theaters-rugby-armstrong.trycloudflare.com/auth/callback",
+  "https://racks-theaters-rugby-armstrong.trycloudflare.com/auth/shopify/callback",
+  "https://racks-theaters-rugby-armstrong.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

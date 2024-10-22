@@ -6,6 +6,7 @@ import { getCarrierByName } from '../../../libs/carriers/carrierlist';
 import { CarrierCardProps, CarrierCardState, CarrierConfig } from '../../../libs/carriers/types/carrier';
 import { getCarrierConfigByShopAndCarrier } from '../../../libs/carriers/carrierConfigUtils';
 import { json } from '@remix-run/node';
+import { countries } from './countryTypes';
 
 const AUSTRALIA_POST_NAME = 'Australia Post';
 const australiaPostConfig = getCarrierByName(AUSTRALIA_POST_NAME);
@@ -89,7 +90,7 @@ export function AustraliaPostCard({
   const [isLoadingServices, setIsLoadingServices] = useState(false);
   const [services, setServices] = useState<Array<Service & { location: string; postalCode: string }>>([]);
   const [selectedTab, setSelectedTab] = useState(0);
-  const [selectedCountry, setSelectedCountry] = useState('NZ');
+  const [selectedCountry, setSelectedCountry] = useState(countries[0].code);
   const [internationalServices, setInternationalServices] = useState<InternationalService[]>([]);
   const [isLoadingInternationalServices, setIsLoadingInternationalServices] = useState(false);
   const [requestUrl, setRequestUrl] = useState('');
@@ -102,10 +103,10 @@ export function AustraliaPostCard({
 
   const testUrl = '/api/australia-post-lookup';
 
-  const countryOptions = [
-    { label: 'New Zealand', value: 'NZ' },
-    { label: 'United States', value: 'US' },
-  ];
+  const countryOptions = countries.map(country => ({
+    label: country.name,
+    value: country.code
+  }));
 
   const handleCountryChange = useCallback((value: string) => {
     setSelectedCountry(value);
@@ -413,8 +414,8 @@ export function AustraliaPostCard({
   // Add this console.log to check the shop object
   
 
-  const fetchInternationalServices = useCallback(async () => {
-    console.log('Attempting to fetch international services'); // Added log
+  const fetchInternationalServices = useCallback(async (countryCode: string) => {
+    console.log('Attempting to fetch international services for country:', countryCode);
     if (!state.apiKey) {
       console.log('No API key found');
       return;
@@ -429,12 +430,12 @@ export function AustraliaPostCard({
         },
         body: JSON.stringify({
           apiKey: state.apiKey,
-          countryCode: selectedCountry,
+          countryCode: countryCode,
           weight: '1',
         }),
       });
 
-      console.log('Response from API:', response); // Added log
+      console.log('Response from API:', response);
 
       if (response.ok) {
         const data = await response.json();
@@ -449,17 +450,17 @@ export function AustraliaPostCard({
     } finally {
       setIsLoadingInternationalServices(false);
     }
-  }, [state.apiKey, selectedCountry]);
+  }, [state.apiKey]);
 
   const handleTabChange = useCallback(
     (selectedTabIndex: number) => {
       setSelectedTab(selectedTabIndex);
       console.log('Tab changed to:', selectedTabIndex); // Added log
       if (selectedTabIndex === 1) { // INTERNATIONAL tab
-        fetchInternationalServices();
+        fetchInternationalServices(selectedCountry);
       }
     },
-    [fetchInternationalServices],
+    [fetchInternationalServices, selectedCountry],
   );
 
   const renderServiceTable = (services: Array<Service & { location: string; postalCode: string }>) => (
