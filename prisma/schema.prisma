@@ -14,125 +14,125 @@ datasource db {
 }
 
 model Session {
-  id             String   @id
-  shop           String
-  state          String
-  isOnline       Boolean
-  scope          String
-  expires        DateTime?
-  accessToken    String
-  userId         String?  // Add this line back
-  shopId         Int?     
-  user           Shop?    @relation(fields: [shopId], references: [id])
-  firstName      String?
-  lastName       String?
-  email          String?
-  accountOwner   Boolean  @default(false)
-  locale         String?
-  collaborator   Boolean  @default(false)
-  emailVerified  Boolean  @default(false)
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean
+  scope         String
+  expires       DateTime?
+  accessToken   String
+  userId        String? // Add this line back
+  shopId        Int?
+  user          Shop?     @relation(fields: [shopId], references: [id])
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean   @default(false)
+  emailVerified Boolean   @default(false)
 }
 
 model Shop {
-  id             Int       @id @default(autoincrement())
-  username       String    @unique
-  shopifyUrl     String    @unique
-  shopifyName    String
-  isActive       Boolean   @default(false)
-  daysActive     Int       @default(0)
-  installedAt    DateTime  @default(now())
-  uninstalledAt  DateTime?
-  carriers       CarrierConfig[] @relation("ShopCarriers")
-  sessions       Session[]
-  locations      Location[] @relation("ShopLocations")
-  postalCode     String?
+  id            Int             @id @default(autoincrement())
+  username      String          @unique
+  shopifyUrl    String          @unique
+  shopifyName   String
+  isActive      Boolean         @default(false)
+  daysActive    Int             @default(0)
+  installedAt   DateTime        @default(now())
+  uninstalledAt DateTime?
+  carriers      CarrierConfig[] @relation("ShopCarriers")
+  sessions      Session[]
+  locations     Location[]      @relation("ShopLocations")
+  postalCode    String?
   // Remove these fields from Shop as they're now in Session
   // accessToken, scope, firstName, lastName, email, accountOwner, locale, collaborator, emailVerified
 }
 
 model Carrier {
-  id             Int       @id @default(autoincrement())
-  name           String    @unique
-  defaultApiKey  String    // Add this line
-  shopConfigs    CarrierConfig[] @relation("CarrierConfigs")
+  id              Int              @id @default(autoincrement())
+  name            String           @unique
+  defaultApiKey   String // Add this line
+  shopConfigs     CarrierConfig[]  @relation("CarrierConfigs")
   shippingMethods ShippingMethod[] @relation("CarrierShippingMethods")
 }
 
 model CarrierConfig {
-  id               Int       @id @default(autoincrement())
-  shop             Shop      @relation("ShopCarriers", fields: [shopId], references: [id])
-  shopId           Int
-  carrier          Carrier   @relation("CarrierConfigs", fields: [carrierId], references: [id])
-  carrierId        Int
-  isActive         Boolean   @default(false)
-  apiKey           String?
-  memberNumber     String?
-  useDescription   Boolean   @default(true)
-  hasDisabledRates Boolean   @default(false)
+  id                    Int                    @id @default(autoincrement())
+  shop                  Shop                   @relation("ShopCarriers", fields: [shopId], references: [id])
+  shopId                Int
+  carrier               Carrier                @relation("CarrierConfigs", fields: [carrierId], references: [id])
+  carrierId             Int
+  isActive              Boolean                @default(false)
+  apiKey                String?
+  memberNumber          String?
+  useDescription        Boolean                @default(true)
+  hasDisabledRates      Boolean                @default(false)
   shippingMethodConfigs ShippingMethodConfig[] @relation("CarrierConfigShippingMethods")
-  disabledRates    DisabledShippingRate[] @relation("CarrierConfigDisabledRates")
+  disabledRates         DisabledShippingRate[] @relation("CarrierConfigDisabledRates")
 
   @@unique([shopId, carrierId])
 }
 
 model ShippingMethod {
-  id             Int       @id @default(autoincrement())
-  carrier        Carrier   @relation("CarrierShippingMethods", fields: [carrierId], references: [id])
-  carrierId      Int
-  name           String
-  configs        ShippingMethodConfig[] @relation("ShippingMethodConfigs")
+  id        Int                    @id @default(autoincrement())
+  carrier   Carrier                @relation("CarrierShippingMethods", fields: [carrierId], references: [id])
+  carrierId Int
+  name      String
+  configs   ShippingMethodConfig[] @relation("ShippingMethodConfigs")
 }
 
 model ShippingMethodConfig {
-  id             Int       @id @default(autoincrement())
-  carrierConfig  CarrierConfig @relation("CarrierConfigShippingMethods", fields: [carrierConfigId], references: [id])
-  carrierConfigId Int
-  shippingMethod ShippingMethod @relation("ShippingMethodConfigs", fields: [shippingMethodId], references: [id])
-  shippingMethodId Int
-  isActive       Boolean   @default(true)
-  customName     String?
-  additionalFlatRate Decimal?
+  id                   Int            @id @default(autoincrement())
+  carrierConfig        CarrierConfig  @relation("CarrierConfigShippingMethods", fields: [carrierConfigId], references: [id])
+  carrierConfigId      Int
+  shippingMethod       ShippingMethod @relation("ShippingMethodConfigs", fields: [shippingMethodId], references: [id])
+  shippingMethodId     Int
+  isActive             Boolean        @default(true)
+  customName           String?
+  additionalFlatRate   Decimal?
   additionalPercentage Decimal?
 
   @@unique([carrierConfigId, shippingMethodId])
 }
 
 model Location {
-  id             Int       @id @default(autoincrement())
-  shop           Shop      @relation("ShopLocations", fields: [shopId], references: [id])
-  shopId         Int
-  name           String
-  address1       String
-  address2       String?
-  city           String
-  province       String
-  country        String
-  zip            String
-  phone          String?
-  shopifyLocationId String @unique
+  id                Int     @id @default(autoincrement())
+  shop              Shop    @relation("ShopLocations", fields: [shopId], references: [id])
+  shopId            Int
+  name              String
+  address1          String
+  address2          String?
+  city              String
+  province          String
+  country           String
+  zip               String
+  phone             String?
+  shopifyLocationId String  @unique
 }
 
 model CarrierService {
-  id             String   @id @default(cuid())
-  shopifyId      String   @unique
-  name           String
-  callbackUrl    String
+  id               String   @id @default(cuid())
+  shopifyId        String   @unique
+  name             String
+  callbackUrl      String
   serviceDiscovery Boolean
-  active         Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model DisabledShippingRate {
-  id               Int       @id @default(autoincrement())
-  carrierConfig    CarrierConfig @relation("CarrierConfigDisabledRates", fields: [carrierConfigId], references: [id])
-  carrierConfigId  Int
-  shippingCode     String
-  shippingName     String
-  isInternational  Boolean   @default(false)
-  location         String    // Store location name (e.g., "Brisbane", "North Adelaide")
-  postalCode       String    // Store postal code (e.g., "4305", "5006")
-  countryCode      String?   // For international shipments (e.g., "US", "NZ")
+  id              Int           @id @default(autoincrement())
+  carrierConfig   CarrierConfig @relation("CarrierConfigDisabledRates", fields: [carrierConfigId], references: [id])
+  carrierConfigId Int
+  shippingCode    String
+  shippingName    String
+  isInternational Boolean       @default(false)
+  location        String
+  postalCode      String
+  countryCode     String?
 
-  @@unique([carrierConfigId, shippingCode, location, postalCode]) // Updated unique constraint
+  @@unique([carrierConfigId, shippingCode, location, postalCode])
 }

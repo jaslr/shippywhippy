@@ -138,7 +138,10 @@ CREATE TABLE public."DisabledShippingRate" (
     "carrierConfigId" integer NOT NULL,
     "shippingCode" text NOT NULL,
     "shippingName" text NOT NULL,
-    "isInternational" boolean DEFAULT false NOT NULL
+    "isInternational" boolean DEFAULT false NOT NULL,
+    "countryCode" text,
+    location text NOT NULL,
+    "postalCode" text NOT NULL
 );
 
 
@@ -422,8 +425,6 @@ ALTER TABLE ONLY public."Shop" ALTER COLUMN id SET DEFAULT nextval('public."Shop
 --
 
 COPY public."Carrier" (id, name, "defaultApiKey") FROM stdin;
-1	Australia Post	your-default-australia-post-api-key
-2	Aramex	your-default-aramex-api-key
 \.
 
 
@@ -432,8 +433,6 @@ COPY public."Carrier" (id, name, "defaultApiKey") FROM stdin;
 --
 
 COPY public."CarrierConfig" (id, "shopId", "carrierId", "isActive", "apiKey", "memberNumber", "useDescription", "hasDisabledRates") FROM stdin;
-28	1	2	f	fdf	\N	f	f
-5	1	1	t	2f34aa06-779c-4cb7-90ae-9311750a2609	\N	t	f
 \.
 
 
@@ -449,7 +448,7 @@ COPY public."CarrierService" (id, "shopifyId", name, "callbackUrl", "serviceDisc
 -- Data for Name: DisabledShippingRate; Type: TABLE DATA; Schema: public; Owner: shippywhippy_admin
 --
 
-COPY public."DisabledShippingRate" (id, "carrierConfigId", "shippingCode", "shippingName", "isInternational") FROM stdin;
+COPY public."DisabledShippingRate" (id, "carrierConfigId", "shippingCode", "shippingName", "isInternational", "countryCode", location, "postalCode") FROM stdin;
 \.
 
 
@@ -466,7 +465,7 @@ COPY public."Location" (id, "shopId", name, address1, address2, city, province, 
 --
 
 COPY public."Session" (id, shop, state, "isOnline", scope, expires, "accessToken", "accountOwner", collaborator, email, "emailVerified", "firstName", "lastName", locale, "shopId", "userId") FROM stdin;
-offline_froggya.myshopify.com	froggya.myshopify.com	281686540425086	f	read_locations,write_products,write_shipping	\N	shpua_9ec0e64a3e95edbc7693bf0842920950	f	f	\N	f	\N	\N	\N	\N	\N
+offline_froggya.myshopify.com	froggya.myshopify.com	159361210983118	f	read_locations,write_products,write_shipping	\N	shpua_3fbc8055ca8efbcb3d416886db0794c0	f	f	\N	f	\N	\N	\N	\N	\N
 \.
 
 
@@ -491,7 +490,6 @@ COPY public."ShippingMethodConfig" (id, "carrierConfigId", "shippingMethodId", "
 --
 
 COPY public."Shop" (id, username, "shopifyName", "shopifyUrl", "isActive", "daysActive", "installedAt", "uninstalledAt", "postalCode") FROM stdin;
-1	froggya.myshopify.com	froggya.myshopify.com	https://froggya.myshopify.com	t	0	2024-10-18 02:00:19.824	\N	3000
 \.
 
 
@@ -500,14 +498,16 @@ COPY public."Shop" (id, username, "shopifyName", "shopifyUrl", "isActive", "days
 --
 
 COPY public._prisma_migrations (id, checksum, finished_at, migration_name, logs, rolled_back_at, started_at, applied_steps_count) FROM stdin;
-544f3b10-9ef0-42bf-b9be-6d3237f55207	409f2143c3e897d90fac5f032234b5c6fe3f65874206eaa3a18e0a7c0318f8fd	2024-10-17 12:58:59.952871+11	20241007070634_init	\N	\N	2024-10-17 12:58:59.806562+11	1
-a7402be2-1545-4029-871f-f2b7e7605e03	4230489444e20f03a3ae051be25a4640465010e0fac1f7cdf7dd2852d3aa5fb1	2024-10-17 12:58:59.970933+11	20241007070937_update_session_model	\N	\N	2024-10-17 12:58:59.95686+11	1
-247437f2-5d24-4644-aa44-7f0214f46fd8	f76f89e0ef5ac7c8886301c373abf569adbbfb9966053093674a09cf2609ba8b	2024-10-17 12:58:59.987071+11	20241007071405_add_userid_to_session	\N	\N	2024-10-17 12:58:59.974992+11	1
-2da8b383-9e09-4ab8-87b9-6f8e1201fed7	43db9ba8676eac10dd87d2bd3747e4206b402b0cb3adeb387b1bce65a2024129	2024-10-17 12:59:00.024868+11	20241017015844_add_default_api_key_to_carrier	\N	\N	2024-10-17 12:58:59.99157+11	1
-e0039dba-2da9-4732-ab64-2281ec151918	9a9cddddd4a3da2022f6ed01278b43fe293b2147366b61acd43651e6e8b6617b	2024-10-21 09:45:02.368094+11	20241020224502_add_use_description_to_carrier_config	\N	\N	2024-10-21 09:45:02.348742+11	1
-6b85768a-aea9-4735-bd3e-aa64b87c55ae	5aef64421ed529ac97c46d6dc7cd0343ccb06ab074b491d3e502a19e8130c9f3	2024-10-21 17:26:52.292444+11	20241021062652_add_postal_code_to_shop	\N	\N	2024-10-21 17:26:52.277727+11	1
-97dbaad5-4168-4b54-a339-4a1155e7251e	90319fe44953004ec595f19e425f21ef603a90cee6b9d1f00ebc7ba4ab0f427b	2024-10-21 17:56:52.741604+11	20241021065652_	\N	\N	2024-10-21 17:56:52.714073+11	1
-e790e860-e470-446f-bc41-bb6cfcf05a30	25092ad447f6a18d8dac439e7158fe9a2dc6432e019daff058a02eb05987ce7c	2024-10-23 11:28:34.278812+11	20241023002834_add_disabled_shipping_rates	\N	\N	2024-10-23 11:28:34.228287+11	1
+a65c9681-1dff-4ad6-ac2d-542e9d0a6f2a	409f2143c3e897d90fac5f032234b5c6fe3f65874206eaa3a18e0a7c0318f8fd	2024-10-23 14:10:35.885529+11	20241007070634_init	\N	\N	2024-10-23 14:10:35.727972+11	1
+3c4a1685-0f72-4f0e-8fe5-d05e16b8061e	4230489444e20f03a3ae051be25a4640465010e0fac1f7cdf7dd2852d3aa5fb1	2024-10-23 14:10:35.902039+11	20241007070937_update_session_model	\N	\N	2024-10-23 14:10:35.889052+11	1
+97b49e7a-fcd5-4575-89b1-db4088c9e0be	f76f89e0ef5ac7c8886301c373abf569adbbfb9966053093674a09cf2609ba8b	2024-10-23 14:10:35.918541+11	20241007071405_add_userid_to_session	\N	\N	2024-10-23 14:10:35.905803+11	1
+4a1a7b16-fdae-4f53-8264-a13bcb817668	43db9ba8676eac10dd87d2bd3747e4206b402b0cb3adeb387b1bce65a2024129	2024-10-23 14:10:35.958198+11	20241017015844_add_default_api_key_to_carrier	\N	\N	2024-10-23 14:10:35.923013+11	1
+0d41d402-29c5-4ca8-b6ad-2e364688641a	9a9cddddd4a3da2022f6ed01278b43fe293b2147366b61acd43651e6e8b6617b	2024-10-23 14:10:35.975862+11	20241020224502_add_use_description_to_carrier_config	\N	\N	2024-10-23 14:10:35.962407+11	1
+39d28e44-adb2-4568-9717-c8ad90827cf0	5aef64421ed529ac97c46d6dc7cd0343ccb06ab074b491d3e502a19e8130c9f3	2024-10-23 14:10:35.99254+11	20241021062652_add_postal_code_to_shop	\N	\N	2024-10-23 14:10:35.980052+11	1
+9cc3139a-53b8-4920-8cb4-9d2b42f51d27	90319fe44953004ec595f19e425f21ef603a90cee6b9d1f00ebc7ba4ab0f427b	2024-10-23 14:10:36.018193+11	20241021065652_	\N	\N	2024-10-23 14:10:35.996891+11	1
+760afead-2488-438f-90a3-ee47e3d17003	25092ad447f6a18d8dac439e7158fe9a2dc6432e019daff058a02eb05987ce7c	2024-10-23 14:10:36.061332+11	20241023002834_add_disabled_shipping_rates	\N	\N	2024-10-23 14:10:36.022492+11	1
+4783dad9-c413-43bf-bd71-11df81804f76	c9672ec3faa1e2222473d9ce56bb958d6f84cb7aff2ee367540bcda00f5aea71	2024-10-23 14:10:36.088827+11	20241023030936_update_disabled_rates_location_fields	\N	\N	2024-10-23 14:10:36.065712+11	1
+1c363104-3d85-4cba-a68c-726d365bb369	122d743a0403e77ad7e0ed9447f5b8826f2fbdbc55612d936eff004dd13c2eec	2024-10-23 14:10:46.66283+11	20241023031037_update_disabled_rates_location_fields	\N	\N	2024-10-23 14:10:46.65438+11	1
 \.
 
 
@@ -515,14 +515,14 @@ e790e860-e470-446f-bc41-bb6cfcf05a30	25092ad447f6a18d8dac439e7158fe9a2dc6432e019
 -- Name: CarrierConfig_id_seq; Type: SEQUENCE SET; Schema: public; Owner: shippywhippy_admin
 --
 
-SELECT pg_catalog.setval('public."CarrierConfig_id_seq"', 74, true);
+SELECT pg_catalog.setval('public."CarrierConfig_id_seq"', 1, false);
 
 
 --
 -- Name: Carrier_id_seq; Type: SEQUENCE SET; Schema: public; Owner: shippywhippy_admin
 --
 
-SELECT pg_catalog.setval('public."Carrier_id_seq"', 2, true);
+SELECT pg_catalog.setval('public."Carrier_id_seq"', 1, false);
 
 
 --
@@ -557,7 +557,7 @@ SELECT pg_catalog.setval('public."ShippingMethod_id_seq"', 1, false);
 -- Name: Shop_id_seq; Type: SEQUENCE SET; Schema: public; Owner: shippywhippy_admin
 --
 
-SELECT pg_catalog.setval('public."Shop_id_seq"', 1, true);
+SELECT pg_catalog.setval('public."Shop_id_seq"', 1, false);
 
 
 --
@@ -662,10 +662,10 @@ CREATE UNIQUE INDEX "Carrier_name_key" ON public."Carrier" USING btree (name);
 
 
 --
--- Name: DisabledShippingRate_carrierConfigId_shippingCode_key; Type: INDEX; Schema: public; Owner: shippywhippy_admin
+-- Name: DisabledShippingRate_carrierConfigId_shippingCode_location__key; Type: INDEX; Schema: public; Owner: shippywhippy_admin
 --
 
-CREATE UNIQUE INDEX "DisabledShippingRate_carrierConfigId_shippingCode_key" ON public."DisabledShippingRate" USING btree ("carrierConfigId", "shippingCode");
+CREATE UNIQUE INDEX "DisabledShippingRate_carrierConfigId_shippingCode_location__key" ON public."DisabledShippingRate" USING btree ("carrierConfigId", "shippingCode", location, "postalCode");
 
 
 --

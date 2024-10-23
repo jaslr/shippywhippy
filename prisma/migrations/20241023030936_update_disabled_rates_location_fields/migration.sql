@@ -6,13 +6,28 @@
   - Added the required column `postalCode` to the `DisabledShippingRate` table without a default value. This is not possible if the table is not empty.
 
 */
--- DropIndex
-DROP INDEX "DisabledShippingRate_carrierConfigId_shippingCode_key";
+-- Step 1: Drop existing unique constraint
+DROP INDEX IF EXISTS "DisabledShippingRate_carrierConfigId_shippingCode_key";
 
--- AlterTable
-ALTER TABLE "DisabledShippingRate" ADD COLUMN     "countryCode" TEXT,
-ADD COLUMN     "location" TEXT NOT NULL,
-ADD COLUMN     "postalCode" TEXT NOT NULL;
+-- Step 2: Add new columns as nullable first
+ALTER TABLE "DisabledShippingRate" 
+ADD COLUMN IF NOT EXISTS "location" TEXT,
+ADD COLUMN IF NOT EXISTS "postalCode" TEXT,
+ADD COLUMN IF NOT EXISTS "countryCode" TEXT;
 
--- CreateIndex
-CREATE UNIQUE INDEX "DisabledShippingRate_carrierConfigId_shippingCode_location__key" ON "DisabledShippingRate"("carrierConfigId", "shippingCode", "location", "postalCode");
+-- Step 3: Set default values for existing records
+UPDATE "DisabledShippingRate" 
+SET 
+    "location" = '',
+    "postalCode" = ''
+WHERE "location" IS NULL 
+   OR "postalCode" IS NULL;
+
+-- Step 4: Make columns non-nullable after setting defaults
+ALTER TABLE "DisabledShippingRate" 
+ALTER COLUMN "location" SET NOT NULL,
+ALTER COLUMN "postalCode" SET NOT NULL;
+
+-- Step 5: Create new unique constraint
+CREATE UNIQUE INDEX "DisabledShippingRate_carrierConfigId_shippingCode_location_postalCode_key" 
+ON "DisabledShippingRate"("carrierConfigId", "shippingCode", "location", "postalCode");

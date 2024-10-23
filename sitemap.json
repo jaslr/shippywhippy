@@ -122,6 +122,8 @@
   "styles.module.css": null
 }
 ,
+  "_index.tsx": null
+,
   "api": {
   "australia-post-international.ts": null
 ,
@@ -161,6 +163,8 @@
   "app.additional.tsx": null
 ,
   "app.tsx": null
+,
+  "australia-post-shipping.tsx": null
 ,
   "auth.$.tsx": null
 ,
@@ -219,6 +223,16 @@
   "20241023002834_add_disabled_shipping_rates": {
   "migration.sql": null
 }
+,
+  "20241023030936_update_disabled_rates_location_fields": {
+  "migration.sql": null
+}
+,
+  "20241023031037_update_disabled_rates_location_fields": {
+  "migration.sql": null
+}
+,
+  "[timestamp]_update_disabled_rates_location_fields.sql": null
 ,
   "migration_lock.toml": null
 }
