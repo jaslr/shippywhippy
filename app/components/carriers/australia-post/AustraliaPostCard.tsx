@@ -9,6 +9,8 @@ import { json } from '@remix-run/node';
 import { countries } from './countryTypes';
 import styles from './AustraliaPostCard.module.css'; // Add this import
 
+import { useAppBridge } from '@shopify/app-bridge-react';
+
 const AUSTRALIA_POST_NAME = 'Australia Post';
 const australiaPostConfig = getCarrierByName(AUSTRALIA_POST_NAME);
 
@@ -72,6 +74,7 @@ export function AustraliaPostCard({
   apiKeyEnvVar = 'AUSTRALIA_POST_API_KEY',
   defaultApiKey = ''
 }: CarrierCardProps) {
+  const app = useAppBridge();
   const [state, setState] = useState<CarrierCardState>({
     isEnabled: false,
     apiKey: '',
@@ -334,6 +337,13 @@ export function AustraliaPostCard({
 
   const handleUseDescriptionChange = useCallback(async (checked: boolean) => {
     setState(prev => ({ ...prev, useDescription: checked }));
+
+    // Show Toast notification
+    const message = `Descriptions now set to: ${checked ? 'Show' : 'Hide'}`;
+    shopify.toast.show(message, {
+      duration: 5000, // 5 seconds
+      isError: false,
+    });
 
     console.log('Updating use description:', { checked, carrierName, shopUrl: shop.shopifyUrl });
 
@@ -688,11 +698,6 @@ export function AustraliaPostCard({
               onChange={() => handleUseDescriptionChange(false)}
             />
 
-            {apiKeySaver.data && !apiKeySaver.data.success && (
-              <Banner tone="critical">
-                <p>Error: {apiKeySaver.data.error || 'Failed to update carrier configuration'}</p>
-              </Banner>
-            )}
             <Text as="h3" variant="headingMd">
               Australia Post Services
             </Text>
