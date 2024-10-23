@@ -2,13 +2,25 @@ import '@shopify/shopify-app-remix/server/adapters/node';
 import {
   LATEST_API_VERSION,
   shopifyApp,
-  DeliveryMethod,
+  DeliveryMethod,  
 } from '@shopify/shopify-app-remix/server';
+
 import { PrismaSessionStorage } from '@shopify/shopify-app-session-storage-prisma';
 import { prisma } from './prisma';
 import { restResources } from "@shopify/shopify-api/rest/admin/2023-04";
 import { shopifyApi, Session } from '@shopify/shopify-api';
 
+
+// Add type assertions or validation at the top
+const apiKey = process.env.SHOPIFY_API_KEY;
+const apiSecretKey = process.env.SHOPIFY_API_SECRET;
+const appUrl = process.env.SHOPIFY_APP_URL;
+
+if (!apiKey || !apiSecretKey || !appUrl) {
+  throw new Error(
+    'Missing required environment variables SHOPIFY_API_KEY, SHOPIFY_API_SECRET, or SHOPIFY_APP_URL'
+  );
+}
 
 console.log('Initializing Shopify app with environment variables:');
 console.log('SHOPIFY_API_KEY:', process.env.SHOPIFY_API_KEY);
@@ -160,79 +172,87 @@ const verifyShopCreation = async (username: string) => {
 };
 
 const shopify = shopifyApp({
-  apiKey: process.env.SHOPIFY_API_KEY!,
-  apiSecretKey: process.env.SHOPIFY_API_SECRET!,
-  appUrl: process.env.SHOPIFY_APP_URL!,
-  scopes: ['read_products', 'write_products', 'read_shipping', 'write_shipping', 'read_locations'],
-  apiVersion: LATEST_API_VERSION,
+  apiKey,
+  apiSecretKey,
+  appUrl,
+  scopes: ['write_products', 'write_shipping', 'read_locations'],
+  authPathPrefix: '/auth',
   sessionStorage: new PrismaSessionStorage(prisma),
-  isEmbeddedApp: true,
-  auth: {
-    path: '/auth',
-    callbackPath: '/auth/callback',
-  },
   webhooks: {
     APP_UNINSTALLED: {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: '/api/webhooks',
+      callbackUrl: "/webhooks",
       callback: async (topic, shop, body, webhookId) => {
-        console.log('App uninstalled from shop:', shop);
-        // Implement your APP_UNINSTALLED webhook logic here
-      },
-    },
-    APP_INSTALLED: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: '/api/webhooks',
-      callback: async (topic: string, shop: string, body: string, webhookId: string) => {
-        console.log('🔔 APP_INSTALLED webhook triggered for shop:', shop);
-        const session = await shopify.sessionStorage.loadSession(shop);
-        
-        if (!session?.accessToken) {
-          console.error('❌ No valid session found for shop:', shop);
-          return;
-        }
-
         try {
-          const username = shop.split('.')[0];
-          const shopifyUrl = `https://${shop}`;
-          
-          // Create shop record
-          const shopRecord = await createShopRecord({
-            username,
-            shopifyUrl,
-            shopifyName: username
+          // Find shop record
+          const shopRecord = await prisma.shop.findFirst({
+            where: { username: shop }
           });
-          
-          // Link session to shop
-          await linkSessionToShop(session.id, shopRecord.id);
-          
-          // Verify creation
-          const verifiedShop = await verifyShopCreation(username);
-          
-          if (!verifiedShop) {
-            throw new Error('Shop creation verification failed');
+
+          if (!shopRecord) {
+            console.error('❌ Shop not found:', shop);
+            return;
           }
 
-          // Fetch locations after successful shop creation
-          await fetchAndLogLocations(shop, session.accessToken);
-          
-          console.log('✅ Shop installation complete:', {
-            shop: verifiedShop.username,
-            sessionId: session.id,
-            shopId: verifiedShop.id
+          // Update shop record
+          await prisma.shop.update({
+            where: { id: shopRecord.id },
+            data: {
+              uninstalledAt: new Date()
+            }
           });
+
+          console.log('✅ Shop record updated:', shopRecord);
+
+          // Update session
+          await prisma.session.updateMany({
+            where: { shop },
+            data: { shopId: shopRecord.id }
+          });
+
+          console.log('✅ Session linked to shop');
         } catch (error) {
-          console.error('❌ Error in APP_INSTALLED webhook:', {
-            error: error instanceof Error ? error.message : 'Unknown error',
-            shop,
-            sessionId: session.id
-          });
-          throw error; // Re-throw to ensure Shopify knows the webhook failed
+          console.error('❌ Error updating shop record:', error);
         }
-      },
-    },
+      }
+    }
   },
-  restResources,
+  hooks: {
+    afterAuth: async (ctx) => {
+      const { session } = ctx;
+      
+      try {
+        const username = session.shop.split('.')[0];
+        const shopRecord = await prisma.shop.upsert({
+          where: { username },
+          create: {
+            username,
+            shopifyName: username,
+            shopifyUrl: `https://${session.shop}`,
+            isActive: true,
+            installedAt: new Date(),
+            daysActive: 0
+          },
+          update: {
+            isActive: true,
+            installedAt: new Date(),
+            uninstalledAt: null
+          }
+        });
+
+        console.log('✅ Shop record created in afterAuth:', shopRecord);
+
+        // Link session to shop
+        await prisma.session.update({
+          where: { id: session.id },
+          data: { shopId: shopRecord.id }
+        });
+
+      } catch (error) {
+        console.error('❌ Error in afterAuth hook:', error);
+      }
+    }
+  }
 });
 
 console.log('Shopify app initialized successfully');
