@@ -130,6 +130,9 @@ model DisabledShippingRate {
   shippingCode     String
   shippingName     String
   isInternational  Boolean   @default(false)
+  location         String    // Store location name (e.g., "Brisbane", "North Adelaide")
+  postalCode       String    // Store postal code (e.g., "4305", "5006")
+  countryCode      String?   // For international shipments (e.g., "US", "NZ")
 
-  @@unique([carrierConfigId, shippingCode])
+  @@unique([carrierConfigId, shippingCode, location, postalCode]) // Updated unique constraint
 }

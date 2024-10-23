@@ -1,14 +1,61 @@
-import { json, type ActionFunction } from '@remix-run/node';
+import { json, type ActionFunction, type LoaderFunction } from '@remix-run/node';
 import { prisma } from '~/prisma';
 import { authenticate } from '../shopify.server';
+
+export const loader: LoaderFunction = async ({ request }) => {
+    const { session } = await authenticate.admin(request);
+    
+    try {
+        const shop = await prisma.shop.findUnique({
+            where: { username: session.shop },
+            include: {
+                carriers: {
+                    include: {
+                        disabledRates: true
+                    }
+                }
+            }
+        });
+
+        if (!shop) {
+            return json({ success: false, error: 'Shop not found' }, { status: 404 });
+        }
+
+        const disabledRates = shop.carriers
+            .flatMap(config => config.disabledRates)
+            .map(rate => ({
+                shippingCode: rate.shippingCode,
+                shippingName: rate.shippingName,
+                isInternational: rate.isInternational
+            }));
+
+        return json({
+            success: true,
+            disabledRates
+        });
+    } catch (error) {
+        console.error('Error fetching disabled rates:', error);
+        return json({
+            success: false,
+            error: 'Failed to fetch disabled rates'
+        }, { status: 500 });
+    }
+};
 
 export const action: ActionFunction = async ({ request }) => {
     const { session } = await authenticate.admin(request);
     const body = await request.json();
 
-    console.log('📝 Received request to update shipping configuration:', body);
-
-    const { carrierId, shippingCode, shippingName, isDisabled, isInternational } = body;
+    const { 
+        carrierId, 
+        shippingCode, 
+        shippingName, 
+        isDisabled, 
+        isInternational,
+        location,     // Add these new fields
+        postalCode,
+        countryCode   // Optional for international
+    } = body;
     
     try {
         // Get the shop by username
@@ -48,29 +95,60 @@ export const action: ActionFunction = async ({ request }) => {
                 isInternational
             });
 
-            await prisma.disabledShippingRate.upsert({
+            // First try to find existing record
+            const existingRate = await prisma.disabledShippingRate.findFirst({
                 where: {
-                    carrierConfigId_shippingCode: {  // This matches your unique constraint
-                        carrierConfigId: carrierConfig.id,
-                        shippingCode
-                    }
-                },
-                update: {
-                    shippingName,    // Update these fields if record exists
-                    isInternational
-                },
-                create: {           // Create with all fields if doesn't exist
-                    carrierConfigId: carrierConfig.id,
-                    shippingCode,
-                    shippingName,
-                    isInternational,
-                },
+                    AND: [
+                        { carrierConfigId: carrierConfig.id },
+                        { shippingCode },
+                        { location: location || '' },
+                        { postalCode: postalCode || '' }
+                    ]
+                }
             });
+
+            if (existingRate) {
+                // Update existing record
+                await prisma.disabledShippingRate.update({
+                    where: { id: existingRate.id },
+                    data: {
+                        shippingName,
+                        isInternational,
+                        countryCode: isInternational ? countryCode || null : null,
+                        location: location || '',
+                        postalCode: postalCode || ''
+                    }
+                });
+            } else {
+                // Create new record
+                await prisma.disabledShippingRate.create({
+                    data: {
+                        carrierConfigId: carrierConfig.id,
+                        shippingCode,
+                        shippingName,
+                        isInternational,
+                        location: location || '',
+                        postalCode: postalCode || '',
+                        countryCode: isInternational ? countryCode || null : null
+                    }
+                });
+            }
 
             // Update hasDisabledRates flag
             await prisma.carrierConfig.update({
                 where: { id: carrierConfig.id },
                 data: { hasDisabledRates: true }
+            });
+
+            return json({
+                success: true,
+                message: `${isInternational ? 'International' : 'Domestic'} shipping rate ${shippingCode} has been disabled`,
+                details: {
+                    restrictions: isInternational ? [
+                        'authority_to_leave must not be specified',
+                        'safe_drop_enabled must not be specified'
+                    ] : []
+                }
             });
         } else {
             console.log('🗑️ Removing DisabledShippingRate record');
@@ -80,12 +158,12 @@ export const action: ActionFunction = async ({ request }) => {
                     shippingCode,
                 }
             });
-        }
 
-        return json({
-            success: true,
-            message: `Shipping rate ${shippingCode} has been ${isDisabled ? 'disabled' : 'enabled'}`,
-        });
+            return json({
+                success: true,
+                message: `Shipping rate ${shippingCode} has been enabled`,
+            });
+        }
     } catch (error) {
         console.error('❌ Error updating shipping configuration:', error);
         return json({

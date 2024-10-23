@@ -106,6 +106,11 @@ export function AustraliaPostCard({
   const [toastMessage, setToastMessage] = useState('');
   const [toastActive, setToastActive] = useState(false);
   const [toastContent, setToastContent] = useState('');
+  const [disabledRates, setDisabledRates] = useState<Array<{
+    shippingCode: string;
+    shippingName: string;
+    isInternational: boolean;
+  }>>([]);
 
   const fetcher = useFetcher<AustraliaPostLookupData>();
   const apiKeySaver = useFetcher<ApiKeySaverData>();
@@ -428,7 +433,9 @@ export function AustraliaPostCard({
           const servicesWithLocations = locations.flatMap(location =>
             (data.services || []).map((service: Service) => ({
               ...service,
-              disabled: false,
+              disabled: disabledRates.some(rate => 
+                rate.shippingCode === service.code && !rate.isInternational
+              ),
               location: location.name,
               postalCode: location.zipCode
             }))
@@ -445,81 +452,70 @@ export function AustraliaPostCard({
     };
 
     fetchServices();
-  }, [state.apiKey, locations]);
+  }, [state.apiKey, locations, disabledRates]);
 
-  const handleServiceDisableToggle = useCallback(async (index: number, isInternational: boolean) => {
-    if (!australiaPostConfig?.id) {
-      console.error('❌ Cannot disable shipping rate: Missing Australia Post configuration');
-      return;
-    }
-
+  const handleDisableService = async(index: number, isInternational: boolean) => {
     const service = isInternational ? internationalServices[index] : services[index];
     const newDisabledState = !service.disabled;
-
-    console.log('🚢 Attempting to disable shipping rate:', {
-      service: service.name,
-      code: service.code,
-      isInternational,
-      newState: newDisabledState ? 'disabled' : 'enabled',
-      carrierId: parseInt(australiaPostConfig.id) // Convert to number for Prisma
-    });
-
+    
     try {
-      const response = await fetch('/api/australia-post-shipping-config', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          shopId: shop.id,
-          carrierId: parseInt(australiaPostConfig.id), // Fix: Convert to number
-          shippingCode: service.code,
-          shippingName: service.name,
-          isDisabled: newDisabledState,
-          isInternational,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        console.log('✅ Successfully disabled shipping rate:', {
-          service: service.name,
-          code: service.code,
-          isInternational,
-          newState: newDisabledState ? 'disabled' : 'enabled'
+        const response = await fetch('/api/australia-post-shipping-config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                carrierId: australiaPostConfig?.id ? parseInt(australiaPostConfig.id) : undefined,
+                shippingCode: service.code,
+                shippingName: service.name,
+                isDisabled: newDisabledState,
+                isInternational,
+                location: service.location,        // Add these fields
+                postalCode: service.postalCode,
+                countryCode: isInternational ? selectedCountry : null  // Add country code for international
+            }),
         });
 
-        // Update local state
-        if (isInternational) {
-          setInternationalServices(prev => {
-            const newServices = [...prev];
-            newServices[index] = {
-              ...newServices[index],
-              disabled: newDisabledState,
-            };
-            return newServices;
-          });
-        } else {
-          setServices(prev => {
-            const newServices = [...prev];
-            newServices[index] = {
-              ...newServices[index],
-              disabled: newDisabledState,
-            };
-            return newServices;
-          });
-        }
+        const data = await response.json();
 
-        app.toast.show(`Shipping rate ${service.name} is now ${newDisabledState ? 'disabled' : 'enabled'}`);
-      } else {
-        throw new Error(data.error || 'Failed to update shipping configuration');
-      }
+        if (data.success) {
+            console.log('✅ Successfully disabled shipping rate:', {
+                service: service.name,
+                code: service.code,
+                isInternational,
+                newState: newDisabledState ? 'disabled' : 'enabled'
+            });
+
+            // Update local state
+            if (isInternational) {
+                setInternationalServices(prev => {
+                    const newServices = [...prev];
+                    newServices[index] = {
+                        ...newServices[index],
+                        disabled: newDisabledState,
+                    };
+                    return newServices;
+                });
+            } else {
+                setServices(prev => {
+                    const newServices = [...prev];
+                    newServices[index] = {
+                        ...newServices[index],
+                        disabled: newDisabledState,
+                    };
+                    return newServices;
+                });
+            }
+
+            app.toast.show(`Shipping rate ${service.name} is now ${newDisabledState ? 'disabled' : 'enabled'}`);
+        } else {
+            throw new Error(data.error || 'Failed to update shipping configuration');
+        }
     } catch (error) {
-      console.error('❌ Error updating shipping configuration:', error);
-      app.toast.show('An error occurred while updating the shipping configuration');
+        console.error('❌ Error updating shipping configuration:', error);
+        app.toast.show('An error occurred while updating the shipping configuration');
     }
-  }, [shop.id, services, internationalServices, australiaPostConfig?.id]);
+};
 
   const handleShowApiKey = useCallback(() => {
     setShowApiKeySection(true);
@@ -612,7 +608,7 @@ export function AustraliaPostCard({
             <Checkbox
               label="Disable"
               checked={service.disabled}
-              onChange={() => handleServiceDisableToggle(index, false)}
+              onChange={() => handleDisableService(index, false)}
               labelHidden
             />
           ];
@@ -621,7 +617,7 @@ export function AustraliaPostCard({
     ) : (
       <Text as="p">No services available.</Text>
     )
-  ), [isLoadingServices, locations, handleServiceDisableToggle]);
+  ), [isLoadingServices, locations, handleDisableService]);
 
   const tabs = [
     {
@@ -637,6 +633,30 @@ export function AustraliaPostCard({
       panelID: 'international-services-content',
     },
   ];
+
+  // Add this effect to fetch disabled rates when component mounts
+  useEffect(() => {
+    const fetchDisabledRates = async () => {
+      if (!australiaPostConfig?.id) return;
+      
+      try {
+        const response = await fetch('/api/australia-post-shipping-config', {
+          method: 'GET',
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setDisabledRates(data.disabledRates);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching disabled rates:', error);
+      }
+    };
+
+    fetchDisabledRates();
+  }, [australiaPostConfig?.id]);
 
   return (
     <Card>
