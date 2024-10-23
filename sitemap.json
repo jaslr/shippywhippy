@@ -44,6 +44,8 @@
 }
 ,
   "australia-post": {
+  "AustraliaPostCard.module.css": null
+,
   "AustraliaPostCard.tsx": null
 ,
   "constants.ts": null
@@ -134,6 +136,8 @@
 ,
   "api.australia-post-services.ts": null
 ,
+  "api.australia-post-shipping-config.ts": null
+,
   "api.carrier-service.ts": null
 ,
   "api.debug-carriers.ts": null
@@ -209,6 +213,10 @@
 }
 ,
   "20241021065652_": {
+  "migration.sql": null
+}
+,
+  "20241023002834_add_disabled_shipping_rates": {
   "migration.sql": null
 }
 ,

@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Card, BlockStack, Text, TextField, FormLayout, Button, Banner, Link, LegacyCard, InlineStack, Spinner, Popover, ActionList, Icon, RadioButton, DataTable, Checkbox, Tooltip, Tabs, Select } from '@shopify/polaris';
 import { CheckIcon, XSmallIcon } from '@shopify/polaris-icons';
-import { useFetcher } from '@remix-run/react';
+import { useFetcher, useNavigate } from '@remix-run/react';
 import { getCarrierByName } from '../../../libs/carriers/carrierlist';
 import { CarrierCardProps, CarrierCardState, CarrierConfig } from '../../../libs/carriers/types/carrier';
 import { getCarrierConfigByShopAndCarrier } from '../../../libs/carriers/carrierConfigUtils';
@@ -10,6 +10,9 @@ import { countries } from './countryTypes';
 import styles from './AustraliaPostCard.module.css'; // Add this import
 
 import { useAppBridge } from '@shopify/app-bridge-react';
+
+// Add this type declaration
+declare const Toast: any;
 
 const AUSTRALIA_POST_NAME = 'Australia Post';
 const australiaPostConfig = getCarrierByName(AUSTRALIA_POST_NAME);
@@ -100,6 +103,9 @@ export function AustraliaPostCard({
   const [requestUrl, setRequestUrl] = useState('');
   const [requestHeaders, setRequestHeaders] = useState('{}'); // Initialize with empty object string
   const [locations, setLocations] = useState<Array<{ id: string; name: string; address: string; zipCode: string | null }>>([]);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastActive, setToastActive] = useState(false);
+  const [toastContent, setToastContent] = useState('');
 
   const fetcher = useFetcher<AustraliaPostLookupData>();
   const apiKeySaver = useFetcher<ApiKeySaverData>();
@@ -112,6 +118,8 @@ export function AustraliaPostCard({
     label: country.name,
     value: country.code
   }));
+
+  const navigate = useNavigate();
 
   // Fetch locations on component mount
   useEffect(() => {
@@ -439,13 +447,79 @@ export function AustraliaPostCard({
     fetchServices();
   }, [state.apiKey, locations]);
 
-  const handleServiceDisableToggle = useCallback((index: number) => {
-    setServices(prevServices => {
-      const newServices = [...prevServices];
-      newServices[index].disabled = !newServices[index].disabled;
-      return newServices;
+  const handleServiceDisableToggle = useCallback(async (index: number, isInternational: boolean) => {
+    if (!australiaPostConfig?.id) {
+      console.error('❌ Cannot disable shipping rate: Missing Australia Post configuration');
+      return;
+    }
+
+    const service = isInternational ? internationalServices[index] : services[index];
+    const newDisabledState = !service.disabled;
+
+    console.log('🚢 Attempting to disable shipping rate:', {
+      service: service.name,
+      code: service.code,
+      isInternational,
+      newState: newDisabledState ? 'disabled' : 'enabled',
+      carrierId: parseInt(australiaPostConfig.id) // Convert to number for Prisma
     });
-  }, []);
+
+    try {
+      const response = await fetch('/api/australia-post-shipping-config', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          shopId: shop.id,
+          carrierId: parseInt(australiaPostConfig.id), // Fix: Convert to number
+          shippingCode: service.code,
+          shippingName: service.name,
+          isDisabled: newDisabledState,
+          isInternational,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log('✅ Successfully disabled shipping rate:', {
+          service: service.name,
+          code: service.code,
+          isInternational,
+          newState: newDisabledState ? 'disabled' : 'enabled'
+        });
+
+        // Update local state
+        if (isInternational) {
+          setInternationalServices(prev => {
+            const newServices = [...prev];
+            newServices[index] = {
+              ...newServices[index],
+              disabled: newDisabledState,
+            };
+            return newServices;
+          });
+        } else {
+          setServices(prev => {
+            const newServices = [...prev];
+            newServices[index] = {
+              ...newServices[index],
+              disabled: newDisabledState,
+            };
+            return newServices;
+          });
+        }
+
+        app.toast.show(`Shipping rate ${service.name} is now ${newDisabledState ? 'disabled' : 'enabled'}`);
+      } else {
+        throw new Error(data.error || 'Failed to update shipping configuration');
+      }
+    } catch (error) {
+      console.error('❌ Error updating shipping configuration:', error);
+      app.toast.show('An error occurred while updating the shipping configuration');
+    }
+  }, [shop.id, services, internationalServices, australiaPostConfig?.id]);
 
   const handleShowApiKey = useCallback(() => {
     setShowApiKeySection(true);
@@ -512,35 +586,33 @@ export function AustraliaPostCard({
     [fetchInternationalServices],
   );
 
-  const renderServiceTable = (services: Array<Service & { location: string; postalCode: string }>) => (
+  // Update the function to accept a services parameter
+  const renderServiceTable = useCallback((servicesToRender: typeof services) => (
     isLoadingServices ? (
       <Spinner accessibilityLabel="Loading services" size="small" />
-    ) : services.length > 0 ? (
+    ) : servicesToRender.length > 0 ? (
       <DataTable
         columnContentTypes={['text', 'text', 'text', 'text']}
         headings={['Location', 'Location Details', 'Name', 'Disable']}
-        rows={services.map((service, index) => {
+        rows={servicesToRender.map((service, index) => {
           const locationData = locations.find(loc => loc.name === service.location);
           const zipCode = service.location === 'Shop location'
             ? (locationData?.zipCode || '4305')
             : (locationData?.zipCode || service.postalCode || 'N/A');
 
+          // Return array of cell contents directly, not JSX elements wrapped in {}
           return [
             service.location,
-            <Tooltip content={locationData?.address || 'Address not available'}>
-              <Text variant="bodyMd" as="span">
-                {zipCode}
-              </Text>
-            </Tooltip>,
-            <Tooltip content={`Code: ${service.code}`}>
-              <Text variant="bodyMd" fontWeight="medium" as="span">
-                {service.name}
-              </Text>
-            </Tooltip>,
+            <Text variant="bodyMd" as="span">
+              {zipCode}
+            </Text>,
+            <Text variant="bodyMd" fontWeight="medium" as="span">
+              {service.name}
+            </Text>,
             <Checkbox
               label="Disable"
               checked={service.disabled}
-              onChange={() => handleServiceDisableToggle(index)}
+              onChange={() => handleServiceDisableToggle(index, false)}
               labelHidden
             />
           ];
@@ -549,7 +621,7 @@ export function AustraliaPostCard({
     ) : (
       <Text as="p">No services available.</Text>
     )
-  );
+  ), [isLoadingServices, locations, handleServiceDisableToggle]);
 
   const tabs = [
     {
@@ -704,7 +776,7 @@ export function AustraliaPostCard({
             <Tabs tabs={tabs} selected={selectedTab} onSelect={handleTabChange}>
               <LegacyCard.Section title={tabs[selectedTab].content}>
                 {selectedTab === 0 ? (
-                  renderServiceTable(services.filter(service => !service.code.startsWith('INT')))
+                  renderServiceTable(services.filter((service) => !service.code.startsWith('INT')))
                 ) : (
                   <>
                     <Select

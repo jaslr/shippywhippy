@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywhippy"
 handle = "shippywhippy"
-application_url = "https://forum-practices-radio-hand.trycloudflare.com"
+application_url = "https://comparative-sites-laundry-house.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_locations,read_products,read_shipping,write_products,write_shippi
 
 [auth]
 redirect_urls = [
-  "https://forum-practices-radio-hand.trycloudflare.com/auth/callback",
-  "https://forum-practices-radio-hand.trycloudflare.com/auth/shopify/callback",
-  "https://forum-practices-radio-hand.trycloudflare.com/api/auth/callback"
+  "https://comparative-sites-laundry-house.trycloudflare.com/auth/callback",
+  "https://comparative-sites-laundry-house.trycloudflare.com/auth/shopify/callback",
+  "https://comparative-sites-laundry-house.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

@@ -59,16 +59,18 @@ model Carrier {
 }
 
 model CarrierConfig {
-  id             Int       @id @default(autoincrement())
-  shop           Shop      @relation("ShopCarriers", fields: [shopId], references: [id])
-  shopId         Int
-  carrier        Carrier   @relation("CarrierConfigs", fields: [carrierId], references: [id])
-  carrierId      Int
-  isActive       Boolean   @default(false)
-  apiKey         String?
-  memberNumber   String?
-  useDescription Boolean   @default(true)
+  id               Int       @id @default(autoincrement())
+  shop             Shop      @relation("ShopCarriers", fields: [shopId], references: [id])
+  shopId           Int
+  carrier          Carrier   @relation("CarrierConfigs", fields: [carrierId], references: [id])
+  carrierId        Int
+  isActive         Boolean   @default(false)
+  apiKey           String?
+  memberNumber     String?
+  useDescription   Boolean   @default(true)
+  hasDisabledRates Boolean   @default(false)
   shippingMethodConfigs ShippingMethodConfig[] @relation("CarrierConfigShippingMethods")
+  disabledRates    DisabledShippingRate[] @relation("CarrierConfigDisabledRates")
 
   @@unique([shopId, carrierId])
 }
@@ -119,4 +121,15 @@ model CarrierService {
   active         Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model DisabledShippingRate {
+  id               Int       @id @default(autoincrement())
+  carrierConfig    CarrierConfig @relation("CarrierConfigDisabledRates", fields: [carrierConfigId], references: [id])
+  carrierConfigId  Int
+  shippingCode     String
+  shippingName     String
+  isInternational  Boolean   @default(false)
+
+  @@unique([carrierConfigId, shippingCode])
 }

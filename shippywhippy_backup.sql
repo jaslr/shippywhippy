@@ -60,7 +60,8 @@ CREATE TABLE public."CarrierConfig" (
     "isActive" boolean DEFAULT false NOT NULL,
     "apiKey" text,
     "memberNumber" text,
-    "useDescription" boolean DEFAULT true NOT NULL
+    "useDescription" boolean DEFAULT true NOT NULL,
+    "hasDisabledRates" boolean DEFAULT false NOT NULL
 );
 
 
@@ -126,6 +127,43 @@ ALTER SEQUENCE public."Carrier_id_seq" OWNER TO shippywhippy_admin;
 --
 
 ALTER SEQUENCE public."Carrier_id_seq" OWNED BY public."Carrier".id;
+
+
+--
+-- Name: DisabledShippingRate; Type: TABLE; Schema: public; Owner: shippywhippy_admin
+--
+
+CREATE TABLE public."DisabledShippingRate" (
+    id integer NOT NULL,
+    "carrierConfigId" integer NOT NULL,
+    "shippingCode" text NOT NULL,
+    "shippingName" text NOT NULL,
+    "isInternational" boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE public."DisabledShippingRate" OWNER TO shippywhippy_admin;
+
+--
+-- Name: DisabledShippingRate_id_seq; Type: SEQUENCE; Schema: public; Owner: shippywhippy_admin
+--
+
+CREATE SEQUENCE public."DisabledShippingRate_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public."DisabledShippingRate_id_seq" OWNER TO shippywhippy_admin;
+
+--
+-- Name: DisabledShippingRate_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: shippywhippy_admin
+--
+
+ALTER SEQUENCE public."DisabledShippingRate_id_seq" OWNED BY public."DisabledShippingRate".id;
 
 
 --
@@ -345,6 +383,13 @@ ALTER TABLE ONLY public."CarrierConfig" ALTER COLUMN id SET DEFAULT nextval('pub
 
 
 --
+-- Name: DisabledShippingRate id; Type: DEFAULT; Schema: public; Owner: shippywhippy_admin
+--
+
+ALTER TABLE ONLY public."DisabledShippingRate" ALTER COLUMN id SET DEFAULT nextval('public."DisabledShippingRate_id_seq"'::regclass);
+
+
+--
 -- Name: Location id; Type: DEFAULT; Schema: public; Owner: shippywhippy_admin
 --
 
@@ -386,9 +431,9 @@ COPY public."Carrier" (id, name, "defaultApiKey") FROM stdin;
 -- Data for Name: CarrierConfig; Type: TABLE DATA; Schema: public; Owner: shippywhippy_admin
 --
 
-COPY public."CarrierConfig" (id, "shopId", "carrierId", "isActive", "apiKey", "memberNumber", "useDescription") FROM stdin;
-28	1	2	f	fdf	\N	f
-5	1	1	t	2f34aa06-779c-4cb7-90ae-9311750a2607	\N	t
+COPY public."CarrierConfig" (id, "shopId", "carrierId", "isActive", "apiKey", "memberNumber", "useDescription", "hasDisabledRates") FROM stdin;
+28	1	2	f	fdf	\N	f	f
+5	1	1	t	2f34aa06-779c-4cb7-90ae-9311750a2609	\N	t	f
 \.
 
 
@@ -397,6 +442,14 @@ COPY public."CarrierConfig" (id, "shopId", "carrierId", "isActive", "apiKey", "m
 --
 
 COPY public."CarrierService" (id, "shopifyId", name, "callbackUrl", "serviceDiscovery", active, "createdAt", "updatedAt") FROM stdin;
+\.
+
+
+--
+-- Data for Name: DisabledShippingRate; Type: TABLE DATA; Schema: public; Owner: shippywhippy_admin
+--
+
+COPY public."DisabledShippingRate" (id, "carrierConfigId", "shippingCode", "shippingName", "isInternational") FROM stdin;
 \.
 
 
@@ -413,7 +466,7 @@ COPY public."Location" (id, "shopId", name, address1, address2, city, province, 
 --
 
 COPY public."Session" (id, shop, state, "isOnline", scope, expires, "accessToken", "accountOwner", collaborator, email, "emailVerified", "firstName", "lastName", locale, "shopId", "userId") FROM stdin;
-offline_froggya.myshopify.com	froggya.myshopify.com	206735962780904	f	read_locations,write_products,write_shipping	\N	shpua_80e8e1398722717ec4e4a273e3d60a17	f	f	\N	f	\N	\N	\N	\N	\N
+offline_froggya.myshopify.com	froggya.myshopify.com	281686540425086	f	read_locations,write_products,write_shipping	\N	shpua_9ec0e64a3e95edbc7693bf0842920950	f	f	\N	f	\N	\N	\N	\N	\N
 \.
 
 
@@ -454,6 +507,7 @@ a7402be2-1545-4029-871f-f2b7e7605e03	4230489444e20f03a3ae051be25a4640465010e0fac
 e0039dba-2da9-4732-ab64-2281ec151918	9a9cddddd4a3da2022f6ed01278b43fe293b2147366b61acd43651e6e8b6617b	2024-10-21 09:45:02.368094+11	20241020224502_add_use_description_to_carrier_config	\N	\N	2024-10-21 09:45:02.348742+11	1
 6b85768a-aea9-4735-bd3e-aa64b87c55ae	5aef64421ed529ac97c46d6dc7cd0343ccb06ab074b491d3e502a19e8130c9f3	2024-10-21 17:26:52.292444+11	20241021062652_add_postal_code_to_shop	\N	\N	2024-10-21 17:26:52.277727+11	1
 97dbaad5-4168-4b54-a339-4a1155e7251e	90319fe44953004ec595f19e425f21ef603a90cee6b9d1f00ebc7ba4ab0f427b	2024-10-21 17:56:52.741604+11	20241021065652_	\N	\N	2024-10-21 17:56:52.714073+11	1
+e790e860-e470-446f-bc41-bb6cfcf05a30	25092ad447f6a18d8dac439e7158fe9a2dc6432e019daff058a02eb05987ce7c	2024-10-23 11:28:34.278812+11	20241023002834_add_disabled_shipping_rates	\N	\N	2024-10-23 11:28:34.228287+11	1
 \.
 
 
@@ -461,7 +515,7 @@ e0039dba-2da9-4732-ab64-2281ec151918	9a9cddddd4a3da2022f6ed01278b43fe293b2147366
 -- Name: CarrierConfig_id_seq; Type: SEQUENCE SET; Schema: public; Owner: shippywhippy_admin
 --
 
-SELECT pg_catalog.setval('public."CarrierConfig_id_seq"', 73, true);
+SELECT pg_catalog.setval('public."CarrierConfig_id_seq"', 74, true);
 
 
 --
@@ -469,6 +523,13 @@ SELECT pg_catalog.setval('public."CarrierConfig_id_seq"', 73, true);
 --
 
 SELECT pg_catalog.setval('public."Carrier_id_seq"', 2, true);
+
+
+--
+-- Name: DisabledShippingRate_id_seq; Type: SEQUENCE SET; Schema: public; Owner: shippywhippy_admin
+--
+
+SELECT pg_catalog.setval('public."DisabledShippingRate_id_seq"', 1, false);
 
 
 --
@@ -521,6 +582,14 @@ ALTER TABLE ONLY public."CarrierService"
 
 ALTER TABLE ONLY public."Carrier"
     ADD CONSTRAINT "Carrier_pkey" PRIMARY KEY (id);
+
+
+--
+-- Name: DisabledShippingRate DisabledShippingRate_pkey; Type: CONSTRAINT; Schema: public; Owner: shippywhippy_admin
+--
+
+ALTER TABLE ONLY public."DisabledShippingRate"
+    ADD CONSTRAINT "DisabledShippingRate_pkey" PRIMARY KEY (id);
 
 
 --
@@ -593,6 +662,13 @@ CREATE UNIQUE INDEX "Carrier_name_key" ON public."Carrier" USING btree (name);
 
 
 --
+-- Name: DisabledShippingRate_carrierConfigId_shippingCode_key; Type: INDEX; Schema: public; Owner: shippywhippy_admin
+--
+
+CREATE UNIQUE INDEX "DisabledShippingRate_carrierConfigId_shippingCode_key" ON public."DisabledShippingRate" USING btree ("carrierConfigId", "shippingCode");
+
+
+--
 -- Name: Location_shopifyLocationId_key; Type: INDEX; Schema: public; Owner: shippywhippy_admin
 --
 
@@ -634,6 +710,14 @@ ALTER TABLE ONLY public."CarrierConfig"
 
 ALTER TABLE ONLY public."CarrierConfig"
     ADD CONSTRAINT "CarrierConfig_shopId_fkey" FOREIGN KEY ("shopId") REFERENCES public."Shop"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: DisabledShippingRate DisabledShippingRate_carrierConfigId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: shippywhippy_admin
+--
+
+ALTER TABLE ONLY public."DisabledShippingRate"
+    ADD CONSTRAINT "DisabledShippingRate_carrierConfigId_fkey" FOREIGN KEY ("carrierConfigId") REFERENCES public."CarrierConfig"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --
