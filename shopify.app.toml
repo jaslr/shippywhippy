@@ -3,7 +3,7 @@
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
 name = "shippywhippy"
 handle = "shippywhippy"
-application_url = "https://respectively-lesson-asian-blues.trycloudflare.com"
+application_url = "https://devoted-integer-surf-even.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_locations,read_products,read_shipping,write_products,write_shippi
 
 [auth]
 redirect_urls = [
-  "https://respectively-lesson-asian-blues.trycloudflare.com/auth/callback",
-  "https://respectively-lesson-asian-blues.trycloudflare.com/auth/shopify/callback",
-  "https://respectively-lesson-asian-blues.trycloudflare.com/api/auth/callback"
+  "https://devoted-integer-surf-even.trycloudflare.com/auth/callback",
+  "https://devoted-integer-surf-even.trycloudflare.com/auth/shopify/callback",
+  "https://devoted-integer-surf-even.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
