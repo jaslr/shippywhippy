@@ -30,8 +30,27 @@ The following colors are used in the Shippy Whippy app, outside of the Polaris D
 Before you begin, you'll need the following:
 
 1. **Node.js**: [Download and install](https://nodejs.org/en/download/) it if you haven't already.
-2. **Shopify Partner Account**: [Create an account](https://partners.shopify.com/signup) if you don't have one.
-3. **Test Store**: Set up either a [development store](https://help.shopify.com/en/partners/dashboard/development-stores#create-a-development-store) or a [Shopify Plus sandbox store](https://help.shopify.com/en/partners/dashboard/managing-stores/plus-sandbox-store) for testing your app.
+2. **Shopify CLI**: Install the Shopify CLI:
+   ```bash
+   # Install Shopify CLI
+   npm install -g @shopify/cli @shopify/theme
+   npm install -g @shopify/app
+   ```
+3. **Shopify Partner Account**: [Create an account](https://partners.shopify.com/signup) if you don't have one.
+4. **Test Store**: Set up either a [development store](https://help.shopify.com/en/partners/dashboard/development-stores#create-a-development-store) or a [Shopify Plus sandbox store](https://help.shopify.com/en/partners/dashboard/managing-stores/plus-sandbox-store) for testing your app.
+5. **PostgreSQL Setup**: If using WSL, install the required components:
+   ```bash
+   # Install PostgreSQL and expect
+   sudo apt update
+   sudo apt install postgresql postgresql-contrib expect
+
+   # Start PostgreSQL service
+   sudo service postgresql start
+
+   # Create database user and database
+   sudo -u postgres createuser -P -s shippywhippy_admin
+   sudo -u postgres createdb shippywhippy
+   ```
 
 ### Setup
 
