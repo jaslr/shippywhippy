@@ -47,10 +47,24 @@ Before you begin, you'll need the following:
    # Start PostgreSQL service
    sudo service postgresql start
 
+   # Verify PostgreSQL port (important for connection string)
+   sudo -u postgres psql -c "SHOW port;"
+
    # Create database user and database
-   sudo -u postgres createuser -P -s shippywhippy_admin
-   sudo -u postgres createdb shippywhippy
+   sudo -u postgres psql -p <your_port> << EOF
+   CREATE USER shippywhippy_admin WITH PASSWORD 'password123' SUPERUSER;
+   CREATE DATABASE shippywhippy OWNER shippywhippy_admin;
+   GRANT ALL PRIVILEGES ON DATABASE shippywhippy TO shippywhippy_admin;
+   EOF
+
+   # Set up your .env file with the correct port
+   echo 'DATABASE_URL="postgresql://shippywhippy_admin:password123@localhost:<your_port>/shippywhippy?schema=public"' > .env
+
+   # Verify connection
+   PGPASSWORD=password123 psql -U shippywhippy_admin -h localhost -p <your_port> -d shippywhippy -c "\conninfo"
    ```
+
+   Note: PostgreSQL might run on a different port (e.g., 5433) instead of the default 5432. Always verify the port number and update your connection string accordingly.
 
 ### Setup
 

@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "0e4c7ec3ef098dfba965757da959cc8f"
-application_url = "https://broken-installations-sad-mathematics.trycloudflare.com"
+application_url = "https://lets-pediatric-laser-transaction.trycloudflare.com"
 embedded = true
 name = "shippywhippy"
 handle = "shippywhippy"
@@ -36,9 +36,9 @@ scopes = "read_locations,read_products,read_shipping,write_products,write_shippi
 
 [auth]
 redirect_urls = [
-  "https://broken-installations-sad-mathematics.trycloudflare.com/auth/callback",
-  "https://broken-installations-sad-mathematics.trycloudflare.com/auth/shopify/callback",
-  "https://broken-installations-sad-mathematics.trycloudflare.com/api/auth/callback"
+  "https://lets-pediatric-laser-transaction.trycloudflare.com/auth/callback",
+  "https://lets-pediatric-laser-transaction.trycloudflare.com/auth/shopify/callback",
+  "https://lets-pediatric-laser-transaction.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
